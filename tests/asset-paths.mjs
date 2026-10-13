@@ -108,7 +108,7 @@ try {
           );
           await page.locator("[data-journey]").scrollIntoViewIfNeeded();
           await page.waitForFunction(() =>
-            ["corridor", "sky"].every((name) =>
+            ["sky"].every((name) =>
               performance.getEntriesByType("resource").some((entry) => new RegExp(`/${name}[^/]*\\.webp$`).test(entry.name)),
             ),
           );
@@ -126,7 +126,7 @@ try {
           );
           assert.deepEqual(failures, [], "No build assets may fail to load");
           console.log(
-            `PASS ${mount} at ${width}px: intro media, journey layers, images, fonts, CSS, and JavaScript`,
+            `PASS ${mount} at ${width}px: intro media, journey sky, images, fonts, CSS, and JavaScript`,
           );
         } finally {
           await page.close();

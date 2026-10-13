@@ -1,7 +1,9 @@
-"""Build the fly-through layers from the site's colonnade photograph.
+"""Build the journey's sky from the site's colonnade photograph.
 
-corridor.webp  the photo with the open sky cut out (alpha)
-sky.webp       a full-frame sky to see through the gaps and to fly out into
+src/journey/sky.webp is the photograph's open sky, extended to a full frame:
+the real sky is kept, what the columns hid is filled from surrounding cloud,
+and the right half mirrors the left. The 3D scene wraps it around the
+colonnade (src/journey/scene.js).
 """
 import numpy as np
 import cv2
@@ -24,10 +26,6 @@ cx, cy, r = 1253.5, 362, 52.5
 d.rectangle([1201, cy, 1306, 615], fill=255)
 d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
 sky = np.asarray(m.filter(ImageFilter.GaussianBlur(0.8))).astype(np.float32) / 255
-
-# ---- corridor layer
-rgba = np.dstack([a, (1 - sky) * 255]).clip(0, 255).astype(np.uint8)
-Image.fromarray(rgba, "RGBA").save("src/journey/corridor.webp", "WEBP", quality=86, method=6, exact=True)
 
 # ---- sky plate
 EDGE = 812

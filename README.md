@@ -29,11 +29,11 @@ Three original AI-generated stills in `public/images/` form a coordinated, pale 
 
 ### The journey
 
-After the hero, a pinned stage flies the camera down the colonnade from `ares-sanctuary.webp`, through the far arch and into open sky, while the story's words arrive in step: *Your themes. Your look.*, *walking into your world*, *Built around you*, the three qualities, and *The details make it yours* as the camera breaks into the sky. The flight is rendered live with WebGL from two layers made from that photograph (`src/journey/corridor.webp` and `sky.webp`, about 180 KB together), so it stays sharp at any size and follows the scrollbar exactly. A light motion blur appears only while the visitor is scrolling. The stage ends on the showcase's background colour, so the page continues without a seam.
+After the hero, a pinned stage flies a camera up the steps and down a marble colonnade, through the arch in its far wall and out into open sky, while the story's words arrive in step: *Your themes. Your look.*, *walking into your world*, *Built around you*, the three qualities, and *The details make it yours* as the camera breaks into the sky. The colonnade is a real 3D scene: steps, fluted columns, entablature, coffered ceiling, polished floor and the arched wall, lit by a low warm sun with soft shadows. The building never moves; only the camera does. It is drawn live in WebGL (ray marched, no libraries) and wrapped in the photograph's own sky, so it stays sharp at any size and follows the scrollbar exactly. While the visitor scrolls it renders at a resolution suited to the device; when they stop, one crisp frame is drawn. The stage ends on the showcase's background colour, so the page continues without a seam.
 
-- `src/journey/journey.js` holds the camera path, the beat timing and the shader; the comments name each tunable value.
-- `tools/build-journey-layers.py` rebuilds the two layers from the photograph (Python with NumPy, SciPy, OpenCV and Pillow).
-- Without WebGL the photograph itself pushes toward the arch. Under reduced motion the journey becomes one still section with every beat visible.
+- `src/journey/scene.js` describes the building and its lighting; `src/journey/journey.js` holds the camera path (keyframes along the corridor), the beat timing and the rendering loop.
+- `src/journey/sky.webp` is the colonnade photograph's sky extended to a full frame; `tools/build-journey-sky.py` rebuilds it (Python with NumPy, SciPy, OpenCV and Pillow).
+- Without WebGL the photograph itself pushes gently forward. Under reduced motion the journey becomes one still section over the photograph with every beat visible.
 
 ### Going back to the classic site
 

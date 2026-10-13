@@ -34,17 +34,17 @@ Native scroll events update a single animation frame at a time. The hero's image
 
 ## The journey
 
-The middle of the site is one flight. The camera starts on the colonnade photograph exactly as it was framed before, then travels down the corridor toward the far arch, turning gently so the arch ends up centred. Near columns sweep past faster than far ones because the stone is treated as a corridor whose depth grows toward the arch; the sky beyond is infinitely far and only turns with the camera. The camera passes through the arch about 84% of the way through the journey, a warm glow marks the moment, and the open sky drifts closer before the stage fades into the showcase's background colour.
+The middle of the site is one flight through a real 3D colonnade. Its proportions follow the sanctuary photograph: two rows of fourteen fluted columns 3.2 m apart, a coffered ceiling, steps rising from a terrace, a polished marble floor and a far wall with an arched opening, all above the photograph's sea of clouds. A low warm sun from the left lays column shadows across the floor, and the marble is a warm ivory with soft clouding and a few long grey veins. The building is fixed; the camera starts on the terrace with the colonnade ahead and to the right (as the photograph frames it), climbs toward the steps, glides down the centre of the corridor, passes through the arch about 84% of the way through the journey, and drifts on over the clouds while lifting its gaze before the stage fades into the showcase's background colour.
 
 | Share of the journey | Camera | Words |
 | --- | --- | --- |
-| 0–17% | At the threshold, starting to move | 01 / Your themes. Your look. To match your business. (lines part as before) |
-| 18–34% | Entering the corridor | A website should feel like walking into your world. |
+| 0–17% | On the terrace, approaching the steps | 01 / Your themes. Your look. To match your business. (lines part as before) |
+| 18–34% | Up the steps, between the first columns | A website should feel like walking into your world. |
 | 35–54% | Columns streaming past | 02 / Websites built from scratch. For your business. |
-| 55–77% | The arch fills the view | I. II. III., the three qualities, on a soft paper band |
+| 55–77% | The arch grows ahead | I. II. III., the three qualities, on a soft paper band |
 | 79–97% | Through the arch, into sky | The details make it yours. |
 
-The journey is 760% of the screen height. On phones the frame is cropped toward the corridor and the words sit at the top over a paper gradient. A motion blur along the direction of travel appears only while the visitor scrolls and settles when they stop. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
+The journey is 760% of the screen height. On tall phone screens the camera's view widens so the corridor stays readable, and the words sit at the top over a paper gradient. While the visitor scrolls, the scene renders at a resolution suited to the device; when scrolling stops, one crisp frame is drawn. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
 
 ## Reduced motion
 

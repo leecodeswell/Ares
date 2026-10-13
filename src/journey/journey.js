@@ -1,107 +1,70 @@
 import "./journey.css";
-import corridorUrl from "./corridor.webp";
 import skyUrl from "./sky.webp";
+import { VERTEX, FRAGMENT } from "./scene.js";
 
-// The journey: a camera flies down the sanctuary colonnade, through the far
-// arch and out into open sky while the story's words arrive in step. The
-// photograph is split into a stone layer and a sky layer
-// (tools/build-journey-layers.py). The stone is treated as a corridor whose
-// depth grows toward the arch, so near columns sweep past faster than far
-// ones; the sky sits at infinity and only turns with the camera.
+// The journey: a camera flies up the steps and down a static marble
+// colonnade, through the arch in its far wall and out into open sky, while
+// the story's words arrive in step. The building is real 3D (scene.js); only
+// the camera moves.
 
-const IMAGE = { width: 1672, height: 941 };
-const VANISHING = { x: 1253, y: 480 }; // where the corridor's lines meet
-const ARCH = { x: 1253, y: 462 }; // centre of the far arch opening
-const CORRIDOR = { side: 75, up: 205, down: 135 }; // far end, in pixels from the vanishing point
-const FLIGHT_END = 0.84; // share of the journey spent inside the colonnade
-const MAX_ZOOM = 17; // how large the far arch grows before we pass through it
+const FLIGHT_END = 0.84; // share of the journey before the camera clears the arch
 const PAPER = [232 / 255, 231 / 255, 221 / 255]; // the showcase background that follows
+
+// Camera keyframes through the building: [flight share, position, look-at].
+const PATH = [
+  [0.0, [-3.4, 1.6, -8.5], [1.4, 3.0, 20]], // on the terrace, colonnade ahead and to the right
+  [0.15, [-1.4, 1.55, -4.2], [0.8, 2.9, 24]], // toward the steps
+  [0.3, [0, 1.7, 3], [0.3, 2.8, 36]], // between the first columns
+  [0.55, [0, 1.8, 18], [0, 2.7, 55]], // halfway down the corridor
+  [0.8, [0, 2.0, 34], [0, 2.5, 70]], // the arch ahead
+  [0.93, [0, 2.1, 40.6], [0, 2.6, 75]], // at the threshold
+  [1.0, [0, 2.3, 44.5], [0, 3.2, 80]], // through, above the clouds
+];
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const smooth = (edge0, edge1, value) => {
   const x = clamp((value - edge0) / (edge1 - edge0));
   return x * x * (3 - 2 * x);
 };
-const mix = (a, b, amount) => a + (b - a) * amount;
 
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const root = document.querySelector("[data-journey]");
 if (root) setUpJourney(root);
 
-/** Where the camera is for a given share of the journey (0-1). */
+// Catmull-Rom through the keyframes, so the camera glides without corners.
+function along(index, local, pick) {
+  const at = (i) => PATH[Math.min(PATH.length - 1, Math.max(0, i))][pick];
+  const p0 = at(index - 1), p1 = at(index), p2 = at(index + 1), p3 = at(index + 2);
+  const t = local, t2 = t * t, t3 = t2 * t;
+  return p1.map((_, k) =>
+    0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3),
+  );
+}
+
+/** Where the camera is, and what the frame looks like, for a share of the journey (0-1). */
 export function cameraAt(progress) {
   const flight = clamp(progress / FLIGHT_END);
-  const skyPhase = clamp((progress - FLIGHT_END) / (1 - FLIGHT_END));
+  const sky = clamp((progress - FLIGHT_END) / (1 - FLIGHT_END));
+  let index = 0;
+  while (index < PATH.length - 2 && flight > PATH[index + 1][0]) index++;
+  const local = clamp((flight - PATH[index][0]) / (PATH[index + 1][0] - PATH[index][0]));
+  const eased = local * local * (3 - 2 * local) * 0.35 + local * 0.65;
+  let position = along(index, eased, 1);
+  let target = along(index, eased, 2);
+  if (sky > 0) {
+    // Out over the clouds the camera keeps drifting forward and lifts its gaze.
+    const lift = smooth(0, 1, sky);
+    position = [position[0], position[1] + 3.5 * lift, position[2] + 14 * lift];
+    target = [target[0], target[1] + 22 * lift, target[2]];
+  }
   return {
     flight,
-    // Forward travel, eased so the arch grows at a steady rate on screen.
-    travel: 1 - Math.pow(MAX_ZOOM, -Math.pow(flight, 1.9)),
-    turn: smooth(0, 0.85, flight),
-    stone: 1 - smooth(0.965, 1, flight),
-    glow: 0.4 * smooth(0.8, 0.985, flight) * (1 - smooth(0, 0.4, skyPhase)),
-    skyZoom: 1 + 0.24 * smooth(0, 1, skyPhase),
-    paper: smooth(0.55, 1, skyPhase),
+    position,
+    target,
+    glow: 0.35 * smooth(0.86, 0.99, flight) * (1 - smooth(0, 0.45, sky)),
+    paper: smooth(0.55, 1, sky),
   };
 }
-
-const VERTEX = `
-attribute vec2 aPosition;
-void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
-`;
-
-const FRAGMENT = `
-precision highp float;
-uniform sampler2D uStone;
-uniform sampler2D uSky;
-uniform vec2 uImage;
-uniform vec2 uVanishing;
-uniform vec3 uCorridor;     // side, up, down
-uniform vec2 uCenter;       // image point at the middle of the screen
-uniform float uScale;       // image pixels per canvas pixel
-uniform vec2 uResolution;
-uniform float uTravel;
-uniform float uBlur;
-uniform float uStoneOpacity;
-uniform float uGlow;
-uniform float uSkyZoom;
-uniform vec3 uPaper;
-uniform float uPaperAmount;
-
-vec2 mirrored(vec2 uv) { return 1.0 - abs(1.0 - mod(uv, 2.0)); }
-
-void main() {
-  vec2 frag = vec2(gl_FragCoord.x, uResolution.y - gl_FragCoord.y);
-  vec2 p = uCenter + (frag - 0.5 * uResolution) * uScale;
-
-  // Sky: infinitely far, so travel never moves it; it eases in once we're out.
-  vec2 skyFocus = vec2(uCenter.x, 0.24 * uImage.y);
-  vec3 sky = texture2D(uSky, mirrored((skyFocus + (p - skyFocus) / uSkyZoom) / uImage)).rgb;
-
-  // Stone: a corridor whose depth is set by the nearest of its walls, floor and
-  // ceiling; the far wall with the arch sits at depth 1. Moving forward by
-  // uTravel, find where each screen point came from in the photograph.
-  vec2 d = p - uVanishing;
-  float reach = max(abs(d.x) / uCorridor.x, d.y > 0.0 ? d.y / uCorridor.z : -d.y / uCorridor.y) + 1e-4;
-  float farWall = 1.0 / (1.0 - uTravel);
-  float source = reach <= farWall ? reach * (1.0 - uTravel) : reach / (1.0 + uTravel * reach);
-  float k = source / reach;
-
-  // Motion blur along the direction of travel while the visitor scrolls.
-  vec4 stone = vec4(0.0);
-  for (int i = 0; i < 8; i++) {
-    float f = k * (1.0 - uBlur * float(i) / 8.0);
-    vec4 c = texture2D(uStone, clamp((uVanishing + d * f) / uImage, 0.0, 1.0));
-    stone += vec4(c.rgb * c.a, c.a);
-  }
-  stone *= uStoneOpacity / 8.0;
-
-  vec3 color = sky * (1.0 - stone.a) + stone.rgb;
-  float r = length((frag - 0.5 * uResolution) / uResolution.y);
-  color = mix(color, vec3(1.0, 0.985, 0.955), uGlow * (1.0 - smoothstep(0.0, 0.95, r)));
-  color = mix(color, uPaper, uPaperAmount);
-  gl_FragColor = vec4(color, 1.0);
-}
-`;
 
 function setUpJourney(journey) {
   const stage = journey.querySelector("[data-journey-stage]");
@@ -114,13 +77,16 @@ function setUpJourney(journey) {
   });
 
   let gl = null;
-  let program = null;
   let uniforms = {};
   let ready = false;
   let progress = 0;
-  let lastTravel = 0;
-  let blur = 0;
   let framePending = false;
+  let restTimer = 0;
+  // Resolution while moving adapts to the device; at rest one crisp frame is drawn.
+  let movingScale = 0.6;
+  let lastFrameAt = 0;
+  let slowFrames = 0;
+  let fastFrames = 0;
 
   function measure() {
     const rect = journey.getBoundingClientRect();
@@ -151,16 +117,39 @@ function setUpJourney(journey) {
     }
   }
 
-  function viewCenter(camera, scale) {
-    // Start on the photograph as the site showed it, then turn toward the arch.
-    const halfWidth = (canvas.width * scale) / 2;
-    const halfHeight = (canvas.height * scale) / 2;
-    const startX = clamp(1130, halfWidth, IMAGE.width - halfWidth);
-    const startY = clamp(IMAGE.height / 2, halfHeight, IMAGE.height - halfHeight);
-    return [mix(startX, ARCH.x, camera.turn), mix(startY, ARCH.y, camera.turn)];
+  function sizeCanvas(scale) {
+    const width = Math.max(1, Math.round(stage.clientWidth * scale));
+    const height = Math.max(1, Math.round(stage.clientHeight * scale));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
   }
 
-  function draw() {
+  function restingScale() {
+    // Crisp, but capped near 1.7 million pixels.
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixels = stage.clientWidth * stage.clientHeight * ratio * ratio;
+    return ratio * Math.min(1, Math.sqrt(1.7e6 / Math.max(1, pixels)));
+  }
+
+  function render(camera, scale) {
+    sizeCanvas(scale);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    const aspect = canvas.width / canvas.height;
+    // Keep at least ~50° across on tall phone screens.
+    const fov = Math.min((75 * Math.PI) / 180, Math.max((55 * Math.PI) / 180, 2 * Math.atan(Math.tan((25 * Math.PI) / 180) / aspect)));
+    gl.uniform2f(uniforms.uResolution, canvas.width, canvas.height);
+    gl.uniform3f(uniforms.uCamera, ...camera.position);
+    gl.uniform3f(uniforms.uTarget, ...camera.target);
+    gl.uniform1f(uniforms.uFov, fov);
+    gl.uniform1f(uniforms.uReflections, scale >= 0.45 ? 1 : 0);
+    gl.uniform1f(uniforms.uGlow, camera.glow);
+    gl.uniform1f(uniforms.uPaperAmount, camera.paper);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  function draw(now = performance.now()) {
     framePending = false;
     progress = motionPreference.matches ? 0 : measure();
     placeBeats();
@@ -169,37 +158,35 @@ function setUpJourney(journey) {
     // The text backdrop lifts with the final fade so the page meets the next
     // section on exactly its colour.
     if (scrim) scrim.style.opacity = (1 - camera.paper).toFixed(3);
-    journey.classList.toggle("is-sky", camera.flight >= 1);
-
-    // Blur follows scroll speed and settles when the visitor stops.
-    const speed = Math.abs(camera.travel - lastTravel);
-    lastTravel = camera.travel;
-    blur += (clamp(speed * 5, 0, 0.07) - blur) * 0.35;
-    if (blur < 0.0015) blur = 0;
 
     if (!ready) {
       if (still) {
-        // Without WebGL the photograph itself pushes toward the arch.
-        const zoom = mix(1, 3.2, camera.travel / 0.941);
-        still.style.transform = `scale(${zoom.toFixed(4)})`;
+        // Without WebGL the photograph itself pushes gently toward its arch.
+        still.style.transform = `scale(${(1 + 1.4 * smooth(0, 1, camera.flight)).toFixed(4)})`;
         still.style.opacity = String(1 - camera.paper);
       }
       return;
     }
+    const visible = journey.getBoundingClientRect();
+    if (visible.bottom < 0 || visible.top > window.innerHeight) return;
 
-    const scale = Math.min(IMAGE.width / canvas.width, IMAGE.height / canvas.height);
-    const [cx, cy] = viewCenter(camera, scale);
-    gl.uniform2f(uniforms.uCenter, cx, cy);
-    gl.uniform1f(uniforms.uScale, scale);
-    gl.uniform2f(uniforms.uResolution, canvas.width, canvas.height);
-    gl.uniform1f(uniforms.uTravel, camera.travel);
-    gl.uniform1f(uniforms.uBlur, blur);
-    gl.uniform1f(uniforms.uStoneOpacity, camera.stone);
-    gl.uniform1f(uniforms.uGlow, camera.glow);
-    gl.uniform1f(uniforms.uSkyZoom, camera.skyZoom);
-    gl.uniform1f(uniforms.uPaperAmount, camera.paper);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-    if (blur > 0) schedule();
+    // Adapt the moving resolution to how quickly frames come back.
+    if (lastFrameAt && now - lastFrameAt < 200) {
+      const interval = now - lastFrameAt;
+      if (interval > 34) slowFrames++;
+      else if (interval < 20) fastFrames++;
+      if (slowFrames > 4) { movingScale = Math.max(0.32, movingScale * 0.85); slowFrames = 0; fastFrames = 0; }
+      if (fastFrames > 20) { movingScale = Math.min(0.85, movingScale * 1.08); slowFrames = 0; fastFrames = 0; }
+    }
+    lastFrameAt = now;
+
+    render(camera, Math.min(movingScale, restingScale()));
+    window.clearTimeout(restTimer);
+    restTimer = window.setTimeout(() => {
+      if (!ready || motionPreference.matches) return;
+      render(cameraAt(measure()), restingScale());
+      lastFrameAt = 0;
+    }, 180);
   }
 
   function schedule() {
@@ -207,16 +194,6 @@ function setUpJourney(journey) {
       framePending = true;
       window.requestAnimationFrame(draw);
     }
-  }
-
-  function resize() {
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-    // The photograph is 1672 px wide; rendering much beyond that adds nothing.
-    const scaleDown = Math.min(1, 1920 / (stage.clientWidth * ratio));
-    canvas.width = Math.max(1, Math.round(stage.clientWidth * ratio * scaleDown));
-    canvas.height = Math.max(1, Math.round(stage.clientHeight * ratio * scaleDown));
-    if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
-    schedule();
   }
 
   function compile(type, source) {
@@ -229,30 +206,10 @@ function setUpJourney(journey) {
     return shader;
   }
 
-  function loadTexture(unit, url) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.addEventListener("load", () => {
-        const texture = gl.createTexture();
-        gl.activeTexture(gl.TEXTURE0 + unit);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        resolve();
-      });
-      image.addEventListener("error", reject);
-      image.src = url;
-    });
-  }
-
   function startWebGL() {
     gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, powerPreference: "high-performance" });
     if (!gl) return;
+    let program;
     try {
       program = gl.createProgram();
       gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
@@ -270,24 +227,29 @@ function setUpJourney(journey) {
     const position = gl.getAttribLocation(program, "aPosition");
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    for (const name of ["uStone", "uSky", "uImage", "uVanishing", "uCorridor", "uCenter", "uScale", "uResolution", "uTravel", "uBlur", "uStoneOpacity", "uGlow", "uSkyZoom", "uPaper", "uPaperAmount"]) {
+    for (const name of ["uResolution", "uCamera", "uTarget", "uFov", "uSky", "uReflections", "uGlow", "uPaper", "uPaperAmount"]) {
       uniforms[name] = gl.getUniformLocation(program, name);
     }
-    gl.uniform1i(uniforms.uStone, 0);
-    gl.uniform1i(uniforms.uSky, 1);
-    gl.uniform2f(uniforms.uImage, IMAGE.width, IMAGE.height);
-    gl.uniform2f(uniforms.uVanishing, VANISHING.x, VANISHING.y);
-    gl.uniform3f(uniforms.uCorridor, CORRIDOR.side, CORRIDOR.up, CORRIDOR.down);
+    gl.uniform1i(uniforms.uSky, 0);
     gl.uniform3f(uniforms.uPaper, ...PAPER);
-    resize();
-    Promise.all([loadTexture(0, corridorUrl), loadTexture(1, skyUrl)])
-      .then(() => {
-        ready = true;
-        journey.classList.add("is-flying");
-        if (still) still.style.transform = "";
-        schedule();
-      })
-      .catch(() => {});
+
+    const image = new Image();
+    image.decoding = "async";
+    image.addEventListener("load", () => {
+      const texture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      ready = true;
+      journey.classList.add("is-flying");
+      if (still) still.style.transform = "";
+      schedule();
+    });
+    image.src = skyUrl;
   }
 
   canvas.addEventListener("webglcontextlost", (event) => {
@@ -297,13 +259,13 @@ function setUpJourney(journey) {
   });
 
   window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", resize, { passive: true });
+  window.addEventListener("resize", schedule, { passive: true });
   motionPreference.addEventListener("change", () => {
     if (!motionPreference.matches && !gl) startWebGL();
     schedule();
   });
 
-  // Prepare the flight shortly before the journey comes into view.
+  // Prepare the scene shortly before the journey comes into view.
   if (motionPreference.matches) {
     placeBeats();
   } else if ("IntersectionObserver" in window) {
