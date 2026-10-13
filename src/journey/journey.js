@@ -63,8 +63,8 @@ export function cameraAt(progress) {
     flight,
     position,
     target,
-    // a slightly long lens at the start, like the photograph; wider inside
-    fov: 46 + 9 * smooth(0.05, 0.3, flight),
+    // a wide view of the terrace and scenery at the start; a touch wider inside
+    fov: 52 + 3 * smooth(0.05, 0.3, flight),
     glow: 0.35 * smooth(0.86, 0.99, flight) * (1 - smooth(0, 0.45, sky)),
     paper: smooth(0.55, 1, sky),
   };
