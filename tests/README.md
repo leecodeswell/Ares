@@ -1,0 +1,7 @@
+# Browser validation
+
+Start the development server with `npm run dev`, then run `npm run test:browser` in a second terminal.
+
+The check uses Playwright with the cloud environment's Chromium at `/usr/bin/chromium`. Override `ARES_CHROMIUM_PATH` for another browser executable, `ARES_TEST_URL` for a different server address, or `ARES_SCREENSHOT_DIR` for another artifact directory. The default URL is `http://127.0.0.1:5173`, and screenshots plus `report.json` are written to `/tmp/ares-shots`.
+
+The check covers desktop and mobile overflow, local photograph loading including lazy scenes, scroll-driven film motion, concept tabs and keyboard interaction, the mobile menu and its focus trap, form labels and invalid email validation, email-draft contents, reduced motion, and browser or asset-loading errors. It captures native-size desktop and mobile scenes for visual review. It intercepts email-draft opening; it does not send messages.
