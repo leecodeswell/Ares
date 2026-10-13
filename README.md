@@ -27,7 +27,9 @@ The inquiry form validates its fields and opens an email draft addressed to Lee.
 
 Four original AI-generated stills in `public/images/` form a coordinated, pale ivory Greek world. They include a separate portrait composition for narrow screens. All are optimized WebP assets; their combined size is about 580 KB. The opening image loads eagerly, while later scenes load lazily.
 
-Scroll-linked scale and vertical drift give the photographs a slow camera-like movement. Scrolling stays native, links remain available throughout the story, and reduced-motion mode stops image and text transforms. No video, autoplay sound, scroll interception, or remote image service is required. Fonts are also served locally.
+The site opens with a pixel-art garden: a statue in an ivy courtyard whose foliage sways on a short, muted, silent loop. Scrolling grows a light from the statue's head until the screen is white, and the hero then rises out of the white. The sequence lives in `src/intro/` (script, styles, light sprite) and `public/intro/` (loop video and poster), about 1.2 MB in total. A **Skip intro** button jumps straight to the hero, and the header returns once the site begins. Visitors who prefer reduced motion skip the sequence entirely and never download the loop.
+
+Scroll-linked scale and vertical drift give the photographs a slow camera-like movement. Scrolling stays native and is never intercepted, and reduced-motion mode stops image and text transforms. No autoplay sound or remote image service is required. Fonts are also served locally.
 
 See [the visual direction notes](docs/visual-direction.md) for image compositions and animation limits.
 
@@ -41,7 +43,7 @@ npm run test:browser
 
 The cloud machine provides `/usr/bin/chromium`. Override `ARES_CHROMIUM_PATH` on another machine and `ARES_TEST_URL` to test a different server. Reports and screenshots are saved to `/tmp/ares-shots` by default. See [tests/README.md](tests/README.md).
 
-The audit checks desktop, tablet, and narrow mobile layouts; image loading and responsive sources; scroll-linked motion and reduced-motion alternatives; design tabs with keyboard arrows; mobile menu focus wrapping and Escape; field labels and email-draft behavior; and browser errors. Automated checks intercept email links so tests never contact anyone. Photo and gradient contrast should also be visually inspected when the artwork or typography changes.
+The audit checks the opening sequence (loop playback, the light growing to white, the hero handoff, Skip intro, and the reduced-motion bypass); desktop, tablet, and narrow mobile layouts; image loading and responsive sources; scroll-linked motion and reduced-motion alternatives; design tabs with keyboard arrows; mobile menu focus wrapping and Escape; field labels and email-draft behavior; and browser errors. Automated checks intercept email links so tests never contact anyone. Photo and gradient contrast should also be visually inspected when the artwork or typography changes.
 
 ## Deployment
 

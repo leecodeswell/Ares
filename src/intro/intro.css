@@ -1,0 +1,152 @@
+/* Opening sequence: pinned pixel-art garden that scrolls into white. */
+.intro {
+  position: relative;
+  z-index: 3;
+  height: 400vh; /* scroll length of the sequence; raise for a slower reveal */
+  height: 400svh;
+  background: #fff;
+}
+/* The white lifts off the hero like mist instead of ending on a hard edge. */
+.intro:after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 42vh;
+  height: 42svh;
+  background: linear-gradient(
+    180deg,
+    #fff 0%,
+    rgba(255, 255, 255, 0.72) 38%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+.intro-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background: #8f8e7c;
+}
+.intro-poster,
+.intro-video {
+  position: absolute;
+  max-width: none;
+  image-rendering: pixelated;
+}
+.intro-video {
+  z-index: 1;
+}
+.intro-lift {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #fffbf0;
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-light {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.intro-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(26px, 6vh, 56px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--paper);
+  transform: translateX(-50%);
+  text-shadow: 0 1px 10px rgba(41, 46, 39, 0.55);
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.intro-hint svg {
+  width: 18px;
+  height: 12px;
+  shape-rendering: crispEdges;
+  filter: drop-shadow(0 1px 3px rgba(41, 46, 39, 0.5));
+  animation: intro-hint-bob 1.6s steps(4) infinite;
+}
+@keyframes intro-hint-bob {
+  50% {
+    transform: translateY(5px);
+  }
+}
+.intro-skip {
+  position: absolute;
+  right: var(--gutter);
+  bottom: clamp(20px, 5vh, 48px);
+  z-index: 4;
+  padding: 11px 18px;
+  border: 1px solid rgba(242, 240, 233, 0.55);
+  border-radius: 999px;
+  background: rgba(41, 46, 39, 0.22);
+  color: var(--paper);
+  transition:
+    opacity 0.5s,
+    background 0.25s;
+}
+.intro-skip:hover {
+  background: rgba(41, 46, 39, 0.45);
+}
+.intro-skip:focus-visible {
+  outline-color: var(--paper);
+}
+.intro.is-scrolling .intro-hint,
+.intro.is-bright .intro-skip {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The site's own chrome waits until the hero rises out of the light. */
+.site-header,
+.scroll-progress {
+  transition:
+    opacity 0.45s,
+    visibility 0.45s,
+    background 0.25s,
+    box-shadow 0.25s;
+}
+.is-intro .site-header,
+.is-intro .scroll-progress {
+  opacity: 0;
+  visibility: hidden;
+}
+/* In-page links to the hero land on it exactly, not 100px into the intro. */
+.hero {
+  scroll-margin-top: -100px;
+}
+
+@media (max-width: 760px) {
+  .intro-skip {
+    right: 50%;
+    bottom: 18px;
+    transform: translateX(50%);
+  }
+  .intro-hint {
+    bottom: 86px;
+  }
+}
+
+/* Reduced motion: no sequence at all; the site opens on its hero as before. */
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+  .is-intro .site-header,
+  .is-intro .scroll-progress {
+    opacity: 1;
+    visibility: visible;
+  }
+}

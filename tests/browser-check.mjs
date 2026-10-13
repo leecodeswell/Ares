@@ -38,8 +38,52 @@ check('Content stays within website design scope', !/custom web apps|scheduling|
 check('Desktop has no horizontal overflow', pageInfo.width <= pageInfo.viewport, { width: pageInfo.width, viewport: pageInfo.viewport });
 const artwork = await page.locator('#home img[data-film-image]').evaluate(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0, naturalWidth: image.naturalWidth }));
 check('Hero photograph loads as a local WebP', artwork.loaded && new URL(artwork.source, url).origin === new URL(url).origin && new URL(artwork.source, url).pathname.endsWith('.webp'), artwork);
+// Opening sequence: garden loop, scroll-driven light, white, then the hero.
+const introTop = await page.evaluate(() => {
+  const intro = document.querySelector('[data-intro]');
+  const video = intro?.querySelector('video');
+  const header = document.querySelector('.site-header');
+  return {
+    present: !!intro,
+    end: intro ? intro.offsetTop + intro.offsetHeight : 0,
+    playing: !!video && !video.paused && video.readyState >= 2,
+    headerHidden: getComputedStyle(header).visibility === 'hidden',
+    skipVisible: !!intro?.querySelector('[data-intro-skip]')?.offsetParent,
+  };
+});
+check('Opening sequence plays the garden loop with the header held back', introTop.present && introTop.playing && introTop.headerHidden && introTop.skipVisible, introTop);
+await page.screenshot({ path: `${screenshotDir}/desktop-intro.png` });
+report.screenshots.push(`${screenshotDir}/desktop-intro.png`);
+const lightAt = async fraction => {
+  await page.evaluate(([end, f]) => scrollTo({ top: (end - innerHeight) * f, behavior: 'instant' }), [introTop.end, fraction]);
+  await page.waitForTimeout(250);
+  return page.evaluate(() => {
+    const canvas = document.querySelector('[data-intro] canvas');
+    const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    let lit = 0, white = 0;
+    for (let i = 3; i < pixels.length; i += 4 * 97) { if (pixels[i] > 0) lit++; if (pixels[i] === 255 && pixels[i - 1] === 255 && pixels[i - 2] === 255 && pixels[i - 3] === 255) white++; }
+    const samples = Math.ceil(pixels.length / (4 * 97));
+    return { lit: lit / samples, white: white / samples };
+  });
+};
+const lightStates = [];
+for (const fraction of [0, 0.3, 0.6, 0.98]) {
+  lightStates.push({ fraction, ...(await lightAt(fraction)) });
+  await page.screenshot({ path: `${screenshotDir}/desktop-intro-${Math.round(fraction * 100)}.png` });
+  report.screenshots.push(`${screenshotDir}/desktop-intro-${Math.round(fraction * 100)}.png`);
+}
+check('Scrolling grows the light until the screen is white', lightStates[0].lit === 0 && lightStates[1].lit > 0 && lightStates[2].lit > lightStates[1].lit && lightStates[3].white > 0.99, lightStates);
+await page.evaluate(end => scrollTo({ top: end, behavior: 'instant' }), introTop.end);
+await page.waitForTimeout(700);
+const heroArrival = await page.evaluate(() => ({ heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), headerVisible: getComputedStyle(document.querySelector('.site-header')).visibility === 'visible', loopPaused: document.querySelector('[data-intro] video').paused }));
+check('The hero follows the white with the header restored and the loop paused', heroArrival.heroTop === 0 && heroArrival.headerVisible && heroArrival.loopPaused, heroArrival);
 await page.screenshot({ path: `${screenshotDir}/desktop-hero.png` });
 report.screenshots.push(`${screenshotDir}/desktop-hero.png`);
+await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+await page.waitForTimeout(300);
+await page.locator('[data-intro-skip]').click();
+await page.waitForFunction(end => Math.abs(scrollY - end) < 2, introTop.end, { timeout: 8000 }).catch(() => {});
+check('Skip intro lands on the hero', await page.evaluate(end => Math.abs(scrollY - end) < 2, introTop.end));
 await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 180)); } });
 await page.waitForTimeout(1000);
 await page.screenshot({ path: `${screenshotDir}/desktop-full.png`, fullPage: true });
@@ -137,6 +181,11 @@ for (const width of [390, 320, 768]) {
   if (width === 390) {
     const portraitHero = await page.locator('#home img[data-film-image]').evaluate(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0 }));
     check('Phones receive the dedicated portrait hero photograph', portraitHero.loaded && new URL(portraitHero.source, url).pathname.endsWith('/ares-hero-mobile.webp'), portraitHero);
+    await page.screenshot({ path: `${screenshotDir}/mobile-intro.png` });
+    report.screenshots.push(`${screenshotDir}/mobile-intro.png`);
+    // Navigation belongs to the site, which begins at the hero below the intro.
+    await page.locator('#home').evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.waitForTimeout(700);
     await page.screenshot({ path: `${screenshotDir}/mobile-hero.png` });
     report.screenshots.push(`${screenshotDir}/mobile-hero.png`);
     const menu = page.locator('[data-menu-toggle]');
@@ -173,6 +222,8 @@ await reducedPage.goto(url, { waitUntil: 'networkidle' });
 await reducedPage.waitForTimeout(300);
 const reduced = await reducedPage.evaluate(() => ({ media: matchMedia('(prefers-reduced-motion: reduce)').matches, scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior, animations: document.getAnimations().filter(animation => animation.playState === 'running').map(animation => ({ timing: animation.effect?.getComputedTiming(), target: animation.effect?.target?.className })), headingVisible: !!document.querySelector('h1') && getComputedStyle(document.querySelector('h1')).opacity !== '0' }));
 check('Reduced motion retains visible heading and disables smooth scrolling', reduced.media && reduced.headingVisible && reduced.scrollBehavior !== 'smooth', reduced);
+const reducedIntro = await reducedPage.evaluate(() => ({ introHidden: getComputedStyle(document.querySelector('[data-intro]')).display === 'none', heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), headerVisible: getComputedStyle(document.querySelector('.site-header')).visibility === 'visible', loopRequested: performance.getEntriesByType('resource').some(entry => /garden-loop/.test(entry.name)) }));
+check('Reduced motion opens directly on the hero without loading the intro loop', reducedIntro.introHidden && reducedIntro.heroTop === 0 && reducedIntro.headerVisible && !reducedIntro.loopRequested, reducedIntro);
 const reducedBefore = await reducedPage.locator('[data-film-image]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
 await reducedPage.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 100)); } });
 const reducedAfter = await reducedPage.locator('[data-film-image]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
