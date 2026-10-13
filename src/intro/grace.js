@@ -1,5 +1,5 @@
-// The garden's light: a grace-like glow that kindles on the statue's head at
-// the first scroll, then opens into rays that widen until the screen is white.
+// The garden's light: a grace-like glow that forms on the statue's head as the
+// visitor starts to scroll, then opens into rays that widen until the screen is white.
 // It is drawn at the garden art's own resolution (the 1208 x 680 crop of the
 // 1672 x 941 painting shown in the loop) and enlarged with nearest neighbours,
 // so its detail and softness match the foliage around it.
@@ -93,13 +93,17 @@ function ray(context, x, y, angle, start, length, halfWidth, fan, color, alpha) 
 }
 
 /**
- * progress: 0-1 share of the light's scroll (0 = not yet scrolled)
- * kindle: 0-1, how far the grace has formed since the first scroll input
- * time: seconds, for the gentle sway and drifting motes
+ * progress: 0-1 share of the light's scroll. Everything follows it, so
+ * scrolling back up reverses the light and at the top there is none.
+ *   0.00-0.07  the grace forms on the statue's head
+ *   0.07-0.24  the grace alone, swaying gently
+ *   0.24-0.70  rays lengthen to the edges of the frame
+ *   0.50-0.92  rays widen and fan until they merge; 0.80-1.00 wash to white
+ * time: seconds, for the sway, breathing and drifting motes
  */
-export function paintLight(context, progress, kindle, time) {
+export function paintLight(context, progress, time) {
   context.clearRect(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT);
-  if (kindle <= 0) return;
+  if (progress <= 0) return;
   if (progress >= 1) {
     context.fillStyle = "#fff";
     context.fillRect(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT);
@@ -107,62 +111,72 @@ export function paintLight(context, progress, kindle, time) {
   }
 
   const x = FOCUS.x * LIGHT_WIDTH;
-  const y = FOCUS.y * LIGHT_HEIGHT - 6;
-  const form = smooth(0, 1, kindle);
-  const swell = 1 + 0.35 * smooth(0, 0.4, progress);
+  const y = FOCUS.y * LIGHT_HEIGHT - 4;
+  const form = smooth(0, 0.07, progress);
+  const swell = 0.55 + 0.45 * form + 0.25 * smooth(0.24, 0.5, progress);
   const far = Math.hypot(Math.max(x, LIGHT_WIDTH - x), Math.max(y, LIGHT_HEIGHT - y)) + 20;
 
   context.save();
   context.globalCompositeOperation = "lighter";
 
   // ---- rays, as before: they lengthen, then widen and fan until they merge
-  const reach = smooth(0.04, 0.62, progress);
+  const reach = smooth(0.24, 0.7, progress);
   if (reach > 0) {
     const rotate = progress * 0.55 + time * 0.015;
-    const fanAmount = Math.tan(clamp((progress - 0.42) / 0.48) ** 1.6 * (Math.PI / 8) * 1.08);
-    const halfWidth = 2.5 + 9 * progress;
+    const fanAmount = Math.tan(clamp((progress - 0.5) / 0.42) ** 1.6 * (Math.PI / 8) * 1.08);
+    const halfWidth = 2.5 + 10 * smooth(0.24, 1, progress);
     const shimmer = 0.92 + 0.08 * Math.sin(time * 5.0);
+    const strength = smooth(0.24, 0.34, progress);
     for (let set = 0; set < 2; set++) {
       const offset = set === 0 ? 0 : Math.PI / 8;
-      const reachShare = set === 0 ? 1 : 0.6 + 0.4 * smooth(0.5, 0.8, progress);
+      const reachShare = set === 0 ? 1 : 0.6 + 0.4 * smooth(0.55, 0.85, progress);
       const length = 10 + far * reach * reachShare;
       for (let i = 0; i < 8; i++) {
         const angle = rotate + offset + (i * Math.PI) / 4;
         const color = set === 0 ? GOLD : PALE;
         // soft outer glow, then the ray, then its white heart
-        ray(context, x, y, angle, 6, length, halfWidth * 2.2, fanAmount * 1.15, color, 0.16 * shimmer);
-        ray(context, x, y, angle, 6, length, halfWidth, fanAmount, color, 0.5 * shimmer);
-        ray(context, x, y, angle, 6, length * 0.86, halfWidth * 0.42, fanAmount * 0.6, WHITE, 0.75);
+        ray(context, x, y, angle, 0, length, halfWidth * 2.2, fanAmount * 1.15, color, 0.16 * shimmer * strength);
+        ray(context, x, y, angle, 0, length, halfWidth, fanAmount, color, 0.5 * shimmer * strength);
+        ray(context, x, y, angle, 0, length * 0.86, halfWidth * 0.42, fanAmount * 0.6, WHITE, 0.75 * strength);
       }
     }
   }
 
-  // ---- the grace: halo, curling strands, a bright core and rising motes
-  glow(context, x, y - 10, 62 * swell * form, PALE, 0.46 * form);
-  glow(context, x, y - 4, 22 * swell * form, WHITE, 0.6 * form);
+  // ---- the grace: a tall soft glow, a fountain of golden strands that rise
+  // close together and arc outward, a bright core, and rising motes
+  context.save();
+  context.translate(x, y - 34 * swell);
+  context.scale(0.55, 1.3);
+  glow(context, 0, 0, 46 * swell * form, PALE, 0.42 * form);
+  context.restore();
+  glow(context, x, y - 6, 20 * swell * form, WHITE, 0.5 * form);
 
+  // [base angle, length, curl]: the middle strands stand tallest; the outer
+  // ones lean out and arc over like a fountain, as at a Site of Grace
   const strands = [
-    [-0.95, 30, -0.55], [-0.55, 40, -0.4], [-0.2, 48, -0.25], [0.05, 54, 0.15],
-    [0.3, 46, 0.3], [0.62, 38, 0.45], [0.98, 28, 0.6],
+    [-0.4, 44, -1.35], [-0.28, 56, -0.95], [-0.16, 66, -0.6], [-0.06, 74, -0.28], [0.0, 80, 0.0],
+    [0.06, 74, 0.28], [0.16, 66, 0.6], [0.28, 56, 0.95], [0.4, 44, 1.35],
   ];
   strands.forEach(([angle, length, curl], i) => {
-    const sway = Math.sin(time * 1.15 + i * 1.7) * 0.07 + Math.sin(time * 0.6 + i) * 0.04;
-    const breathe = 0.9 + 0.1 * Math.sin(time * 1.6 + i * 2.3);
-    strand(context, x, y, angle * 0.62 + sway, length * 1.3 * swell * breathe * form, 3.3, curl, 0.82 * form);
+    const sway = Math.sin(time * 1.1 + i * 1.3) * 0.045 + Math.sin(time * 0.55 + i) * 0.03;
+    const breathe = 0.9 + 0.1 * Math.sin(time * 1.5 + i * 2.1);
+    const width = i === 4 ? 3.4 : 2.6;
+    strand(context, x, y, angle + sway, length * swell * breathe * form, width, curl * (0.9 + 0.1 * breathe), 0.8 * form);
   });
 
-  // core with a faint four-point glint
-  glow(context, x, y, 9 * swell, WHITE, form);
-  const glint = (0.55 + 0.45 * Math.sin(time * 2.2)) * form;
-  context.fillStyle = `rgba(${WHITE}, ${0.4 * glint})`;
-  context.fillRect(x - 13 * swell, y - 0.5, 26 * swell, 1);
-  context.fillRect(x - 0.5, y - 15 * swell, 1, 26 * swell);
+  // a bright core where the strands gather: white all the way to its edge
+  const core = context.createRadialGradient(x, y, 0, x, y, 11 * swell);
+  core.addColorStop(0, `rgba(${WHITE}, ${form})`);
+  core.addColorStop(0.5, `rgba(${WHITE}, ${0.6 * form})`);
+  core.addColorStop(1, `rgba(${WHITE}, 0)`);
+  context.fillStyle = core;
+  context.fillRect(x - 12 * swell, y - 12 * swell, 24 * swell, 24 * swell);
 
   // motes drift up and sway like embers of light
   for (let i = 0; i < 16; i++) {
     const life = (time * (0.16 + (i % 4) * 0.02) + i * 0.618) % 1;
-    const px = x + Math.sin(i * 2.4 + life * 3.1) * (6 + life * 22) + ((i % 5) - 2) * 3;
-    const py = y - 4 - life * (60 + 40 * smooth(0, 0.4, progress));
+    const px = x + Math.sin(i * 2.4 + life * 3.1) * (4 + life * 26) + ((i % 5) - 2) * 3;
+    const py = y - 6 - life * (80 + 40 * smooth(0.24, 0.5, progress));
     const alpha = Math.sin(life * Math.PI) * (0.35 + (i % 3) * 0.2) * form;
     context.fillStyle = `rgba(${i % 3 ? GOLD : WHITE}, ${alpha})`;
     const size = i % 4 === 0 ? 2 : 1.4;

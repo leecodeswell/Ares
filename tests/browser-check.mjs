@@ -70,13 +70,15 @@ const litNow = () => page.evaluate(() => {
   for (let i = 3; i < pixels.length; i += 4 * 97) if (pixels[i] > 0) lit++;
   return lit / Math.ceil(pixels.length / (4 * 97));
 });
-await page.waitForTimeout(900);
-const beforeInput = await litNow();
-await page.mouse.move(400, 400);
-await page.mouse.wheel(0, 1);
-await page.waitForTimeout(1300);
+await page.waitForTimeout(600);
+const atTop = await litNow();
+await page.evaluate(end => scrollTo({ top: (end - innerHeight) * 0.15, behavior: 'instant' }), introTop.end);
+await page.waitForTimeout(400);
 const graceFormed = await litNow();
-check('The light waits for the first scroll input, then a compact grace forms on the statue', beforeInput === 0 && graceFormed > 0 && graceFormed < 0.03, { beforeInput, graceFormed });
+await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+await page.waitForTimeout(400);
+const backAtTop = await litNow();
+check('The grace forms as the visitor scrolls and leaves when they scroll back up', atTop === 0 && graceFormed > 0 && graceFormed < 0.03 && backAtTop === 0, { atTop, graceFormed, backAtTop });
 const lightAt = async fraction => {
   await page.evaluate(([end, f]) => scrollTo({ top: (end - innerHeight) * f, behavior: 'instant' }), [introTop.end, fraction]);
   await page.waitForTimeout(250);

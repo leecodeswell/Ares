@@ -1,14 +1,15 @@
 import "./intro.css";
 import { paintLight, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./grace.js";
 
-// Opening sequence: the garden loops untouched until the visitor's first
-// scroll input. Then a grace-like light kindles on the statue's head, and
-// scrolling opens it into rays that widen until the screen is white. The
-// white then lifts off the hero like mist. Reduced motion skips it entirely.
+// Opening sequence: the garden loops untouched at the top of the page. As the
+// visitor scrolls, a grace-like light forms on the statue's head and then
+// opens into rays that widen until the screen is white; scrolling back up
+// reverses it. The white then lifts off the hero like mist. Reduced motion
+// skips it entirely.
 
 const SOURCE_WIDTH = 1920;
 const SOURCE_HEIGHT = 1080;
-const LIGHT_START = 0.02; // share of the intro's scroll where the light appears
+const LIGHT_START = 0.01; // share of the intro's scroll where the light appears
 const LIGHT_END = 0.84; // ...and where the screen is fully white
 const ART_WIDTH = 1208; // the garden art's own pixels across the frame
 const WALL = { x: 0.31, y: 0.495 }; // top left of the bare wall beside the statue
@@ -44,15 +45,6 @@ function setUpIntro(intro) {
   let framePending = false;
   let lightTimer = 0;
   let visible = true;
-  // The light waits for the visitor's first scroll input (wheel, touch, keys
-  // or a scroll after load), so a page that simply opens shows only the garden.
-  let kindledAt = 0;
-  const kindle = () => {
-    if (!kindledAt) {
-      kindledAt = performance.now();
-      schedule();
-    }
-  };
 
   // Cover the stage, but keep the statue's head in view on tall phones.
   function measure() {
@@ -137,10 +129,7 @@ function setUpIntro(intro) {
     intro.classList.toggle("is-scrolling", scrolled > 0.015);
     intro.classList.toggle("is-bright", t > 0.75);
 
-    if (!kindledAt && scrolled > 0.03) kindle(); // e.g. a reload part-way down
-    // (frame timestamps can sit a few ms before the input that kindled it)
-    const formed = kindledAt ? Math.max(0.001, clamp((now - kindledAt) / 900)) : 0;
-    const animating = visible && !document.hidden && kindledAt > 0 && t < 1;
+    const animating = visible && !document.hidden && t > 0 && t < 1;
     if (animating) lightTimer = window.setTimeout(schedule, 1000 / 24);
     const key = `${t.toFixed(4)}|${animating ? tick : 0}|${layout.width}x${layout.height}`;
     if (key === lastKey) return;
@@ -157,8 +146,8 @@ function setUpIntro(intro) {
       return;
     }
     if (visible) playLoop();
-    if (!formed || !visible || document.hidden) return;
-    paintLight(lightContext, t, formed, tick / 24);
+    if (t <= 0 || !visible || document.hidden) return;
+    paintLight(lightContext, t, tick / 24);
     context.drawImage(
       light,
       0,
@@ -223,16 +212,6 @@ function setUpIntro(intro) {
     }
   });
   window.addEventListener("scroll", schedule, { passive: true });
-  const loadedAt = performance.now();
-  window.addEventListener("scroll", () => {
-    // ignore the browser restoring a scroll position during load
-    if (performance.now() - loadedAt > 400) kindle();
-  }, { passive: true });
-  window.addEventListener("wheel", kindle, { passive: true });
-  window.addEventListener("touchmove", kindle, { passive: true });
-  window.addEventListener("keydown", (event) => {
-    if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", " ", "End", "Home", "Spacebar"].includes(event.key)) kindle();
-  });
   window.addEventListener("resize", resize, { passive: true });
   document.fonts?.ready.then(() => layout && placeCopy());
 
