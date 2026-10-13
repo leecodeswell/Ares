@@ -77,7 +77,14 @@ function setUpJourney(journey) {
   const scrim = journey.querySelector(".journey-scrim");
   const beats = [...journey.querySelectorAll("[data-beat]")].map((element) => {
     const [start, end] = element.dataset.beat.split(" ").map(Number);
-    return { element, start, end, reading: element.hasAttribute("data-reading-beat"), links: [...element.querySelectorAll("a")] };
+    return {
+      element,
+      start,
+      end,
+      reading: element.hasAttribute("data-reading-beat"),
+      panel: element.classList.contains("beat-qualities"),
+      links: [...element.querySelectorAll("a")],
+    };
   });
   const readingBeat = beats.find((beat) => beat.reading);
   const journeyStyle = getComputedStyle(journey);
@@ -118,7 +125,12 @@ function setUpJourney(journey) {
   }
 
   // Each beat fades and drifts in, holds, and leaves before the next arrives.
+  // How much text is on screen over the open scene; the qualities carry their
+  // own panel, so they don't count.
+  let textCover = 0;
+
   function placeBeats() {
+    textCover = 0;
     for (const beat of beats) {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
@@ -130,6 +142,7 @@ function setUpJourney(journey) {
       const drift = beat.reading ? 30 * (1 - fadeIn) - 30 * (1 - fadeOut) : (0.5 - clamp(local)) * 60;
       const shift = motionPreference.matches ? 0 : drift;
       beat.element.style.opacity = opacity.toFixed(3);
+      if (!beat.panel) textCover = Math.max(textCover, opacity);
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
       beat.element.style.setProperty("--beat-shift", `${shift.toFixed(1)}px`);
       // Every beat stays readable to screen readers; only links that can't be
@@ -184,7 +197,9 @@ function setUpJourney(journey) {
     journey.dataset.progress = progress.toFixed(3);
     // The text backdrop lifts with the final fade so the page meets the next
     // section on exactly its colour.
-    if (scrim) scrim.style.opacity = (1 - camera.paper).toFixed(3);
+    // The paper backdrop only sits behind words while they are on screen, so
+    // between passages the scenery on the left is seen clear of any haze.
+    if (scrim) scrim.style.opacity = (textCover * (1 - camera.paper)).toFixed(3);
 
     if (!ready) {
       if (still) {

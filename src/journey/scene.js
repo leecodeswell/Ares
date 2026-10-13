@@ -262,16 +262,6 @@ float ridges(float az) {
   return h;
 }
 
-float ridgesLow(float az) {
-  float h = 0.0, a = 0.55, f = 1.3;
-  for (int i = 0; i < 2; i++) {
-    float r = 1.0 - abs(2.0 * noise1(az * f + float(i) * 3.7) - 1.0);
-    h += a * r * r;
-    a *= 0.5;
-    f *= 2.1;
-  }
-  return h;
-}
 float noise2(vec2 x) {
   vec2 i = floor(x), f = fract(x);
   f = f * f * (3.0 - 2.0 * f);
@@ -279,42 +269,49 @@ float noise2(vec2 x) {
              mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 
-#define CLOUD_TOP 0.045  // elevation of the cloud sea's upper edge, in this mapping
+#define CLOUD_TOP 0.008  // elevation of the cloud sea's upper edge, in this mapping
 
 // The site's sky photograph wrapped around the scene by direction, a little
-// warmer, with distant mountains rising out of the cloud sea as in the hero.
+// warmer, with two small, far peaks just clearing the cloud sea.
 vec3 skyColor(vec3 rd) {
   float az = atan(rd.x, rd.z);
   float el = asin(clamp(rd.y, -1.0, 1.0));
   vec2 uv = vec2(0.36 + az / 2.2, 0.53 - el / 1.05);
   uv = 1.0 - abs(1.0 - mod(uv, 2.0));
   vec3 c = toLinear(texture2D(uSky, uv).rgb) * vec3(1.03, 0.98, 0.9);
+  // The photograph's sunlit edges (seen out of the left side) are close to
+  // white. Bring just those regions down, a touch cooler, so they read as sky
+  // and cloud rather than glare; the rest of the photograph is untouched.
+  float edge = max(smoothstep(0.28, 0.02, uv.x), smoothstep(0.74, 0.98, uv.x));
+  float band = smoothstep(-0.08, 0.02, el) * (1.0 - smoothstep(0.5, 0.65, el));
+  float glare = edge * band;
+  c *= mix(vec3(1.0), vec3(0.8, 0.79, 0.84), glare);
+  c = mix(c, max((c - 0.5) * 1.22 + 0.5, 0.0), glare * 0.7);
+  // a little more body in the cloud sea so its shapes read
+  float sea = smoothstep(0.06, -0.04, el);
+  c = mix(c, max((c - 0.5) * 1.2 + 0.5, 0.0), sea * 0.6);
 
-  // two ranges: a far, pale one and a nearer, firmer one (colours from the hero's mountains)
-  for (int layer = 0; layer < 2; layer++) {
-    float fl = float(layer);
-    float freq = 1.1 + fl * 1.2;
-    float shift = fl * 5.3;
-    float h = ridges(az * freq + shift);
-    float top = CLOUD_TOP + (0.24 - fl * 0.11) * pow(max(h - 0.42 - fl * 0.04, 0.0) / 0.58, 1.25);
-    if (el < top) {
-      // broad slope from the first two octaves only, so faces read as planes
-      float slope = (ridgesLow(az * freq + shift + 0.01) - ridgesLow(az * freq + shift)) / 0.01;
-      vec2 cell = vec2(az * (26.0 + fl * 14.0), el * (70.0 + fl * 30.0));
-      float crag = noise2(cell) * 0.6 + noise2(cell * 2.3 + 4.0) * 0.4;   // ribs and gullies
-      float below = clamp((top - el) / max(top - CLOUD_TOP, 0.01), 0.0, 1.0);
-      float lit = clamp(0.55 - slope * 0.3 + (crag - 0.5) * 0.55 - below * 0.15, 0.0, 1.0);
-      vec3 shade = layer == 0 ? vec3(0.56, 0.52, 0.52) : vec3(0.34, 0.32, 0.33);
-      vec3 sunlit = layer == 0 ? vec3(0.82, 0.69, 0.56) : vec3(0.62, 0.53, 0.45);
-      vec3 rock = mix(shade, sunlit, lit);
-      rock = mix(rock, c, below * 0.35);                                 // haze gathers toward the clouds
-      rock = mix(rock, c, layer == 0 ? 0.3 : 0.12);                      // aerial haze
-      float feet = smoothstep(CLOUD_TOP - 0.025, CLOUD_TOP + 0.02, el); // clouds wrap their feet
+  // Above the clouds: only two small, far peaks barely clear the cloud sea,
+  // one off each side, softened by haze (the photograph's own peak is in the
+  // sky texture). [azimuth, half-width, height above the clouds]
+  for (int k = 0; k < 2; k++) {
+    vec3 peak = k == 0 ? vec3(-0.9, 0.15, 0.05) : vec3(0.85, 0.12, 0.036);
+    float dx = (az - peak.x) / peak.y;
+    float shape = exp(-dx * dx * 1.6) * (0.85 + 0.15 * ridges(az * 9.0 + float(k) * 4.0));
+    float top = CLOUD_TOP - 0.01 + peak.z * shape;
+    if (el < top && abs(dx) < 2.5) {
+      vec2 cell = vec2(az * 40.0, el * 90.0);
+      float crag = noise2(cell) * 0.6 + noise2(cell * 2.3 + 4.0) * 0.4;
+      float lit = clamp(0.55 + dx * 0.25 + (crag - 0.5) * 0.4, 0.0, 1.0);  // sun from the left
+      vec3 rock = mix(vec3(0.6, 0.57, 0.58), vec3(0.84, 0.72, 0.6), lit);
+      rock = mix(rock, c, 0.42);                                             // far and hazy
+      float feet = smoothstep(CLOUD_TOP - 0.012, CLOUD_TOP + 0.016, el);   // clouds wrap their feet
       c = mix(c, rock, feet);
     }
   }
+  // only a faint warmth toward the sun, no bloom
   float sun = max(dot(rd, SUN), 0.0);
-  return c + vec3(0.26, 0.16, 0.08) * pow(sun, 8.0) + vec3(0.06, 0.035, 0.012) * pow(sun, 2.0);
+  return c + vec3(0.05, 0.03, 0.012) * pow(sun, 8.0);
 }
 
 vec3 marbleTexture(vec2 uv) { return toLinear(texture2D(uMarble, uv).rgb); }
