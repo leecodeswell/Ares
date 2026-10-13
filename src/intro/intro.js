@@ -11,6 +11,8 @@ const SOURCE_WIDTH = 1920;
 const SOURCE_HEIGHT = 1080;
 const LIGHT_START = 0.01; // share of the intro's scroll where the light appears
 const LIGHT_END = 0.84; // ...and where the screen is fully white
+const ART_WIDTH = 1208; // the garden art's own pixels across the frame
+const WALL = { x: 0.31, y: 0.495 }; // top left of the bare wall beside the statue
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,6 +32,7 @@ function setUpIntro(intro) {
   const lift = intro.querySelector("[data-intro-lift]");
   const canvas = intro.querySelector("[data-intro-light]");
   const skip = intro.querySelector("[data-intro-skip]");
+  const copy = intro.querySelector("[data-intro-copy]");
   const context = canvas.getContext("2d");
   const html = document.documentElement;
 
@@ -63,11 +66,33 @@ function setUpIntro(intro) {
     element.style.top = `${layout.y}px`;
   }
 
+  // Letter the welcome onto the bare wall, sized in the art's own pixels.
+  // Portrait screens crop the wall away, so there it sits low on the left.
+  function placeCopy() {
+    if (!copy) return;
+    const { width, height, coverWidth, coverHeight, x, y } = layout;
+    const portrait = width / height < 1.1;
+    copy.classList.toggle("is-portrait", portrait);
+    const unit = portrait
+      ? clamp(width / 400, 0.8, 1.3)
+      : Math.min(coverWidth / ART_WIDTH, height / 640);
+    copy.style.setProperty("--u", unit.toFixed(3));
+    copy.style.setProperty("--px", `${Math.max(1, Math.round(unit))}px`);
+    const copyWidth = copy.offsetWidth;
+    const copyHeight = copy.offsetHeight;
+    const edge = Math.min(48, width * 0.06);
+    const left = portrait ? edge : x + WALL.x * coverWidth;
+    const top = portrait ? height - 150 - copyHeight : y + WALL.y * coverHeight;
+    copy.style.setProperty("--copy-x", `${Math.round(clamp(left, edge, width - edge - copyWidth))}px`);
+    copy.style.setProperty("--copy-y", `${Math.round(clamp(top, 70, height - 110 - copyHeight))}px`);
+  }
+
   function resize() {
     if (motionPreference.matches) return;
     layout = measure();
     place(video);
     place(poster);
+    placeCopy();
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(layout.width * ratio);
     canvas.height = Math.round(layout.height * ratio);
@@ -188,6 +213,7 @@ function setUpIntro(intro) {
   });
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", resize, { passive: true });
+  document.fonts?.ready.then(() => layout && placeCopy());
 
   resize();
 }

@@ -56,50 +56,58 @@
   height: 100%;
   pointer-events: none;
 }
+/* The welcome is lettered onto the bare stretch of wall between the hanging
+   ivy and the statue, in the ivy's own green. JS places it on the garden art
+   (--copy-x/--copy-y) and sizes it in the art's own pixels (--u), so it stays
+   on the wall at any landscape size. */
 .intro-copy {
+  --u: 1;
+  --px: 1px; /* one highlight step; JS rounds it to whole screen pixels */
   position: absolute;
-  left: var(--gutter);
-  top: 50%;
+  left: var(--copy-x, 26%);
+  top: var(--copy-y, 50%);
   z-index: 4;
-  width: min(42vw, 520px);
-  color: #fff9e9;
-  transform: translateY(-50%);
-  text-shadow: 0 2px 18px rgba(25, 32, 25, 0.7);
-  isolation: isolate;
+  width: max-content;
+  color: #2c3a27;
+  /* a sunlit edge under each letter, as if painted on the wall */
+  text-shadow: var(--px) var(--px) 0 rgba(236, 228, 196, 0.55);
   transition: opacity 0.5s;
+  -webkit-font-smoothing: none;
 }
-.intro-copy::before {
-  content: "";
-  position: absolute;
-  inset: -48px -35px;
-  z-index: -1;
-  background: radial-gradient(ellipse, rgba(25, 32, 25, 0.42), transparent 72%);
-  pointer-events: none;
+/* Portrait crops the wall away, so the lettering sits over the statue and
+   needs a soft pale halo to stay legible. */
+.intro-copy.is-portrait {
+  text-shadow:
+    var(--px) var(--px) 0 rgba(236, 228, 196, 0.55),
+    0 0 6px rgba(236, 230, 205, 0.9),
+    0 0 14px rgba(236, 230, 205, 0.6);
 }
 .intro-copy h2 {
-  margin: 0 0 12px;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(54px, 6.5vw, 94px);
+  margin: 0 0 calc(var(--u) * 6px);
+  font-family: "Jacquard 24", var(--serif);
+  font-size: calc(var(--u) * 72px);
   font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.025em;
+  line-height: 0.9;
 }
 .intro-copy p {
   margin: 0;
+  font-family: "Pixelify Sans", var(--serif);
   text-transform: none;
 }
 .intro-studio {
-  font-size: clamp(13px, 1.2vw, 17px);
-  letter-spacing: 0.08em;
-  line-height: 1.6;
+  font-size: calc(var(--u) * 18px);
+  letter-spacing: 0.04em;
+  line-height: 1.3;
 }
 .intro-invitation {
-  margin-top: 38px;
-  font-size: 14px;
-  line-height: 1.9;
+  margin-top: calc(var(--u) * 16px);
+  color: #3d4c35;
+  font-size: calc(var(--u) * 14px);
+  letter-spacing: 0.03em;
+  line-height: 1.5;
 }
 .intro-invitation p + p {
-  margin-top: 6px;
+  margin-top: calc(var(--u) * 2px);
 }
 .intro-hint {
   position: absolute;
@@ -175,15 +183,6 @@
 }
 
 @media (max-width: 760px) {
-  .intro-copy {
-    top: auto;
-    bottom: 150px;
-    width: calc(100% - var(--gutter) * 2);
-    transform: none;
-  }
-  .intro-invitation {
-    margin-top: 22px;
-  }
   .intro-skip {
     right: 50%;
     bottom: 18px;

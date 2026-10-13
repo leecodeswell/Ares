@@ -7,6 +7,8 @@ import "@fontsource/cormorant-garamond/latin-400-italic.css";
 import "@fontsource/dm-sans/latin-400.css";
 import "@fontsource/dm-sans/latin-500.css";
 import "@fontsource/dm-sans/latin-600.css";
+import "@fontsource/jacquard-24/latin-400.css";
+import "@fontsource/pixelify-sans/latin-400.css";
 
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const smallScreen = window.matchMedia("(max-width: 700px)");
