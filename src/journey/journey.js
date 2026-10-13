@@ -1,5 +1,6 @@
 import "./journey.css";
 import skyUrl from "./sky.webp";
+import marbleUrl from "./marble.webp";
 import { VERTEX, FRAGMENT } from "./scene.js";
 
 // The journey: a camera flies up the steps and down a static marble
@@ -12,12 +13,12 @@ const PAPER = [232 / 255, 231 / 255, 221 / 255]; // the showcase background that
 
 // Camera keyframes through the building: [flight share, position, look-at].
 const PATH = [
-  [0.0, [-3.4, 1.6, -8.5], [1.4, 3.0, 20]], // on the terrace, colonnade ahead and to the right
-  [0.15, [-1.4, 1.55, -4.2], [0.8, 2.9, 24]], // toward the steps
-  [0.3, [0, 1.7, 3], [0.3, 2.8, 36]], // between the first columns
-  [0.55, [0, 1.8, 18], [0, 2.7, 55]], // halfway down the corridor
-  [0.8, [0, 2.0, 34], [0, 2.5, 70]], // the arch ahead
-  [0.93, [0, 2.1, 40.6], [0, 2.6, 75]], // at the threshold
+  [0.0, [-0.7, 0.3, -7.5], [-10.45, 2.1, 20.8]], // on the terrace, framed like the sanctuary photograph
+  [0.14, [-0.4, 0.9, -4.4], [-4.5, 2.5, 24]], // turning toward the steps
+  [0.28, [0, 1.6, 1.5], [0.2, 2.8, 34]], // up the steps, between the first columns
+  [0.52, [0, 1.75, 16], [0, 2.7, 52]], // halfway down the corridor
+  [0.78, [0, 1.95, 33], [0, 2.5, 70]], // the arch ahead
+  [0.92, [0, 2.1, 40.4], [0, 2.6, 75]], // at the threshold
   [1.0, [0, 2.3, 44.5], [0, 3.2, 80]], // through, above the clouds
 ];
 
@@ -61,6 +62,8 @@ export function cameraAt(progress) {
     flight,
     position,
     target,
+    // a slightly long lens at the start, like the photograph; wider inside
+    fov: 46 + 9 * smooth(0.05, 0.3, flight),
     glow: 0.35 * smooth(0.86, 0.99, flight) * (1 - smooth(0, 0.45, sky)),
     paper: smooth(0.55, 1, sky),
   };
@@ -138,12 +141,13 @@ function setUpJourney(journey) {
     gl.viewport(0, 0, canvas.width, canvas.height);
     const aspect = canvas.width / canvas.height;
     // Keep at least ~50° across on tall phone screens.
-    const fov = Math.min((75 * Math.PI) / 180, Math.max((55 * Math.PI) / 180, 2 * Math.atan(Math.tan((25 * Math.PI) / 180) / aspect)));
+    const fov = Math.min((75 * Math.PI) / 180, Math.max((camera.fov * Math.PI) / 180, 2 * Math.atan(Math.tan((25 * Math.PI) / 180) / aspect)));
     gl.uniform2f(uniforms.uResolution, canvas.width, canvas.height);
     gl.uniform3f(uniforms.uCamera, ...camera.position);
     gl.uniform3f(uniforms.uTarget, ...camera.target);
     gl.uniform1f(uniforms.uFov, fov);
-    gl.uniform1f(uniforms.uReflections, scale >= 0.45 ? 1 : 0);
+    // reflections, sun shafts and bounced light switch off only while moving on slow devices
+    gl.uniform1f(uniforms.uQuality, scale >= 0.45 ? 1 : 0);
     gl.uniform1f(uniforms.uGlow, camera.glow);
     gl.uniform1f(uniforms.uPaperAmount, camera.paper);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -227,29 +231,40 @@ function setUpJourney(journey) {
     const position = gl.getAttribLocation(program, "aPosition");
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    for (const name of ["uResolution", "uCamera", "uTarget", "uFov", "uSky", "uReflections", "uGlow", "uPaper", "uPaperAmount"]) {
+    for (const name of ["uResolution", "uCamera", "uTarget", "uFov", "uSky", "uMarble", "uQuality", "uGlow", "uPaper", "uPaperAmount"]) {
       uniforms[name] = gl.getUniformLocation(program, name);
     }
     gl.uniform1i(uniforms.uSky, 0);
+    gl.uniform1i(uniforms.uMarble, 1);
     gl.uniform3f(uniforms.uPaper, ...PAPER);
 
-    const image = new Image();
-    image.decoding = "async";
-    image.addEventListener("load", () => {
-      const texture = gl.createTexture();
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      ready = true;
-      journey.classList.add("is-flying");
-      if (still) still.style.transform = "";
-      schedule();
-    });
-    image.src = skyUrl;
+    const loadTexture = (unit, url, repeat) =>
+      new Promise((resolve, reject) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.addEventListener("load", () => {
+          gl.activeTexture(gl.TEXTURE0 + unit);
+          gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+          const wrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+          if (repeat) gl.generateMipmap(gl.TEXTURE_2D); // the marble tile is 1024 px, so it can repeat and mipmap
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, repeat ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+          resolve();
+        });
+        image.addEventListener("error", reject);
+        image.src = url;
+      });
+    Promise.all([loadTexture(0, skyUrl, false), loadTexture(1, marbleUrl, true)])
+      .then(() => {
+        ready = true;
+        journey.classList.add("is-flying");
+        if (still) still.style.transform = "";
+        schedule();
+      })
+      .catch(() => {});
   }
 
   canvas.addEventListener("webglcontextlost", (event) => {

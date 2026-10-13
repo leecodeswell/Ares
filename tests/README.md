@@ -1,6 +1,6 @@
 # Browser validation
 
-`npm run build && npm run test:assets` checks the production bundle on both `/` and `/Ares/`, with desktop and mobile viewports. It verifies the intro poster, loop video, and light sprite, the journey's sky texture, actual image decoding, the portrait source, fonts, and a working design-tab interaction, and fails on missing assets. It starts and stops its own static servers.
+`npm run build && npm run test:assets` checks the production bundle on both `/` and `/Ares/`, with desktop and mobile viewports. It verifies the intro poster, loop video, and light sprite, the journey's sky and marble textures, actual image decoding, the portrait source, fonts, and a working design-tab interaction, and fails on missing assets. It starts and stops its own static servers.
 
 Start the development server with `npm run dev`, then run `npm run test:browser` in a second terminal.
 
