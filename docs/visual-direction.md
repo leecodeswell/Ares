@@ -15,11 +15,25 @@ The images were generated specifically for this project with the image-generatio
 
 The imagery keeps the material pale and realistic: no weapons, bright gold armor, glitter effects, or decorative text baked into the photographs. Website text remains live HTML.
 
+## Opening sequence
+
+The site opens on a pixel-art statue in an ivy courtyard, a deliberate contrast to the photographic story that follows. Only the green foliage sways; marble, wall, and light stay still. The palette is muted to sit beside the site's ivory and sage.
+
+Scrolling through the first four screen heights grows a pixel-art light from the statue's head. Rays lengthen, widen, and merge while the whole scene brightens in even steps, so the statue never fades separately from her surroundings. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
+
+| Asset | Size | Purpose |
+| --- | --- | --- |
+| `public/intro/garden-loop.webm`, `.mp4` | 1920 × 1080, 4 s loop | Swaying garden; WebM first, MP4 fallback |
+| `public/intro/poster.webp` | 1208 × 680 | First paint, before the loop is ready |
+| `src/intro/light-sheet.png` | 120 frames of 320 × 180 | The light, drawn at its native pixel size and scaled with nearest-neighbour sampling |
+
+On narrow or tall screens the frame is cropped so the statue's head stays in view, and the light is drawn on the same crop. The site header and reading progress are held back until the hero arrives, and the progress bar measures the site rather than the intro. Under `prefers-reduced-motion: reduce`, the sequence is not shown and the site opens on its hero.
+
 ## Motion
 
 Native scroll events update a single animation frame at a time. Each visible film scene receives a progress value, and its image moves slowly within an oversized frame. Desktop image scale stays between 1.04 and 1.105, with no more than 28 px of upward drift. Narrow screens use a smaller movement: scale 1.04–1.065 and drift up to 10 px.
 
-Only visible film scenes need a transform compositing hint. Images and headline movements stop under `prefers-reduced-motion: reduce`, and the identity scene becomes an ordinary reading section. No loading sequence or mandatory animation delays navigation.
+Only visible film scenes need a transform compositing hint. Images and headline movements stop under `prefers-reduced-motion: reduce`, and the identity scene becomes an ordinary reading section. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
 
 ## Interaction
 

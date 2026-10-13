@@ -13,6 +13,9 @@ const mime = {
   ".svg": "image/svg+xml",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
+  ".png": "image/png",
+  ".webm": "video/webm",
+  ".mp4": "video/mp4",
 };
 const browser = await chromium.launch({
   executablePath: process.env.ARES_CHROMIUM_PATH || "/usr/bin/chromium",
@@ -80,6 +83,29 @@ try {
             hero,
             `${mount}images/ares-hero${width < 761 ? "-mobile" : ""}.webp`,
           );
+          const intro = await page.evaluate(async () => {
+            const video = document.querySelector("[data-intro] video");
+            const poster = document.querySelector("[data-intro] img");
+            await poster.decode();
+            await new Promise((ready) => {
+              if (video.readyState >= 2) ready();
+              else video.addEventListener("loadeddata", ready, { once: true });
+            });
+            return {
+              poster: new URL(poster.currentSrc).pathname,
+              video: new URL(video.currentSrc).pathname,
+            };
+          });
+          assert.equal(intro.poster, `${mount}intro/poster.webp`);
+          assert.match(intro.video, new RegExp(`^${mount}intro/garden-loop\\.(webm|mp4)$`));
+          const introEnd = await page.evaluate(() => {
+            const element = document.querySelector("[data-intro]");
+            return element.offsetTop + element.offsetHeight;
+          });
+          await page.evaluate((end) => scrollTo({ top: end * 0.5, behavior: "instant" }), introEnd);
+          await page.waitForFunction(() =>
+            performance.getEntriesByType("resource").some((entry) => /light-sheet.*\.png$/.test(entry.name)),
+          );
           await page.locator('[data-concept="botanical"]').click();
           assert.equal(
             await page.locator("#concept-panel").getAttribute("data-theme"),
@@ -94,7 +120,7 @@ try {
           );
           assert.deepEqual(failures, [], "No build assets may fail to load");
           console.log(
-            `PASS ${mount} at ${width}px: images, fonts, CSS, and JavaScript`,
+            `PASS ${mount} at ${width}px: intro media, images, fonts, CSS, and JavaScript`,
           );
         } finally {
           await page.close();

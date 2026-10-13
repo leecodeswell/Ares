@@ -1,4 +1,5 @@
 import "./style.css";
+import { introEnd } from "./intro/intro.js";
 import "@fontsource/cormorant-garamond/latin-400.css";
 import "@fontsource/cormorant-garamond/latin-500.css";
 import "@fontsource/cormorant-garamond/latin-400-italic.css";
@@ -25,10 +26,14 @@ const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 let framePending = false;
 function paintScroll() {
   framePending = false;
-  const available = document.documentElement.scrollHeight - window.innerHeight;
-  const position = available > 0 ? clamp(window.scrollY / available) : 0;
+  // The opening sequence sits above the site, so reading starts at the hero.
+  const start = introEnd();
+  const available =
+    document.documentElement.scrollHeight - window.innerHeight - start;
+  const position =
+    available > 0 ? clamp((window.scrollY - start) / available) : 0;
   progress?.style.setProperty("transform", `scaleX(${position})`);
-  header?.classList.toggle("is-scrolled", window.scrollY > 32);
+  header?.classList.toggle("is-scrolled", window.scrollY > start + 32);
   for (const scene of scenes) {
     const rect = scene.getBoundingClientRect();
     if (rect.bottom < -100 || rect.top > window.innerHeight + 100) continue;

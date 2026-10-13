@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="is-intro">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -95,6 +95,23 @@
         ></a>
       </nav>
     </header>
+
+    <section class="intro" data-intro aria-label="Opening">
+      <div class="intro-stage" data-intro-stage>
+        <img class="intro-poster" src="/intro/poster.webp" alt="" width="1208" height="680" fetchpriority="high" decoding="async" data-intro-poster />
+        <video class="intro-video" muted loop playsinline preload="none" poster="/intro/poster.webp" aria-hidden="true" tabindex="-1" data-intro-video>
+          <source src="/intro/garden-loop.webm" type="video/webm" />
+          <source src="/intro/garden-loop.mp4" type="video/mp4" />
+        </video>
+        <div class="intro-lift" aria-hidden="true" data-intro-lift></div>
+        <canvas class="intro-light" aria-hidden="true" data-intro-light></canvas>
+        <div class="intro-hint eyebrow" aria-hidden="true">
+          <span>Scroll</span>
+          <svg viewBox="0 0 9 6" fill="currentColor"><path d="M0 0h2v1h1v1h1v1h1V2h1V1h1V0h2v2H8v1H7v1H6v1H5v1H4V5H3V4H2V3H1V2H0z" /></svg>
+        </div>
+        <button class="intro-skip eyebrow" type="button" data-intro-skip>Skip intro</button>
+      </div>
+    </section>
 
     <main id="main">
       <section class="hero" id="home" data-film-scene aria-labelledby="hero-title">
