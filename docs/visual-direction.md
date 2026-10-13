@@ -10,8 +10,7 @@ The images were generated specifically for this project with the image-generatio
 | --- | --- | --- |
 | `ares-hero.webp` | 1672 × 941 | Ares portrait on the right; pale sky and clouds leave room for the opening typography. |
 | `ares-hero-mobile.webp` | 941 × 1672 | A portrait reframe of the same statue with room above and below for navigation and text. |
-| `ares-sanctuary.webp` | 1672 × 941 | A marble colonnade at cloud level, with a deep corridor and quiet space to the left. |
-| `ares-detail.webp` | 1672 × 941 | Draped stone and a resting marble hand on the left, soft open air to the right. |
+| `ares-sanctuary.webp` | 1672 × 941 | A marble colonnade at cloud level, with a deep corridor and quiet space to the left. The journey's starting frame and the source of its two flight layers. |
 
 The imagery keeps the material pale and realistic: no weapons, bright gold armor, glitter effects, or decorative text baked into the photographs. Website text remains live HTML.
 
@@ -31,11 +30,25 @@ On narrow or tall screens the frame is cropped so the statue's head stays in vie
 
 ## Motion
 
-Native scroll events update a single animation frame at a time. Each visible film scene receives a progress value, and its image moves slowly within an oversized frame. The hero and the pinned vision scene carry the strongest movement: on desktop their images scale from 1.04 to 1.21 with up to 80 px of upward drift (phones: 1.04–1.13 and 30 px). The detail scene keeps the gentler 1.04–1.105 and 28 px (phones: 1.04–1.065 and 10 px).
+Native scroll events update a single animation frame at a time. The hero's image moves slowly within an oversized frame, scaling from 1.04 to 1.21 on desktop with up to 80 px of upward drift (phones: 1.04–1.13 and 30 px). As the hero scrolls away, ARES slides left while the eyebrow and signature slide right and the tagline drifts left.
 
-Type moves with the images. As the hero scrolls away, ARES slides left while the eyebrow and signature slide right and the tagline drifts left. In the vision scene each heading line crosses the stage in its own direction, 8–17% of the viewport width (less on phones), never past the page margin, and the lines align halfway through the pin so the phrase reads cleanly at its centre.
+## The journey
 
-Only visible film scenes need a transform compositing hint. Images and all type movements stop under `prefers-reduced-motion: reduce`, and the identity scene becomes an ordinary reading section. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
+The middle of the site is one flight. The camera starts on the colonnade photograph exactly as it was framed before, then travels down the corridor toward the far arch, turning gently so the arch ends up centred. Near columns sweep past faster than far ones because the stone is treated as a corridor whose depth grows toward the arch; the sky beyond is infinitely far and only turns with the camera. The camera passes through the arch about 84% of the way through the journey, a warm glow marks the moment, and the open sky drifts closer before the stage fades into the showcase's background colour.
+
+| Share of the journey | Camera | Words |
+| --- | --- | --- |
+| 0–17% | At the threshold, starting to move | 01 / Your themes. Your look. To match your business. (lines part as before) |
+| 18–34% | Entering the corridor | A website should feel like walking into your world. |
+| 35–54% | Columns streaming past | 02 / Websites built from scratch. For your business. |
+| 55–77% | The arch fills the view | I. II. III., the three qualities, on a soft paper band |
+| 79–97% | Through the arch, into sky | The details make it yours. |
+
+The journey is 760% of the screen height. On phones the frame is cropped toward the corridor and the words sit at the top over a paper gradient. A motion blur along the direction of travel appears only while the visitor scrolls and settles when they stop. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
+
+## Reduced motion
+
+Images and all type movements stop under `prefers-reduced-motion: reduce`. The journey becomes one still section over the colonnade photograph with every beat visible in order. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
 
 ## Interaction
 

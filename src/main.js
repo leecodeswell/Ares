@@ -1,5 +1,6 @@
 import "./style.css";
 import { introEnd } from "./intro/intro.js";
+import "./journey/journey.js";
 import "@fontsource/cormorant-garamond/latin-400.css";
 import "@fontsource/cormorant-garamond/latin-500.css";
 import "@fontsource/cormorant-garamond/latin-400-italic.css";

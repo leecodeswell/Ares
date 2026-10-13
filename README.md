@@ -1,6 +1,6 @@
 # Ares by Lee Thompson
 
-A cinematic website design showcase built with Vite and vanilla JavaScript. The story centers on **your themes, your look, and your business**, moving through marble portraiture, a cloud-level colonnade, and sculptural details. Three live design directions, mobile navigation, and an email-draft inquiry form make the site useful to explore.
+A cinematic website design showcase built with Vite and vanilla JavaScript. The story centers on **your themes, your look, and your business**, moving from marble portraiture into a scroll-driven flight down a cloud-level colonnade and out into open sky. Three live design directions, mobile navigation, and an email-draft inquiry form make the site useful to explore.
 
 ## Run locally
 
@@ -25,7 +25,25 @@ The inquiry form validates its fields and opens an email draft addressed to Lee.
 
 ## Imagery and motion
 
-Four original AI-generated stills in `public/images/` form a coordinated, pale ivory Greek world. They include a separate portrait composition for narrow screens. All are optimized WebP assets; their combined size is about 580 KB. The opening image loads eagerly, while later scenes load lazily.
+Three original AI-generated stills in `public/images/` form a coordinated, pale ivory Greek world, including a separate portrait composition of the hero for narrow screens. All are optimized WebP assets. The opening image loads eagerly, while later scenes load lazily.
+
+### The journey
+
+After the hero, a pinned stage flies the camera down the colonnade from `ares-sanctuary.webp`, through the far arch and into open sky, while the story's words arrive in step: *Your themes. Your look.*, *walking into your world*, *Built around you*, the three qualities, and *The details make it yours* as the camera breaks into the sky. The flight is rendered live with WebGL from two layers made from that photograph (`src/journey/corridor.webp` and `sky.webp`, about 180 KB together), so it stays sharp at any size and follows the scrollbar exactly. A light motion blur appears only while the visitor is scrolling. The stage ends on the showcase's background colour, so the page continues without a seam.
+
+- `src/journey/journey.js` holds the camera path, the beat timing and the shader; the comments name each tunable value.
+- `tools/build-journey-layers.py` rebuilds the two layers from the photograph (Python with NumPy, SciPy, OpenCV and Pillow).
+- Without WebGL the photograph itself pushes toward the arch. Under reduced motion the journey becomes one still section with every beat visible.
+
+### Going back to the classic site
+
+The site as it was before the journey (separate vision, craft and detail sections) is kept on the `classic` branch. To return to it, either deploy that branch, or restore it onto `main`:
+
+```sh
+git checkout main
+git restore --source classic --staged --worktree -- .
+git commit -m "Return to the classic site"
+```
 
 The site opens with a pixel-art garden: a statue in an ivy courtyard whose foliage sways on a short, muted, silent loop. Scrolling grows a light from the statue's head until the screen is white, and the hero then rises out of the white. The sequence lives in `src/intro/` (script, styles, light sprite) and `public/intro/` (loop video and poster), about 1.2 MB in total. A **Skip intro** button jumps straight to the hero, and the header returns once the site begins. Visitors who prefer reduced motion skip the sequence entirely and never download the loop.
 

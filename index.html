@@ -155,124 +155,61 @@
         </div>
       </section>
 
-      <section
-        class="identity-scene"
-        id="vision"
-        data-scene
-        data-film-scene
-        aria-labelledby="vision-title"
-      >
-        <div class="scene-stage">
-          <picture class="film-visual scene-visual">
-            <img src="/images/ares-sanctuary.webp" alt="A sunlit marble colonnade opening onto mountains and clouds." width="1672" height="941" loading="lazy" decoding="async" data-film-image />
-          </picture>
-          <div class="scene-scrim" aria-hidden="true"></div>
-          <div class="scene-caption">
-            <span class="eyebrow"
-              >01 / Your identity, beautifully translated</span
-            ><span class="scene-caption-line"></span>
-          </div>
-          <h2 class="vision-heading" id="vision-title">
-            <span class="vision-line">Your themes.</span
-            ><span class="vision-line">Your look.</span
-            ><span class="vision-line vision-line-last"
-              >To match <em>your business.</em></span
-            >
-          </h2>
-          <div class="vision-detail">
-            <span class="vision-detail-line" aria-hidden="true"></span>
-            <p>
-              A website should feel like walking into your world.<br
-                class="desktop-break"
-              />
-              The atmosphere. The details. The way it all fits together.
-            </p>
-          </div>
-          <div class="scene-side-label" aria-hidden="true">
-            NOTHING OFF THE SHELF
-          </div>
-        </div>
-      </section>
+      <section class="journey" id="vision" data-journey aria-labelledby="vision-title">
+        <span class="journey-mark" id="craft" style="--at: 0.36" aria-hidden="true"></span>
+        <div class="journey-stage" data-journey-stage>
+          <img class="journey-still" src="/images/ares-sanctuary.webp" alt="A sunlit marble colonnade leading to an arch that opens onto mountains and clouds." width="1672" height="941" loading="lazy" decoding="async" data-journey-still />
+          <canvas class="journey-canvas" aria-hidden="true" data-journey-canvas></canvas>
+          <div class="journey-scrim" aria-hidden="true"></div>
 
-      <section
-        class="introduction section-padding"
-        id="craft"
-        aria-labelledby="craft-title"
-      >
-        <div class="section-kicker" data-reveal>
-          <span>02 / Built around you</span><span class="kicker-line"></span>
-        </div>
-        <div class="introduction-top">
-          <h2 id="craft-title" data-reveal>
-            Websites built<br />from <em>scratch.</em><br />For your business.
-          </h2>
-          <div class="introduction-copy" data-reveal>
-            <p class="body-large">
-              No templates and no page-builder subscriptions. Just a
-              thoughtfully built website that feels right for your business.
-            </p>
-            <p>
-              From the first impression to the final click, every detail has a
-              purpose: help people understand what you do, find what they need,
-              and take the next step.
-            </p>
-            <a class="text-link" href="#showcase"
-              >See what that can look like
-              <span aria-hidden="true"
-                ><svg
-                  class="icon-arrow"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M6 18 18 6M6 6h12v12"
-                    stroke="currentColor"
-                    stroke-width="1.4"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  /></svg></span
-            ></a>
+          <div class="journey-beat beat-vision" data-beat="0 0.17">
+            <div class="scene-caption">
+              <span class="eyebrow">01 / Your identity, beautifully translated</span><span class="scene-caption-line"></span>
+            </div>
+            <h2 class="vision-heading" id="vision-title">
+              <span class="vision-line">Your themes.</span><span class="vision-line">Your look.</span><span class="vision-line vision-line-last">To match <em>your business.</em></span>
+            </h2>
           </div>
-        </div>
-        <div class="qualities">
-          <article class="quality" data-reveal>
-            <span class="quality-number">I.</span>
-            <h3>A look that feels <br />like you.</h3>
-            <p>
-              Your colors, your personality, your story. Designed together, from
-              a blank canvas.
-            </p>
-          </article>
-          <article class="quality" data-reveal>
-            <span class="quality-number">II.</span>
-            <h3>Easy to use. <br />Everywhere.</h3>
-            <p>
-              Clear navigation, thoughtful interactions, and a great experience
-              on phones.
-            </p>
-          </article>
-          <article class="quality" data-reveal>
-            <span class="quality-number">III.</span>
-            <h3>Every detail, <br />considered.</h3>
-            <p>
-              Useful contact forms, beautiful galleries, and the features your
-              website actually needs.
-            </p>
-          </article>
-        </div>
-      </section>
 
-      <section class="detail-scene" data-film-scene aria-labelledby="detail-title">
-        <picture class="film-visual detail-visual">
-          <img src="/images/ares-detail.webp" alt="Draped marble folds and the resting hand of a classical statue." width="1672" height="941" loading="lazy" decoding="async" data-film-image />
-        </picture>
-        <div class="detail-scrim" aria-hidden="true"></div>
-        <div class="detail-content" data-reveal>
-          <p class="eyebrow">DESIGNED WITH INTENTION</p>
-          <h2 id="detail-title">The details<br />make it <em>yours.</em></h2>
-          <p class="detail-description">Color. Type. Space. Movement.<br />Every choice belongs to your story.</p>
-          <span class="detail-rule" aria-hidden="true"></span>
+          <div class="journey-beat beat-world" data-beat="0.18 0.34">
+            <span class="journey-rule" aria-hidden="true"></span>
+            <p class="journey-statement">A website should feel like walking into <em>your world.</em></p>
+            <p class="journey-aside">The atmosphere. The details. The way it all fits together.</p>
+          </div>
+
+          <div class="journey-beat beat-craft" data-beat="0.35 0.54" aria-labelledby="craft-title">
+            <div class="section-kicker"><span>02 / Built around you</span><span class="kicker-line"></span></div>
+            <h2 class="journey-title" id="craft-title">Websites built<br />from <em>scratch.</em><br />For your business.</h2>
+            <p class="journey-lead">No templates and no page-builder subscriptions. Just a thoughtfully built website that feels right for your business.</p>
+            <p class="journey-body">From the first impression to the final click, every detail has a purpose: help people understand what you do, find what they need, and take the next step.</p>
+          </div>
+
+          <div class="journey-beat beat-qualities" data-beat="0.55 0.77">
+            <div class="qualities journey-qualities">
+              <article class="quality">
+                <span class="quality-number">I.</span>
+                <h3>A look that feels <br />like you.</h3>
+                <p>Your colors, your personality, your story. Designed together, from a blank canvas.</p>
+              </article>
+              <article class="quality">
+                <span class="quality-number">II.</span>
+                <h3>Easy to use. <br />Everywhere.</h3>
+                <p>Clear navigation, thoughtful interactions, and a great experience on phones.</p>
+              </article>
+              <article class="quality">
+                <span class="quality-number">III.</span>
+                <h3>Every detail, <br />considered.</h3>
+                <p>Useful contact forms, beautiful galleries, and the features your website actually needs.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="journey-beat beat-detail" data-beat="0.79 0.97" aria-labelledby="detail-title">
+            <p class="eyebrow">Designed with intention</p>
+            <h2 class="journey-title" id="detail-title">The details<br />make it <em>yours.</em></h2>
+            <p class="journey-aside">Color. Type. Space. Movement.<br />Every choice belongs to your story.</p>
+            <a class="text-link" href="#showcase">See what that can look like <span aria-hidden="true"><svg class="icon-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg></span></a>
+          </div>
         </div>
       </section>
 

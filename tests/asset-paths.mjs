@@ -64,8 +64,8 @@ try {
           const url = `http://127.0.0.1:${server.address().port}${mount}`;
           await page.goto(url, { waitUntil: "networkidle" });
           await page.evaluate(() => document.fonts.ready);
-          const images = page.locator("[data-film-image]");
-          assert.equal(await images.count(), 3);
+          const images = page.locator("[data-film-image], [data-journey-still]");
+          assert.equal(await images.count(), 2);
           for (const image of await images.all()) {
             await image.scrollIntoViewIfNeeded();
             await image.evaluate((element) => element.decode());
@@ -106,6 +106,12 @@ try {
           await page.waitForFunction(() =>
             performance.getEntriesByType("resource").some((entry) => /light-sheet.*\.png$/.test(entry.name)),
           );
+          await page.locator("[data-journey]").scrollIntoViewIfNeeded();
+          await page.waitForFunction(() =>
+            ["corridor", "sky"].every((name) =>
+              performance.getEntriesByType("resource").some((entry) => new RegExp(`/${name}[^/]*\\.webp$`).test(entry.name)),
+            ),
+          );
           await page.locator('[data-concept="botanical"]').click();
           assert.equal(
             await page.locator("#concept-panel").getAttribute("data-theme"),
@@ -120,7 +126,7 @@ try {
           );
           assert.deepEqual(failures, [], "No build assets may fail to load");
           console.log(
-            `PASS ${mount} at ${width}px: intro media, images, fonts, CSS, and JavaScript`,
+            `PASS ${mount} at ${width}px: intro media, journey layers, images, fonts, CSS, and JavaScript`,
           );
         } finally {
           await page.close();

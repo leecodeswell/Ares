@@ -95,16 +95,31 @@ check('All photograph assets are served locally', images.every(image => new URL(
 await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
 await page.waitForTimeout(200);
 const initialProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
-const filmImage = page.locator('#vision [data-film-image]');
-const filmTop = await page.locator('#vision').evaluate(element => element.getBoundingClientRect().top + scrollY);
-await page.evaluate(top => scrollTo({ top: top + 150, behavior: 'instant' }), filmTop);
-await page.waitForTimeout(250);
-const firstFilmState = await filmImage.evaluate(image => ({ transform: getComputedStyle(image).transform, progress: getComputedStyle(image.closest('[data-film-scene]')).getPropertyValue('--film-progress') }));
-await page.evaluate(top => scrollTo({ top: top + 650, behavior: 'instant' }), filmTop);
-await page.waitForTimeout(250);
-const secondFilmState = await filmImage.evaluate(image => ({ transform: getComputedStyle(image).transform, progress: getComputedStyle(image.closest('[data-film-scene]')).getPropertyValue('--film-progress') }));
+// The journey: the camera flies through the colonnade while the words change.
+const journeyBox = await page.locator('[data-journey]').evaluate(element => ({ top: element.offsetTop, height: element.offsetHeight }));
+const journeyAt = async fraction => {
+  await page.evaluate(([box, f]) => scrollTo({ top: box.top + (box.height - innerHeight) * f, behavior: 'instant' }), [journeyBox, fraction]);
+  await page.waitForTimeout(700);
+  const path = `${screenshotDir}/desktop-journey-${Math.round(fraction * 100)}.png`;
+  await page.screenshot({ path });
+  report.screenshots.push(path);
+  return page.evaluate(() => {
+    const journey = document.querySelector('[data-journey]');
+    return {
+      flying: journey.classList.contains('is-flying'),
+      progress: Number(journey.dataset.progress),
+      shown: [...journey.querySelectorAll('[data-beat].is-shown')].map(beat => beat.className.replace('journey-beat ', '').replace(' is-shown', '')),
+    };
+  });
+};
+await page.waitForFunction(() => document.querySelector('[data-journey]')?.classList.contains('is-flying'), null, { timeout: 8000 }).catch(() => {});
+const journeyStates = [];
+for (const fraction of [0.05, 0.45, 0.9]) journeyStates.push(await journeyAt(fraction));
+check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
+check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
+const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] canvas')].map(canvas => ({ width: canvas.width, height: canvas.height, visible: getComputedStyle(canvas).opacity === '1' })));
+check('The flight canvas fills the stage', flightFrames.length === 1 && flightFrames[0].width > 0 && flightFrames[0].visible, flightFrames);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
-check('Film scene moves as visitors scroll with motion enabled', firstFilmState.transform !== secondFilmState.transform && firstFilmState.progress !== secondFilmState.progress, { before: firstFilmState, after: secondFilmState });
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
 const conceptButtons = page.locator('button[data-concept]');
@@ -224,17 +239,19 @@ const reduced = await reducedPage.evaluate(() => ({ media: matchMedia('(prefers-
 check('Reduced motion retains visible heading and disables smooth scrolling', reduced.media && reduced.headingVisible && reduced.scrollBehavior !== 'smooth', reduced);
 const reducedIntro = await reducedPage.evaluate(() => ({ introHidden: getComputedStyle(document.querySelector('[data-intro]')).display === 'none', heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), headerVisible: getComputedStyle(document.querySelector('.site-header')).visibility === 'visible', loopRequested: performance.getEntriesByType('resource').some(entry => /garden-loop/.test(entry.name)) }));
 check('Reduced motion opens directly on the hero without loading the intro loop', reducedIntro.introHidden && reducedIntro.heroTop === 0 && reducedIntro.headerVisible && !reducedIntro.loopRequested, reducedIntro);
-const reducedBefore = await reducedPage.locator('[data-film-image]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
+const reducedBefore = await reducedPage.locator('[data-film-image], [data-journey-still]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
 await reducedPage.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 100)); } });
-const reducedAfter = await reducedPage.locator('[data-film-image]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
-check('Reduced motion keeps every film image stationary', reducedBefore.length >= 3 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
+const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey-still]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
+const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] canvas')).display === 'none', beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
+check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
+check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));
 check('Reduced motion leaves the entire story visible', reducedContent.every(element => element.opacity === '1' && element.visibility !== 'hidden'), reducedContent);
 
 for (const viewport of [{ width: 1440, height: 1000, name: 'desktop' }, { width: 390, height: 844, name: 'mobile' }]) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   await page.goto(url, { waitUntil: 'networkidle' });
-  for (const [selector, name] of [['#home', 'hero'], ['#vision', 'vision'], ['#craft', 'craft'], ['.detail-scene', 'detail'], ['#showcase', 'explorer'], ['#contact', 'contact'], ['#inquiry-form', 'form']]) {
+  for (const [selector, name] of [['#home', 'hero'], ['#vision', 'vision'], ['#craft', 'craft'], ['#showcase', 'explorer'], ['#contact', 'contact'], ['#inquiry-form', 'form']]) {
     await captureScene(page, selector, `${viewport.name}-${name}-native`);
   }
 }

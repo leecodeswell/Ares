@@ -1,0 +1,269 @@
+/* The journey: a pinned stage where the camera flies through the colonnade and
+   the story's words arrive in step. */
+.journey {
+  position: relative;
+  height: 760vh; /* scroll length of the whole flight */
+  height: 760svh;
+  background: #e8e7dd;
+}
+.journey-mark {
+  position: absolute;
+  left: 0;
+  top: calc(var(--at) * (100% - 100svh));
+}
+.journey-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #ecebe4;
+}
+.journey-still,
+.journey-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.journey-still {
+  z-index: 0;
+  object-fit: cover;
+  object-position: 68% 50%;
+  transform-origin: 75% 51%;
+}
+.journey-canvas {
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.journey.is-flying .journey-canvas {
+  opacity: 1;
+}
+.journey-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(242, 240, 233, 0.9) 0%,
+      rgba(242, 240, 233, 0.72) 30%, rgba(242, 240, 233, 0.22) 56%,
+      rgba(242, 240, 233, 0) 70%),
+    linear-gradient(180deg, rgba(242, 240, 233, 0.35), transparent 22%);
+}
+
+/* ---- beats */
+.journey-beat {
+  position: absolute;
+  z-index: 3;
+  left: var(--gutter);
+  top: 50%;
+  width: min(44vw, 620px);
+  opacity: 0;
+  transform: translateY(calc(-50% + var(--beat-shift, 0px)));
+  will-change: opacity, transform;
+}
+.journey-beat:not(.is-shown) {
+  pointer-events: none;
+}
+.journey-beat em {
+  font-style: italic;
+}
+
+.beat-vision {
+  width: min(80vw, 1200px);
+}
+.journey .vision-line {
+  transform: translateX(calc((var(--beat-progress, 0) - 0.3) * var(--line-travel)));
+}
+.journey .scene-caption {
+  margin-bottom: 42px;
+}
+
+.journey-rule {
+  display: block;
+  width: 56px;
+  height: 1px;
+  background: #a29a7f;
+  margin-bottom: 34px;
+}
+.journey-statement {
+  font-family: var(--serif);
+  font-size: clamp(46px, 4.6vw, 82px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: #2a3326;
+}
+.journey-statement em,
+.journey-title em {
+  color: #7d6f4b;
+}
+.journey-aside {
+  margin-top: 30px;
+  max-width: 380px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: #3f4838;
+}
+.journey .section-kicker {
+  margin-bottom: 40px;
+  color: #59634f;
+}
+.journey-title {
+  font-family: var(--serif);
+  font-size: clamp(56px, 5.6vw, 96px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  color: #262d23;
+}
+.journey-lead {
+  margin-top: 34px;
+  max-width: 440px;
+  font-size: 19px;
+  line-height: 1.55;
+  letter-spacing: -0.3px;
+  color: #353d30;
+}
+.journey-body {
+  margin-top: 16px;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #48513f;
+}
+.beat-detail .eyebrow {
+  margin-bottom: 26px;
+  color: #59634f;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+}
+.beat-detail .text-link {
+  margin-top: 36px;
+}
+
+/* The three qualities sit on a soft paper band near the far arch. */
+.beat-qualities {
+  top: auto;
+  bottom: clamp(32px, 8vh, 90px);
+  width: auto;
+  right: var(--gutter);
+  transform: translateY(var(--beat-shift, 0px));
+}
+.journey-qualities {
+  margin: 0;
+  padding: 34px 40px 38px;
+  gap: 5vw;
+  border-top: 0;
+  background: rgba(242, 240, 233, 0.8);
+  box-shadow: 0 1px 0 rgba(62, 67, 54, 0.12) inset;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.journey-qualities .quality-number {
+  margin-bottom: 18px;
+}
+.journey-qualities .quality p {
+  color: #4f5947;
+}
+
+@media (max-width: 760px) {
+  .journey-scrim {
+    background:
+      linear-gradient(180deg, rgba(242, 240, 233, 0.94) 0%,
+        rgba(242, 240, 233, 0.82) 42%, rgba(242, 240, 233, 0.2) 70%,
+        rgba(242, 240, 233, 0) 82%);
+  }
+  .journey-beat {
+    top: 116px;
+    right: var(--gutter);
+    width: auto;
+    transform: translateY(var(--beat-shift, 0px));
+  }
+  .beat-vision {
+    width: auto;
+  }
+  .journey .vision-line {
+    --line-travel: 0px;
+  }
+  .journey-statement {
+    font-size: 11vw;
+  }
+  .journey-title {
+    font-size: 13vw;
+  }
+  .journey-lead {
+    margin-top: 24px;
+    font-size: 16px;
+  }
+  .journey-body {
+    font-size: 13px;
+  }
+  .beat-qualities {
+    top: 104px;
+    bottom: auto;
+  }
+  .journey-qualities {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 22px 22px 24px;
+  }
+  .journey-qualities .quality-number {
+    margin-bottom: 8px;
+  }
+  .journey-qualities .quality h3 {
+    font-size: 23px;
+    margin-bottom: 8px;
+  }
+  .journey-qualities .quality h3 br {
+    display: none;
+  }
+  .journey-qualities .quality p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+}
+
+/* Reduced motion: no flight. The words read as one section over the still. */
+@media (prefers-reduced-motion: reduce) {
+  .journey {
+    height: auto;
+  }
+  .journey-stage {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    padding: 150px var(--gutter) 110px;
+    display: flex;
+    flex-direction: column;
+    gap: 110px;
+  }
+  .journey-canvas {
+    display: none;
+  }
+  .journey-still {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .journey-scrim {
+    background: rgba(242, 240, 233, 0.8);
+  }
+  .journey-beat,
+  .beat-qualities {
+    position: relative;
+    inset: auto;
+    width: auto;
+    max-width: 900px;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .journey-beat:not(.is-shown) {
+    pointer-events: auto;
+  }
+  .journey-qualities {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    padding: 0;
+  }
+}
