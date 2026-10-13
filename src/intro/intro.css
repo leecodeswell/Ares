@@ -2,8 +2,8 @@
 .intro {
   position: relative;
   z-index: 3;
-  height: 400vh; /* scroll length of the sequence; raise for a slower reveal */
-  height: 400svh;
+  height: 240vh; /* scroll length of the sequence; raise for a slower reveal */
+  height: 240svh;
   background: #fff;
 }
 /* The white lifts off the hero like mist instead of ending on a hard edge. */

@@ -77,8 +77,14 @@ function paintScroll() {
 
     // A slow push and small vertical drift give stills depth without hijacking
     // the scroll. The portrait layout uses a smaller move to keep the face framed.
-    const zoom = smallScreen.matches ? 0.025 : 0.065;
-    const drift = smallScreen.matches ? 10 : 28;
+    // The hero and the vision scene carry the story, so they move the most.
+    const featured = sticky || opening;
+    const zoom = featured
+      ? smallScreen.matches ? 0.09 : 0.17
+      : smallScreen.matches ? 0.025 : 0.065;
+    const drift = featured
+      ? smallScreen.matches ? 30 : 80
+      : smallScreen.matches ? 10 : 28;
     const scale = motionPreference.matches ? 1 : 1.04 + phase * zoom;
     const offset = motionPreference.matches ? 0 : -phase * drift;
     for (const image of images) {

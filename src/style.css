@@ -329,15 +329,41 @@ em {
   position: relative;
   z-index: 2;
 }
+/* Each line crosses the stage in its own direction and they line up mid-scroll. */
 .vision-line {
   display: block;
-  transform: translateX(calc(var(--scene-progress, 0) * -16px));
+  --line-travel: -8vw;
+  transform: translateX(calc((var(--scene-progress, 0) - 0.5) * var(--line-travel)));
+  will-change: transform;
 }
 .vision-line:nth-child(2) {
-  transform: translateX(calc(var(--scene-progress, 0) * 20px));
+  --line-travel: 17vw;
 }
 .vision-line-last {
-  transform: translateX(calc(var(--scene-progress, 0) * -10px));
+  --line-travel: -10vw;
+}
+.vision-detail {
+  transform: translateX(calc((var(--scene-progress, 0) - 0.5) * 6vw));
+}
+
+/* The hero's type parts in opposite directions as the hero scrolls away. */
+.hero h1 {
+  transform: translateX(calc(var(--film-progress, 0) * -22vw));
+}
+.hero-signature {
+  transform: translateX(calc(var(--film-progress, 0) * 16vw));
+}
+.hero-eyebrow {
+  transform: translateX(calc(var(--film-progress, 0) * 10vw));
+}
+.hero-bottom > p {
+  transform: translateX(calc(var(--film-progress, 0) * -12vw));
+}
+.hero h1,
+.hero-signature,
+.hero-eyebrow,
+.hero-bottom > p {
+  will-change: transform;
 }
 .vision-line:nth-child(2) {
   padding-left: 8vw;
@@ -2405,7 +2431,24 @@ em {
     min-height: 760px;
     height: auto;
   }
-  .vision-line {
+  .vision-line,
+  .vision-detail,
+  .hero h1,
+  .hero-signature,
+  .hero-eyebrow,
+  .hero-bottom > p {
     transform: none !important;
+    will-change: auto;
+  }
+}
+@media (max-width: 760px) {
+  .vision-line {
+    --line-travel: -7vw;
+  }
+  .vision-line:nth-child(2) {
+    --line-travel: 11vw;
+  }
+  .vision-line-last {
+    --line-travel: -6vw;
   }
 }

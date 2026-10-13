@@ -19,7 +19,7 @@ The imagery keeps the material pale and realistic: no weapons, bright gold armor
 
 The site opens on a pixel-art statue in an ivy courtyard, a deliberate contrast to the photographic story that follows. Only the green foliage sways; marble, wall, and light stay still. The palette is muted to sit beside the site's ivory and sage.
 
-Scrolling through the first four screen heights grows a pixel-art light from the statue's head. Rays lengthen, widen, and merge while the whole scene brightens in even steps, so the statue never fades separately from her surroundings. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
+Scrolling through roughly the first one and a half screen heights grows a pixel-art light from the statue's head. Rays lengthen, widen, and merge while the whole scene brightens in even steps, so the statue never fades separately from her surroundings. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
 
 | Asset | Size | Purpose |
 | --- | --- | --- |
@@ -31,9 +31,11 @@ On narrow or tall screens the frame is cropped so the statue's head stays in vie
 
 ## Motion
 
-Native scroll events update a single animation frame at a time. Each visible film scene receives a progress value, and its image moves slowly within an oversized frame. Desktop image scale stays between 1.04 and 1.105, with no more than 28 px of upward drift. Narrow screens use a smaller movement: scale 1.04–1.065 and drift up to 10 px.
+Native scroll events update a single animation frame at a time. Each visible film scene receives a progress value, and its image moves slowly within an oversized frame. The hero and the pinned vision scene carry the strongest movement: on desktop their images scale from 1.04 to 1.21 with up to 80 px of upward drift (phones: 1.04–1.13 and 30 px). The detail scene keeps the gentler 1.04–1.105 and 28 px (phones: 1.04–1.065 and 10 px).
 
-Only visible film scenes need a transform compositing hint. Images and headline movements stop under `prefers-reduced-motion: reduce`, and the identity scene becomes an ordinary reading section. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
+Type moves with the images. As the hero scrolls away, ARES slides left while the eyebrow and signature slide right and the tagline drifts left. In the vision scene each heading line crosses the stage in its own direction, 8–17% of the viewport width (less on phones), never past the page margin, and the lines align halfway through the pin so the phrase reads cleanly at its centre.
+
+Only visible film scenes need a transform compositing hint. Images and all type movements stop under `prefers-reduced-motion: reduce`, and the identity scene becomes an ordinary reading section. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
 
 ## Interaction
 

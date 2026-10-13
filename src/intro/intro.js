@@ -8,8 +8,8 @@ import lightSheetUrl from "./light-sheet.png";
 
 const SOURCE_WIDTH = 1920;
 const SOURCE_HEIGHT = 1080;
-const LIGHT_START = 0.03; // share of the intro's scroll where the light appears
-const LIGHT_END = 0.86; // ...and where the screen is fully white
+const LIGHT_START = 0.02; // share of the intro's scroll where the light appears
+const LIGHT_END = 0.84; // ...and where the screen is fully white
 
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
