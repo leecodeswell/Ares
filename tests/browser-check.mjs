@@ -57,12 +57,26 @@ report.screenshots.push(`${screenshotDir}/desktop-intro.png`);
 await page.locator('[data-intro-light]').evaluate(canvas => {
   const context = canvas.getContext('2d');
   const drawImage = context.drawImage;
-  window.__aresFlameDraws = 0;
+  window.__aresLightDraws = 0;
   context.drawImage = function (...args) {
-    window.__aresFlameDraws++;
+    window.__aresLightDraws++;
     return drawImage.apply(this, args);
   };
 });
+const litNow = () => page.evaluate(() => {
+  const canvas = document.querySelector('[data-intro] canvas');
+  const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  let lit = 0;
+  for (let i = 3; i < pixels.length; i += 4 * 97) if (pixels[i] > 0) lit++;
+  return lit / Math.ceil(pixels.length / (4 * 97));
+});
+await page.waitForTimeout(900);
+const beforeInput = await litNow();
+await page.mouse.move(400, 400);
+await page.mouse.wheel(0, 1);
+await page.waitForTimeout(1300);
+const graceFormed = await litNow();
+check('The light waits for the first scroll input, then a compact grace forms on the statue', beforeInput === 0 && graceFormed > 0 && graceFormed < 0.03, { beforeInput, graceFormed });
 const lightAt = async fraction => {
   await page.evaluate(([end, f]) => scrollTo({ top: (end - innerHeight) * f, behavior: 'instant' }), [introTop.end, fraction]);
   await page.waitForTimeout(250);
@@ -84,17 +98,17 @@ for (const fraction of [0, 0.3, 0.6, 0.98]) {
     const firstPose = await page.locator('[data-intro-light]').evaluate(canvas => canvas.toDataURL());
     await page.waitForTimeout(400);
     const secondPose = await page.locator('[data-intro-light]').evaluate(canvas => canvas.toDataURL());
-    check('The early flame stays compact and flickers without scrolling', lightStates.at(-1).lit > 0 && lightStates.at(-1).lit < 0.02 && firstPose !== secondPose, { litFraction: lightStates.at(-1).lit, posesChanged: firstPose !== secondPose });
+    check('The grace and its rays keep moving while the visitor rests', lightStates.at(-1).lit > 0 && firstPose !== secondPose, { litFraction: lightStates.at(-1).lit, posesChanged: firstPose !== secondPose });
   }
 }
-check('Scrolling grows the light until the screen is white', lightStates[0].lit === 0 && lightStates[1].lit > 0 && lightStates[2].lit > lightStates[1].lit && lightStates[3].white > 0.99, lightStates);
+check('Scrolling grows the rays until the screen is white', lightStates[0].lit < 0.03 && lightStates[1].lit > lightStates[0].lit && lightStates[2].lit > lightStates[1].lit && lightStates[3].white > 0.99, lightStates);
 await page.evaluate(end => scrollTo({ top: end, behavior: 'instant' }), introTop.end);
 await page.waitForTimeout(700);
 const heroArrival = await page.evaluate(() => ({ heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), headerVisible: getComputedStyle(document.querySelector('.site-header')).visibility === 'visible', loopPaused: document.querySelector('[data-intro] video').paused }));
 check('The hero follows the white with the header restored and the loop paused', heroArrival.heroTop === 0 && heroArrival.headerVisible && heroArrival.loopPaused, heroArrival);
-const flameDrawsAfterIntro = await page.evaluate(() => window.__aresFlameDraws);
+const lightDrawsAfterIntro = await page.evaluate(() => window.__aresLightDraws);
 await page.waitForTimeout(400);
-check('The flame stops drawing once the intro is offscreen', await page.evaluate(() => window.__aresFlameDraws) === flameDrawsAfterIntro);
+check('The light stops drawing once the intro is offscreen', await page.evaluate(() => window.__aresLightDraws) === lightDrawsAfterIntro);
 await page.screenshot({ path: `${screenshotDir}/desktop-hero.png` });
 report.screenshots.push(`${screenshotDir}/desktop-hero.png`);
 await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));

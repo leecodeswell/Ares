@@ -106,10 +106,9 @@ try {
           await page.waitForFunction(() => {
             const canvas = document.querySelector("[data-intro-light]");
             const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
-            // The light is now drawn live. Verify visible warm flame pixels,
-            // rather than a request for the retired sprite-sheet asset.
+            // The light is drawn live: look for warm gold ray pixels.
             for (let i = 0; i < pixels.length; i += 4) {
-              if (pixels[i] > 190 && pixels[i + 1] > 140 && pixels[i + 2] < 225 && pixels[i + 3] > 180) return true;
+              if (pixels[i] > 190 && pixels[i + 1] > 140 && pixels[i + 2] < 235 && pixels[i + 3] > 120) return true;
             }
             return false;
           });

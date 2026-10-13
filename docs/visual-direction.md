@@ -20,17 +20,17 @@ The imagery keeps the material pale and realistic: no weapons, bright gold armor
 
 The site opens on a pixel-art statue in an ivy courtyard. In the garden loop only the green foliage sways; marble and wall stay still. The palette is muted to sit beside the site's ivory and sage.
 
-Scrolling through roughly the first one and a half screen heights reveals a small gold flame above the statue's head. Layered amber, pale gold, and ivory form a slender, gently bending tongue of light; fine motes rise around it. It stays compact through the first half of the sequence, then its halo opens into a pale wash across the whole garden. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
+The garden plays untouched until the visitor's first scroll input (wheel, touch, keys, or a scroll after the page has loaded). Then a golden light kindles on the statue's head over about a second, shaped like a Site of Grace: a bright core with a faint four-point glint, seven slender strands that rise, lean outward and curl at their tips, a warm halo, and motes drifting upward. Scrolling through roughly the next one and a half screen heights opens it into two interleaved sets of eight rays, gold with white hearts, that turn slowly, lengthen to the edges of the frame, then widen and fan until they merge, while the garden brightens beneath them. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
 
 | Asset | Size | Purpose |
 | --- | --- | --- |
 | `public/intro/garden-loop.webm`, `.mp4` | 1920 × 1080, 4 s loop | Swaying garden; WebM first, MP4 fallback |
 | `public/intro/poster.webp` | 1208 × 680 | First paint, before the loop is ready |
-| `src/intro/flame.js` | 960 × 540 drawing grid | Live gold flame and rising motes, at three times the old sprite's resolution on each axis; nearest-neighbour scaling keeps its pixels aligned with the garden crop |
+| `src/intro/grace.js` | 1208 × 680 drawing grid | The live grace and its rays, drawn at the garden art's own resolution for the visible crop; nearest-neighbour scaling keeps them aligned with the painting's pixels |
 
 On narrow or tall screens the frame is cropped so the statue's head stays in view, and the light is drawn on the same crop. The site header and reading progress are held back until the hero arrives, and the progress bar measures the site rather than the intro. Under `prefers-reduced-motion: reduce`, the sequence is not shown and the site opens on its hero.
 
-The flame changes pose at up to 24 frames per second while visible. It stops after the white handoff, outside the viewport, in a hidden tab, or under reduced motion.
+The light changes pose at up to 24 frames per second while visible. It stops after the white handoff, outside the viewport, in a hidden tab, or under reduced motion.
 
 ## Motion
 

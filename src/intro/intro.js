@@ -1,9 +1,10 @@
 import "./intro.css";
-import { paintFlame, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./flame.js";
+import { paintLight, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./grace.js";
 
-// Opening sequence: a small golden flame stirs above the statue. Scrolling
-// finally opens its light into white. The white then lifts
-// off the hero like mist. Reduced motion skips the sequence entirely.
+// Opening sequence: the garden loops untouched until the visitor's first
+// scroll input. Then a grace-like light kindles on the statue's head, and
+// scrolling opens it into rays that widen until the screen is white. The
+// white then lifts off the hero like mist. Reduced motion skips it entirely.
 
 const SOURCE_WIDTH = 1920;
 const SOURCE_HEIGHT = 1080;
@@ -38,8 +39,17 @@ function setUpIntro(intro) {
   let layout = null;
   let lastKey = "";
   let framePending = false;
-  let flameTimer = 0;
+  let lightTimer = 0;
   let visible = true;
+  // The light waits for the visitor's first scroll input (wheel, touch, keys
+  // or a scroll after load), so a page that simply opens shows only the garden.
+  let kindledAt = 0;
+  const kindle = () => {
+    if (!kindledAt) {
+      kindledAt = performance.now();
+      schedule();
+    }
+  };
 
   // Cover the stage, but keep the statue's head in view on tall phones.
   function measure() {
@@ -84,7 +94,7 @@ function setUpIntro(intro) {
 
   function paint(now = performance.now()) {
     framePending = false;
-    window.clearTimeout(flameTimer);
+    window.clearTimeout(lightTimer);
     if (motionPreference.matches || !layout) {
       html.classList.remove("is-intro");
       return;
@@ -102,13 +112,17 @@ function setUpIntro(intro) {
     intro.classList.toggle("is-scrolling", scrolled > 0.015);
     intro.classList.toggle("is-bright", t > 0.75);
 
-    const animating = visible && !document.hidden && t > 0 && t < 1;
-    if (animating) flameTimer = window.setTimeout(schedule, 1000 / 24);
+    if (!kindledAt && scrolled > 0.03) kindle(); // e.g. a reload part-way down
+    // (frame timestamps can sit a few ms before the input that kindled it)
+    const formed = kindledAt ? Math.max(0.001, clamp((now - kindledAt) / 900)) : 0;
+    const animating = visible && !document.hidden && kindledAt > 0 && t < 1;
+    if (animating) lightTimer = window.setTimeout(schedule, 1000 / 24);
     const key = `${t.toFixed(4)}|${animating ? tick : 0}|${layout.width}x${layout.height}`;
     if (key === lastKey) return;
     lastKey = key;
 
-    lift.style.opacity = String(clamp((t - 0.6) / 0.4) * 0.65);
+    // the garden brightens steadily as the rays spread
+    lift.style.opacity = String(clamp((t - 0.25) / 0.75) * 0.6);
     context.clearRect(0, 0, layout.width, layout.height);
 
     if (t >= 1) {
@@ -118,8 +132,8 @@ function setUpIntro(intro) {
       return;
     }
     if (visible) playLoop();
-    if (t <= 0 || !visible || document.hidden) return;
-    paintFlame(lightContext, t, tick / 24);
+    if (!formed || !visible || document.hidden) return;
+    paintLight(lightContext, t, formed, tick / 24);
     context.drawImage(
       light,
       0,
@@ -157,7 +171,7 @@ function setUpIntro(intro) {
         visible = entry.isIntersecting;
         if (!visible) {
           video.pause();
-          window.clearTimeout(flameTimer);
+          window.clearTimeout(lightTimer);
         } else {
           lastKey = "";
           schedule();
@@ -169,7 +183,7 @@ function setUpIntro(intro) {
   motionPreference.addEventListener("change", () => {
     if (motionPreference.matches) {
       video?.pause();
-      window.clearTimeout(flameTimer);
+      window.clearTimeout(lightTimer);
       html.classList.remove("is-intro");
     }
     resize();
@@ -177,13 +191,23 @@ function setUpIntro(intro) {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       video?.pause();
-      window.clearTimeout(flameTimer);
+      window.clearTimeout(lightTimer);
     } else {
       lastKey = "";
       schedule();
     }
   });
   window.addEventListener("scroll", schedule, { passive: true });
+  const loadedAt = performance.now();
+  window.addEventListener("scroll", () => {
+    // ignore the browser restoring a scroll position during load
+    if (performance.now() - loadedAt > 400) kindle();
+  }, { passive: true });
+  window.addEventListener("wheel", kindle, { passive: true });
+  window.addEventListener("touchmove", kindle, { passive: true });
+  window.addEventListener("keydown", (event) => {
+    if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", " ", "End", "Home", "Spacebar"].includes(event.key)) kindle();
+  });
   window.addEventListener("resize", resize, { passive: true });
 
   resize();
