@@ -48,3 +48,11 @@ The audit checks desktop, tablet, and narrow mobile layouts; image loading and r
 This is a static frontend. `npm run build` produces `dist/` for a static host. No backend credentials are needed. The inquiry form opens an email draft and requires the visitor's email app to send it.
 
 No deployment is configured or performed by these scripts. For cloud development, work in the existing checkout; tasks are already isolated, so a new Git worktree is unnecessary.
+
+### Image paths and hosting
+
+The build uses relative asset paths, so images, fonts, styles, and scripts work both at a domain root and below a repository path such as `/Ares/`. Deploy the **contents of `dist/`**, produced by `npm run build`, rather than the source `index.html`.
+
+GitHub's repository file viewer is not a running website. To view the site on your computer, clone the repository, open a terminal in its `Ares` folder, install dependencies with `npm ci`, and run `npm run dev`. Use `npm run preview` after a production build to inspect the build locally.
+
+Run `npm run build && npm run test:assets` to verify the production images and other assets under both root and repository-path hosting. This test starts its own local servers and needs no running development server.
