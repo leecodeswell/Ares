@@ -10,7 +10,7 @@ import { paintLight, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./grace.js";
 const SOURCE_WIDTH = 1920;
 const SOURCE_HEIGHT = 1080;
 const LIGHT_START = 0.01; // share of the intro's scroll where the light appears
-const LIGHT_END = 0.84; // ...and where the screen is fully white
+const LIGHT_END = 0.91; // ...and where the screen is fully white
 const ART_WIDTH = 1208; // the garden art's own pixels across the frame
 const WALL = { x: 0.31, y: 0.495 }; // top left of the bare wall beside the statue
 
@@ -127,7 +127,7 @@ function setUpIntro(intro) {
     // The site's header returns once the hero starts rising out of the white.
     html.classList.toggle("is-intro", rect.bottom > window.innerHeight * 0.15);
     intro.classList.toggle("is-scrolling", scrolled > 0.015);
-    intro.classList.toggle("is-bright", t > 0.75);
+    intro.classList.toggle("is-bright", t > 0.72);
 
     const animating = visible && !document.hidden && t > 0 && t < 1;
     if (animating) lightTimer = window.setTimeout(schedule, 1000 / 24);

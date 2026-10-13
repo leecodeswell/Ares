@@ -96,9 +96,9 @@ function ray(context, x, y, angle, start, length, halfWidth, fan, color, alpha) 
  * progress: 0-1 share of the light's scroll. Everything follows it, so
  * scrolling back up reverses the light and at the top there is none.
  *   0.00-0.07  the grace forms on the statue's head
- *   0.07-0.24  the grace alone, swaying gently
- *   0.24-0.70  rays lengthen to the edges of the frame
- *   0.50-0.92  rays widen and fan until they merge; 0.80-1.00 wash to white
+ *   0.07-0.16  the grace alone, swaying gently
+ *   0.16-0.67  rays lengthen to the edges of the frame
+ *   0.45-0.91  rays widen and fan until they merge; 0.78-1.00 wash to white
  * time: seconds, for the sway, breathing and drifting motes
  */
 export function paintLight(context, progress, time) {
@@ -113,23 +113,23 @@ export function paintLight(context, progress, time) {
   const x = FOCUS.x * LIGHT_WIDTH;
   const y = FOCUS.y * LIGHT_HEIGHT - 4;
   const form = smooth(0, 0.07, progress);
-  const swell = 0.55 + 0.45 * form + 0.25 * smooth(0.24, 0.5, progress);
+  const swell = 0.55 + 0.45 * form + 0.25 * smooth(0.16, 0.45, progress);
   const far = Math.hypot(Math.max(x, LIGHT_WIDTH - x), Math.max(y, LIGHT_HEIGHT - y)) + 20;
 
   context.save();
   context.globalCompositeOperation = "lighter";
 
   // ---- rays, as before: they lengthen, then widen and fan until they merge
-  const reach = smooth(0.24, 0.7, progress);
+  const reach = smooth(0.16, 0.67, progress);
   if (reach > 0) {
     const rotate = progress * 0.55 + time * 0.015;
-    const fanAmount = Math.tan(clamp((progress - 0.5) / 0.42) ** 1.6 * (Math.PI / 8) * 1.08);
-    const halfWidth = 2.5 + 10 * smooth(0.24, 1, progress);
+    const fanAmount = Math.tan(clamp((progress - 0.45) / 0.46) ** 1.6 * (Math.PI / 8) * 1.08);
+    const halfWidth = 2.5 + 10 * smooth(0.16, 1, progress);
     const shimmer = 0.92 + 0.08 * Math.sin(time * 5.0);
-    const strength = smooth(0.24, 0.34, progress);
+    const strength = smooth(0.16, 0.27, progress);
     for (let set = 0; set < 2; set++) {
       const offset = set === 0 ? 0 : Math.PI / 8;
-      const reachShare = set === 0 ? 1 : 0.6 + 0.4 * smooth(0.55, 0.85, progress);
+      const reachShare = set === 0 ? 1 : 0.6 + 0.4 * smooth(0.5, 0.83, progress);
       const length = 10 + far * reach * reachShare;
       for (let i = 0; i < 8; i++) {
         const angle = rotate + offset + (i * Math.PI) / 4;
@@ -176,7 +176,7 @@ export function paintLight(context, progress, time) {
   for (let i = 0; i < 16; i++) {
     const life = (time * (0.16 + (i % 4) * 0.02) + i * 0.618) % 1;
     const px = x + Math.sin(i * 2.4 + life * 3.1) * (4 + life * 26) + ((i % 5) - 2) * 3;
-    const py = y - 6 - life * (80 + 40 * smooth(0.24, 0.5, progress));
+    const py = y - 6 - life * (80 + 40 * smooth(0.16, 0.45, progress));
     const alpha = Math.sin(life * Math.PI) * (0.35 + (i % 3) * 0.2) * form;
     context.fillStyle = `rgba(${i % 3 ? GOLD : WHITE}, ${alpha})`;
     const size = i % 4 === 0 ? 2 : 1.4;
@@ -185,7 +185,7 @@ export function paintLight(context, progress, time) {
   context.restore();
 
   // the last stretch of the scroll washes everything to white
-  const white = smooth(0.8, 1, progress);
+  const white = smooth(0.78, 1, progress);
   if (white > 0) {
     context.fillStyle = `rgba(255, 255, 255, ${white})`;
     context.fillRect(0, 0, LIGHT_WIDTH, LIGHT_HEIGHT);

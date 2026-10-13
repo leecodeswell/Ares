@@ -166,10 +166,8 @@
   backdrop-filter: blur(10px);
 }
 .journey-qualities .quality-number {
-  margin-bottom: 18px;
-}
-.journey-qualities .quality p {
-  color: #4f5947;
+  margin-bottom: 16px;
+  color: #6d6244;
 }
 
 @media (max-width: 760px) {
@@ -214,18 +212,11 @@
     padding: 22px 22px 24px;
   }
   .journey-qualities .quality-number {
-    margin-bottom: 8px;
+    margin: 0;
+    font-size: 34px;
   }
   .journey-qualities .quality h3 {
     font-size: 23px;
-    margin-bottom: 8px;
-  }
-  .journey-qualities .quality h3 br {
-    display: none;
-  }
-  .journey-qualities .quality p {
-    font-size: 12px;
-    line-height: 1.7;
   }
 }
 
