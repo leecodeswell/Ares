@@ -1,9 +1,8 @@
 import "./intro.css";
-import meta from "./intro.json";
-import lightSheetUrl from "./light-sheet.png";
+import { paintFlame, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./flame.js";
 
-// Opening sequence: the pixel-art garden loops on its own, and scrolling grows a
-// light from the statue's head until the screen is white. The white then lifts
+// Opening sequence: a small golden flame stirs above the statue. Scrolling
+// finally opens its light into white. The white then lifts
 // off the hero like mist. Reduced motion skips the sequence entirely.
 
 const SOURCE_WIDTH = 1920;
@@ -32,10 +31,15 @@ function setUpIntro(intro) {
   const context = canvas.getContext("2d");
   const html = document.documentElement;
 
-  let sheet = null;
+  const light = document.createElement("canvas");
+  light.width = LIGHT_WIDTH;
+  light.height = LIGHT_HEIGHT;
+  const lightContext = light.getContext("2d");
   let layout = null;
   let lastKey = "";
   let framePending = false;
+  let flameTimer = 0;
+  let visible = true;
 
   // Cover the stage, but keep the statue's head in view on tall phones.
   function measure() {
@@ -44,8 +48,8 @@ function setUpIntro(intro) {
     const scale = Math.max(width / SOURCE_WIDTH, height / SOURCE_HEIGHT);
     const coverWidth = SOURCE_WIDTH * scale;
     const coverHeight = SOURCE_HEIGHT * scale;
-    const x = clamp(width * 0.55 - meta.focusX * coverWidth, width - coverWidth, 0);
-    const y = clamp(height * 0.32 - meta.focusY * coverHeight, height - coverHeight, 0);
+    const x = clamp(width * 0.55 - FOCUS.x * coverWidth, width - coverWidth, 0);
+    const y = clamp(height * 0.32 - FOCUS.y * coverHeight, height - coverHeight, 0);
     return { width, height, coverWidth, coverHeight, x, y };
   }
 
@@ -73,13 +77,14 @@ function setUpIntro(intro) {
 
   // The loop is not marked autoplay, so reduced-motion visitors never download it.
   function playLoop() {
-    if (!video || !video.paused || motionPreference.matches) return;
+    if (!video || !video.paused || motionPreference.matches || document.hidden || !visible) return;
     video.muted = true;
     video.play()?.catch(() => {});
   }
 
-  function paint() {
+  function paint(now = performance.now()) {
     framePending = false;
+    window.clearTimeout(flameTimer);
     if (motionPreference.matches || !layout) {
       html.classList.remove("is-intro");
       return;
@@ -88,36 +93,39 @@ function setUpIntro(intro) {
     const distance = Math.max(1, rect.height - window.innerHeight);
     const scrolled = clamp(-rect.top / distance);
     const t = clamp((scrolled - LIGHT_START) / (LIGHT_END - LIGHT_START));
-    const frame = t <= 0 ? -1 : Math.min(meta.frames - 1, Math.floor(t * meta.frames));
+    // Twenty-four discrete poses per second keep the flicker in the same
+    // illustrated world as the loop. Scrolling itself is still immediate.
+    const tick = Math.floor(now / (1000 / 24));
 
     // The site's header returns once the hero starts rising out of the white.
     html.classList.toggle("is-intro", rect.bottom > window.innerHeight * 0.15);
     intro.classList.toggle("is-scrolling", scrolled > 0.015);
-    intro.classList.toggle("is-bright", t > 0.6);
+    intro.classList.toggle("is-bright", t > 0.75);
 
-    const key = `${frame}|${layout.width}x${layout.height}`;
+    const animating = visible && !document.hidden && t > 0 && t < 1;
+    if (animating) flameTimer = window.setTimeout(schedule, 1000 / 24);
+    const key = `${t.toFixed(4)}|${animating ? tick : 0}|${layout.width}x${layout.height}`;
     if (key === lastKey) return;
     lastKey = key;
 
-    lift.style.opacity = frame < 0 ? "0" : String(meta.lift[frame]);
+    lift.style.opacity = String(clamp((t - 0.6) / 0.4) * 0.65);
     context.clearRect(0, 0, layout.width, layout.height);
 
-    if (frame >= meta.frames - 1) {
+    if (t >= 1) {
       context.fillStyle = "#fff";
       context.fillRect(0, 0, layout.width, layout.height);
       video?.pause();
       return;
     }
-    if (rect.bottom > 0) playLoop();
-    if (frame < 0 || !sheet) return;
-    const column = frame % meta.cols;
-    const row = Math.floor(frame / meta.cols);
+    if (visible) playLoop();
+    if (t <= 0 || !visible || document.hidden) return;
+    paintFlame(lightContext, t, tick / 24);
     context.drawImage(
-      sheet,
-      column * meta.width,
-      row * meta.height,
-      meta.width,
-      meta.height,
+      light,
+      0,
+      0,
+      LIGHT_WIDTH,
+      LIGHT_HEIGHT,
       layout.x,
       layout.y,
       layout.coverWidth,
@@ -146,31 +154,37 @@ function setUpIntro(intro) {
   if ("IntersectionObserver" in window && video) {
     new IntersectionObserver((entries) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) video.pause();
-        else schedule();
+        visible = entry.isIntersecting;
+        if (!visible) {
+          video.pause();
+          window.clearTimeout(flameTimer);
+        } else {
+          lastKey = "";
+          schedule();
+        }
       }
     }).observe(stage);
   }
 
-  const image = new Image();
-  image.decoding = "async";
-  image.addEventListener("load", () => {
-    sheet = image;
-    lastKey = "";
-    schedule();
-  });
-  const loadSheet = () => {
-    if (!motionPreference.matches && !image.src) image.src = lightSheetUrl;
-  };
-
   motionPreference.addEventListener("change", () => {
-    if (motionPreference.matches) video?.pause();
-    loadSheet();
+    if (motionPreference.matches) {
+      video?.pause();
+      window.clearTimeout(flameTimer);
+      html.classList.remove("is-intro");
+    }
     resize();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      video?.pause();
+      window.clearTimeout(flameTimer);
+    } else {
+      lastKey = "";
+      schedule();
+    }
   });
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", resize, { passive: true });
 
-  loadSheet();
   resize();
 }

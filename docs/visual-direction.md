@@ -2,6 +2,8 @@
 
 Ares pairs monumental classical imagery with a quiet editorial layout. The central message is “Your themes. Your look. To match your business.” Warm ivory, muted limestone, understated sage and gold, and generous serif typography keep the website welcoming and readable.
 
+The brand mark is a simple fluted Doric column in muted gold. The same silhouette appears in the header, footer signature, and browser icon.
+
 ## Original image assets
 
 The images were generated specifically for this project with the image-generation tool available in Codex, then encoded as WebP. They are still images, not video. No third-party client photographs or Pear website assets are included.
@@ -16,17 +18,19 @@ The imagery keeps the material pale and realistic: no weapons, bright gold armor
 
 ## Opening sequence
 
-The site opens on a pixel-art statue in an ivy courtyard, a deliberate contrast to the photographic story that follows. Only the green foliage sways; marble, wall, and light stay still. The palette is muted to sit beside the site's ivory and sage.
+The site opens on a pixel-art statue in an ivy courtyard. In the garden loop only the green foliage sways; marble and wall stay still. The palette is muted to sit beside the site's ivory and sage.
 
-Scrolling through roughly the first one and a half screen heights grows a pixel-art light from the statue's head. Rays lengthen, widen, and merge while the whole scene brightens in even steps, so the statue never fades separately from her surroundings. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
+Scrolling through roughly the first one and a half screen heights reveals a small gold flame above the statue's head. Layered amber, pale gold, and ivory form a slender, gently bending tongue of light; fine motes rise around it. It stays compact through the first half of the sequence, then its halo opens into a pale wash across the whole garden. The screen reaches pure white, and the hero rises through a soft white gradient. The garden keeps looping beneath the light, so starting to scroll never causes a jump.
 
 | Asset | Size | Purpose |
 | --- | --- | --- |
 | `public/intro/garden-loop.webm`, `.mp4` | 1920 × 1080, 4 s loop | Swaying garden; WebM first, MP4 fallback |
 | `public/intro/poster.webp` | 1208 × 680 | First paint, before the loop is ready |
-| `src/intro/light-sheet.png` | 120 frames of 320 × 180 | The light, drawn at its native pixel size and scaled with nearest-neighbour sampling |
+| `src/intro/flame.js` | 960 × 540 drawing grid | Live gold flame and rising motes, at three times the old sprite's resolution on each axis; nearest-neighbour scaling keeps its pixels aligned with the garden crop |
 
 On narrow or tall screens the frame is cropped so the statue's head stays in view, and the light is drawn on the same crop. The site header and reading progress are held back until the hero arrives, and the progress bar measures the site rather than the intro. Under `prefers-reduced-motion: reduce`, the sequence is not shown and the site opens on its hero.
+
+The flame changes pose at up to 24 frames per second while visible. It stops after the white handoff, outside the viewport, in a hidden tab, or under reduced motion.
 
 ## Motion
 
@@ -38,9 +42,9 @@ The middle of the site is one flight through a real 3D colonnade built to match 
 
 The marble is a seamless texture whose colours were measured from the photograph's marble: warm white stone with long, branching grey-brown veins, quieter on broad walls, the vault and the polished floor slabs. A low warm sun from the left lays column shadows across the floor; sunlight bouncing up from the floor lights the vault in soft stripes; faint sun shafts hang in the air between the columns; and the sky is the photograph's own, a touch warmer. The tone curve leaves the mid-tones untouched so the sky keeps its contrast, and only rolls off sunlit highlights.
 
-The building is fixed; the camera starts on the terrace with the front column near the centre and the corridor ahead to the right, through a slightly long lens (46°) as in the photograph. It turns toward the steps, climbs them, widens to 55° and glides down the centre of the corridor, passes through the arch about 84% of the way through the journey, and drifts on over the clouds while lifting its gaze before the stage fades into the showcase's background colour.
+The building is fixed; the camera starts on the terrace with the front column near the centre and the corridor ahead to the right, through a slightly long lens (46°) as in the photograph. It turns toward the steps, climbs them, widens to 55° and glides down the centre of the corridor, passes through the arch about 87% of the way through the scroll, and drifts on over the clouds while lifting its gaze before the stage fades into the showcase's background colour.
 
-| Share of the journey | Camera | Words |
+| Story progress (before the reading hold stretches scroll distance) | Camera | Words |
 | --- | --- | --- |
 | 0–17% | On the terrace, approaching the steps | 01 / Your themes. Your look. To match your business. (lines part as before) |
 | 18–34% | Up the steps, between the first columns | A website should feel like walking into your world. |
@@ -48,7 +52,7 @@ The building is fixed; the camera starts on the terrace with the front column ne
 | 55–77% | The arch grows ahead | I. II. III., the three qualities, on a soft paper band |
 | 79–97% | Through the arch, into sky | The details make it yours. |
 
-The journey is 760% of the screen height. On tall phone screens the camera's view widens so the corridor stays readable, and the words sit at the top over a paper gradient. While the visitor scrolls, the scene renders at a resolution suited to the device; when scrolling stops, one crisp frame is drawn. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
+The journey is 910% of the screen height. The added 150% belongs entirely to the qualities' fully opaque interval, giving those three messages about 243% of a screen height to read (previously 93%). They stay still while the camera glides more slowly behind them. Other beats keep their previous scroll duration. On tall phone screens the camera's view widens so the corridor stays readable, and the words sit at the top over a paper gradient. While the visitor scrolls, the scene renders at a resolution suited to the device; when scrolling stops, one crisp frame is drawn. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
 
 ## Reduced motion
 

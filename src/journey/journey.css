@@ -1,15 +1,20 @@
 /* The journey: a pinned stage where the camera flies through the colonnade and
    the story's words arrive in step. */
 .journey {
+  --flight-scroll: 660;
+  --reading-scroll: 150;
   position: relative;
-  height: 760vh; /* scroll length of the whole flight */
-  height: 760svh;
+  /* Extra runway belongs to the qualities' reading interval; the rest of the
+     flight keeps its original pace. These values are viewport-height units. */
+  height: calc((var(--flight-scroll) + var(--reading-scroll) + 100) * 1vh);
+  height: calc((var(--flight-scroll) + var(--reading-scroll) + 100) * 1svh);
   background: #e8e7dd;
 }
 .journey-mark {
   position: absolute;
   left: 0;
-  top: calc(var(--at) * (100% - 100svh));
+  /* The craft anchor precedes the extended reading interval. */
+  top: calc(var(--at) * var(--flight-scroll) * 1svh);
 }
 .journey-stage {
   position: sticky;

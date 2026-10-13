@@ -35,6 +35,7 @@ After the hero, a pinned stage flies a camera from the terrace (framed like the 
 - `src/journey/marble.webp` is a seamless marble tile; `tools/build-journey-marble.py` regenerates it (colours measured from the photograph's marble).
 - `src/journey/sky.webp` is the colonnade photograph's sky extended to a full frame; `tools/build-journey-sky.py` rebuilds it. Both tools need Python with NumPy, SciPy and Pillow (the sky also OpenCV).
 - Without WebGL the photograph itself pushes gently forward. Under reduced motion the journey becomes one still section over the photograph with every beat visible.
+- The three qualities have a longer reading hold: about 243vh of fully visible text, up from 93vh. An extra 150vh is added only to that interval, slowing the camera while the text stays still. Adjust `--reading-scroll` in `src/journey/journey.css` to change that added reading space.
 
 ### Going back to the classic site
 
@@ -46,7 +47,7 @@ git restore --source classic --staged --worktree -- .
 git commit -m "Return to the classic site"
 ```
 
-The site opens with a pixel-art garden: a statue in an ivy courtyard whose foliage sways on a short, muted, silent loop. Scrolling grows a light from the statue's head until the screen is white, and the hero then rises out of the white. The sequence lives in `src/intro/` (script, styles, light sprite) and `public/intro/` (loop video and poster), about 1.2 MB in total. A **Skip intro** button jumps straight to the hero, and the header returns once the site begins. Visitors who prefer reduced motion skip the sequence entirely and never download the loop.
+The site opens with a pixel-art garden: a statue in an ivy courtyard whose foliage sways on a short, muted, silent loop. Scrolling reveals a small gold flame above the statue, with a gentle flicker and fine rising motes. Its light blooms into white near the end, and the hero then rises out of the white. The sequence lives in `src/intro/` (script, styles, and procedural flame) and `public/intro/` (loop video and poster). `flame.js` draws at 960 × 540 with nearest-neighbour scaling to match the garden's fine pixel texture. The flame animates only while visible; hidden tabs and reduced motion stop it. A **Skip intro** button jumps straight to the hero, and the header returns once the site begins. Visitors who prefer reduced motion skip the sequence entirely and never download the loop.
 
 Scroll-linked scale and vertical drift give the photographs a slow camera-like movement. Scrolling stays native and is never intercepted, and reduced-motion mode stops image and text transforms. No autoplay sound or remote image service is required. Fonts are also served locally.
 

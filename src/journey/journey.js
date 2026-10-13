@@ -9,6 +9,7 @@ import { VERTEX, FRAGMENT } from "./scene.js";
 // the camera moves.
 
 const FLIGHT_END = 0.84; // share of the journey before the camera clears the arch
+const BEAT_FADE = 0.18;
 const PAPER = [232 / 255, 231 / 255, 221 / 255]; // the showcase background that follows
 
 // Camera keyframes through the building: [flight share, position, look-at].
@@ -76,8 +77,27 @@ function setUpJourney(journey) {
   const scrim = journey.querySelector(".journey-scrim");
   const beats = [...journey.querySelectorAll("[data-beat]")].map((element) => {
     const [start, end] = element.dataset.beat.split(" ").map(Number);
-    return { element, start, end, links: [...element.querySelectorAll("a")] };
+    return { element, start, end, reading: element.hasAttribute("data-reading-beat"), links: [...element.querySelectorAll("a")] };
   });
+  const readingBeat = beats.find((beat) => beat.reading);
+  const journeyStyle = getComputedStyle(journey);
+  const flightScroll = Number.parseFloat(journeyStyle.getPropertyValue("--flight-scroll"));
+  const readingScroll = Number.parseFloat(journeyStyle.getPropertyValue("--reading-scroll"));
+
+  // Stretch only the qualities' fully opaque interval. The camera keeps moving
+  // gently behind the words, and every other beat retains its original runway.
+  function storyAt(scrollProgress) {
+    if (!readingBeat || !flightScroll || !readingScroll) return scrollProgress;
+    const span = readingBeat.end - readingBeat.start;
+    const start = readingBeat.start + span * BEAT_FADE;
+    const end = readingBeat.end - span * BEAT_FADE;
+    const distance = scrollProgress * (flightScroll + readingScroll);
+    const readingStart = start * flightScroll;
+    const readingEnd = end * flightScroll + readingScroll;
+    if (distance <= readingStart) return distance / flightScroll;
+    if (distance >= readingEnd) return (distance - readingScroll) / flightScroll;
+    return start + ((distance - readingStart) / (readingEnd - readingStart)) * (end - start);
+  }
 
   let gl = null;
   let uniforms = {};
@@ -94,7 +114,7 @@ function setUpJourney(journey) {
   function measure() {
     const rect = journey.getBoundingClientRect();
     const distance = Math.max(1, rect.height - window.innerHeight);
-    return clamp(-rect.top / distance);
+    return storyAt(clamp(-rect.top / distance));
   }
 
   // Each beat fades and drifts in, holds, and leaves before the next arrives.
@@ -102,10 +122,13 @@ function setUpJourney(journey) {
     for (const beat of beats) {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
-      const fadeIn = beat.start === 0 ? 1 : smooth(0, 0.18, local);
-      const fadeOut = 1 - smooth(0.82, 1, local);
+      const fadeIn = beat.start === 0 ? 1 : smooth(0, BEAT_FADE, local);
+      const fadeOut = 1 - smooth(1 - BEAT_FADE, 1, local);
       const opacity = motionPreference.matches ? 1 : fadeIn * fadeOut;
-      const shift = motionPreference.matches ? 0 : (0.5 - clamp(local)) * 60;
+      // The longer reading beat settles completely while all three qualities
+      // are visible, then resumes its drift on the way out.
+      const drift = beat.reading ? 30 * (1 - fadeIn) - 30 * (1 - fadeOut) : (0.5 - clamp(local)) * 60;
+      const shift = motionPreference.matches ? 0 : drift;
       beat.element.style.opacity = opacity.toFixed(3);
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
       beat.element.style.setProperty("--beat-shift", `${shift.toFixed(1)}px`);

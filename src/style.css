@@ -120,6 +120,7 @@ em {
 }
 .brand-mark {
   color: #8e805c;
+  flex: none;
 }
 .brand-byline {
   display: block;
@@ -1159,6 +1160,17 @@ em {
   font-style: italic;
   font-size: 17px;
   letter-spacing: 0;
+}
+.footer-signature {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.footer-mark {
+  width: 20px;
+  height: 25px;
+  color: #8e805c;
+  flex: none;
 }
 .footer-bottom a {
   display: flex;

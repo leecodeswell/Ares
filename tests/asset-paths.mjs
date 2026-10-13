@@ -102,10 +102,17 @@ try {
             const element = document.querySelector("[data-intro]");
             return element.offsetTop + element.offsetHeight;
           });
-          await page.evaluate((end) => scrollTo({ top: end * 0.5, behavior: "instant" }), introEnd);
-          await page.waitForFunction(() =>
-            performance.getEntriesByType("resource").some((entry) => /light-sheet.*\.png$/.test(entry.name)),
-          );
+          await page.evaluate((end) => scrollTo({ top: (end - innerHeight) * 0.3, behavior: "instant" }), introEnd);
+          await page.waitForFunction(() => {
+            const canvas = document.querySelector("[data-intro-light]");
+            const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+            // The light is now drawn live. Verify visible warm flame pixels,
+            // rather than a request for the retired sprite-sheet asset.
+            for (let i = 0; i < pixels.length; i += 4) {
+              if (pixels[i] > 190 && pixels[i + 1] > 140 && pixels[i + 2] < 225 && pixels[i + 3] > 180) return true;
+            }
+            return false;
+          });
           await page.locator("[data-journey]").scrollIntoViewIfNeeded();
           await page.waitForFunction(() =>
             ["sky", "marble"].every((name) =>

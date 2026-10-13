@@ -54,6 +54,15 @@ const introTop = await page.evaluate(() => {
 check('Opening sequence plays the garden loop with the header held back', introTop.present && introTop.playing && introTop.headerHidden && introTop.skipVisible, introTop);
 await page.screenshot({ path: `${screenshotDir}/desktop-intro.png` });
 report.screenshots.push(`${screenshotDir}/desktop-intro.png`);
+await page.locator('[data-intro-light]').evaluate(canvas => {
+  const context = canvas.getContext('2d');
+  const drawImage = context.drawImage;
+  window.__aresFlameDraws = 0;
+  context.drawImage = function (...args) {
+    window.__aresFlameDraws++;
+    return drawImage.apply(this, args);
+  };
+});
 const lightAt = async fraction => {
   await page.evaluate(([end, f]) => scrollTo({ top: (end - innerHeight) * f, behavior: 'instant' }), [introTop.end, fraction]);
   await page.waitForTimeout(250);
@@ -71,12 +80,21 @@ for (const fraction of [0, 0.3, 0.6, 0.98]) {
   lightStates.push({ fraction, ...(await lightAt(fraction)) });
   await page.screenshot({ path: `${screenshotDir}/desktop-intro-${Math.round(fraction * 100)}.png` });
   report.screenshots.push(`${screenshotDir}/desktop-intro-${Math.round(fraction * 100)}.png`);
+  if (fraction === 0.3) {
+    const firstPose = await page.locator('[data-intro-light]').evaluate(canvas => canvas.toDataURL());
+    await page.waitForTimeout(400);
+    const secondPose = await page.locator('[data-intro-light]').evaluate(canvas => canvas.toDataURL());
+    check('The early flame stays compact and flickers without scrolling', lightStates.at(-1).lit > 0 && lightStates.at(-1).lit < 0.02 && firstPose !== secondPose, { litFraction: lightStates.at(-1).lit, posesChanged: firstPose !== secondPose });
+  }
 }
 check('Scrolling grows the light until the screen is white', lightStates[0].lit === 0 && lightStates[1].lit > 0 && lightStates[2].lit > lightStates[1].lit && lightStates[3].white > 0.99, lightStates);
 await page.evaluate(end => scrollTo({ top: end, behavior: 'instant' }), introTop.end);
 await page.waitForTimeout(700);
 const heroArrival = await page.evaluate(() => ({ heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), headerVisible: getComputedStyle(document.querySelector('.site-header')).visibility === 'visible', loopPaused: document.querySelector('[data-intro] video').paused }));
 check('The hero follows the white with the header restored and the loop paused', heroArrival.heroTop === 0 && heroArrival.headerVisible && heroArrival.loopPaused, heroArrival);
+const flameDrawsAfterIntro = await page.evaluate(() => window.__aresFlameDraws);
+await page.waitForTimeout(400);
+check('The flame stops drawing once the intro is offscreen', await page.evaluate(() => window.__aresFlameDraws) === flameDrawsAfterIntro);
 await page.screenshot({ path: `${screenshotDir}/desktop-hero.png` });
 report.screenshots.push(`${screenshotDir}/desktop-hero.png`);
 await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
@@ -114,9 +132,19 @@ const journeyAt = async fraction => {
 };
 await page.waitForFunction(() => document.querySelector('[data-journey]')?.classList.contains('is-flying'), null, { timeout: 8000 }).catch(() => {});
 const journeyStates = [];
-for (const fraction of [0.05, 0.45, 0.9]) journeyStates.push(await journeyAt(fraction));
+for (const fraction of [0.05, 0.37, 0.9]) journeyStates.push(await journeyAt(fraction));
 check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
 check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
+const readingStates = [];
+for (const fraction of [0.5, 0.63, 0.76]) {
+  await journeyAt(fraction);
+  readingStates.push(await page.locator('[data-reading-beat]').evaluate(beat => {
+    const style = getComputedStyle(beat);
+    const rect = beat.getBoundingClientRect();
+    return { opacity: Number(style.opacity), top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
+  }));
+}
+check('All three qualities stay fully readable and steady across an extended scroll interval', readingStates.every(state => state.opacity === 1 && state.headings.length === 3 && state.top >= 0 && state.bottom <= state.viewport && Math.abs(state.top - readingStates[0].top) < 1), readingStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] canvas')].map(canvas => ({ width: canvas.width, height: canvas.height, visible: getComputedStyle(canvas).opacity === '1' })));
 check('The flight canvas fills the stage', flightFrames.length === 1 && flightFrames[0].width > 0 && flightFrames[0].visible, flightFrames);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
