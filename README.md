@@ -69,7 +69,13 @@ The audit checks the opening sequence (loop playback, the light growing to white
 
 This is a static frontend. `npm run build` produces `dist/` for a static host. No backend credentials are needed. The inquiry form opens an email draft and requires the visitor's email app to send it.
 
-No deployment is configured or performed by these scripts. For cloud development, work in the existing checkout; tasks are already isolated, so a new Git worktree is unnecessary.
+### GitHub Pages
+
+The workflow in `.github/workflows/deploy-pages.yml` builds and deploys the site whenever a commit reaches `main`. Enable it once in the repository's **Settings → Pages → Build and deployment → Source → GitHub Actions**. Then open **Actions → Deploy to GitHub Pages → Run workflow** and choose `main` to publish the current version. Later pushes deploy automatically.
+
+The default public URL is **https://leecodeswell.github.io/Ares/**. Deployment progress and errors appear in the Actions tab. If the first run fails before Pages is enabled, enable the setting and rerun the workflow. You do not need a Codespace or a running development server to view the deployed site. Edits must be committed and pushed before they appear there.
+
+The local npm scripts only build or preview the site; deployment is performed by GitHub Actions. For cloud development, work in the existing checkout; tasks are already isolated, so a new Git worktree is unnecessary.
 
 ### Image paths and hosting
 
