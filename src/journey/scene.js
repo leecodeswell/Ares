@@ -5,8 +5,7 @@
 // Layout: a terrace and steps lead up to a corridor between two rows of nine
 // broad Corinthian columns (x = ±3, 4.6 m apart). A coffered barrel vault
 // spans the corridor; both sides are open to the sky, the clouds and the
-// mountains. Olive trees stand on the terrace. The far wall (z = 42) has an
-// arched opening.
+// mountains. The far wall (z = 42) has an arched opening.
 
 export const VERTEX = `
 attribute vec2 aPosition;
@@ -44,7 +43,7 @@ const vec3 SUN = normalize(vec3(-0.84, 0.42, -0.22));   // toward the sun: low, 
 const vec3 SUN_COLOR = vec3(1.0, 0.84, 0.66);
 const vec3 HAZE = vec3(0.9, 0.84, 0.78);
 
-// Ids: 1 column, 2 floor, 3 stone (walls, entablature), 4 vault, 5 olive leaves, 6 bark
+// Ids: 1 column, 2 floor, 3 stone (walls, entablature), 4 vault
 float flutes = 1.0; // shadows and occlusion skip fine detail, which only adds noise
 
 // ---------- helpers
@@ -136,77 +135,6 @@ float vault(vec3 p) {
   return min(shell, rib);
 }
 
-// ---------- an olive tree in a round stone planter, standing at its base point
-// cheap ellipsoid bound: plenty for soft clumps of leaves
-float sdEllipsoid(vec3 p, vec3 r) {
-  return (length(p / r) - 1.0) * min(r.x, min(r.y, r.z));
-}
-float sdCapsule(vec3 p, vec3 a, vec3 b, float ra, float rb) {
-  vec3 pa = p - a, ba = b - a;
-  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-  return length(pa - ba * h) - mix(ra, rb, h);
-}
-float smin(float a, float b, float k) {
-  float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
-  return mix(b, a, h) - k * h * (1.0 - h);
-}
-vec2 oliveTree(vec3 p, vec3 base, float turn) {
-  vec3 q = p - base;
-  float bound = length(q - vec3(0.0, 1.9, 0.0)) - 2.9;
-  if (bound > 0.4) return vec2(bound, 5.0);
-  float c = cos(turn), s = sin(turn);
-  q.xz = mat2(c, -s, s, c) * q.xz;
-  // planter: a round basin with a rim
-  float basin = max(length(q.xz) - 0.72, abs(q.y - 0.28) - 0.28);
-  float rim = sdTorusY(q - vec3(0.0, 0.56, 0.0), 0.7, 0.06);
-  vec2 res = vec2(min(basin, rim), 3.0);
-  // gnarled trunk splitting into five spreading limbs
-  vec3 fork = vec3(0.18, 1.45, 0.05);
-  float trunk = sdCapsule(q, vec3(0.0, 0.5, 0.0), fork, 0.17, 0.11);
-  trunk = smin(trunk, sdCapsule(q, fork, vec3(-0.85, 2.3, 0.2), 0.09, 0.04), 0.08);
-  trunk = smin(trunk, sdCapsule(q, fork, vec3(1.0, 2.2, -0.25), 0.09, 0.04), 0.08);
-  trunk = smin(trunk, sdCapsule(q, fork, vec3(0.1, 2.65, 0.7), 0.08, 0.035), 0.08);
-  trunk = smin(trunk, sdCapsule(q, fork, vec3(-0.1, 2.5, -0.8), 0.08, 0.035), 0.08);
-  trunk = smin(trunk, sdCapsule(q, fork, vec3(0.35, 2.95, 0.0), 0.08, 0.035), 0.08);
-  if (trunk < res.x) res = vec2(trunk, 6.0);
-  // separate, flattish clumps of leaves at the ends of the limbs, with ragged
-  // edges and gaps; fine leafy relief only for camera rays
-  float crown = sdEllipsoid(q - vec3(-0.9, 2.45, 0.2), vec3(0.62, 0.3, 0.55));
-  crown = smin(crown, sdEllipsoid(q - vec3(1.05, 2.35, -0.25), vec3(0.6, 0.3, 0.5)), 0.12);
-  crown = smin(crown, sdEllipsoid(q - vec3(0.1, 2.82, 0.75), vec3(0.55, 0.28, 0.5)), 0.12);
-  crown = smin(crown, sdEllipsoid(q - vec3(-0.1, 2.65, -0.85), vec3(0.55, 0.28, 0.48)), 0.12);
-  crown = smin(crown, sdEllipsoid(q - vec3(0.35, 3.15, 0.0), vec3(0.7, 0.34, 0.6)), 0.12);
-  if (flutes > 0.5) {
-    vec3 w = sin(q * vec3(13.0, 17.0, 14.0) + vec3(0.0, 1.0, 2.0));
-    vec3 w2 = sin(q * vec3(31.0, 29.0, 33.0) + vec3(1.3, 0.0, 0.7));
-    crown += 0.09 * w.x * w.y * w.z + 0.05 * w2.x * w2.y * w2.z;
-  }
-  if (crown < res.x) res = vec2(crown * 0.8, 5.0);
-  return res;
-}
-
-// Trees are only evaluated for camera rays that pass near them (and points
-// beside them), so the rest of the frame pays nothing for them. Shadow and
-// sun-shaft rays skip them; their shade on the floor is drawn analytically.
-const vec3 TREE_A = vec3(5.7, 0.0, 3.0);
-const vec3 TREE_B = vec3(-5.8, 0.0, 16.0);
-const float TREE_R = 3.0; // bounding sphere around each tree, centred 1.9 m up
-float treesOn = 0.0;
-float raySphere(vec3 ro, vec3 rd, vec3 c, float r) {
-  vec3 oc = ro - c;
-  float b = dot(oc, rd);
-  float h = b * b - (dot(oc, oc) - r * r);
-  return (h > 0.0 && -b + sqrt(h) > 0.0) ? 1.0 : 0.0;
-}
-void treesForRay(vec3 ro, vec3 rd) {
-  treesOn = max(raySphere(ro, rd, TREE_A + vec3(0.0, 1.9, 0.0), TREE_R),
-                raySphere(ro, rd, TREE_B + vec3(0.0, 1.9, 0.0), TREE_R));
-}
-void treesAtPoint(vec3 p) {
-  treesOn = (length(p - TREE_A - vec3(0.0, 1.9, 0.0)) < TREE_R + 1.0 ||
-             length(p - TREE_B - vec3(0.0, 1.9, 0.0)) < TREE_R + 1.0) ? 1.0 : 0.0;
-}
-
 vec2 map(vec3 p) {
   // column rows on both sides, repeated along z
   vec3 q = vec3(abs(p.x) - ROWX, p.y, p.z - SPACING * clamp(floor(p.z / SPACING + 0.5), 0.0, LASTCOL));
@@ -249,19 +177,10 @@ vec2 map(vec3 p) {
   parapet = min(parapet, sdRoundBox(p - vec3(-9.2, -0.3, -3.05), vec3(4.8, 0.32, 0.24), 0.04));
   float ground = min(min(floorSlab, terrace), min(min(step1, step2), min(step3, parapet)));
   if (ground < res.x) res = vec2(ground, 2.0);
-
-  // two olive trees on the walkway outside the colonnade
-  if (treesOn > 0.5) {
-    // only the nearer tree needs its full shape
-    bool nearA = length(p - TREE_A) < length(p - TREE_B);
-    vec2 tree = oliveTree(p, nearA ? TREE_A : TREE_B, nearA ? 0.4 : 2.2);
-    if (tree.x < res.x) res = tree;
-  }
   return res;
 }
 
 vec3 normalAt(vec3 p) {
-  treesAtPoint(p);
   vec2 e = vec2(0.0012, 0.0);
   return normalize(vec3(
     map(p + e.xyy).x - map(p - e.xyy).x,
@@ -286,7 +205,6 @@ vec2 march(vec3 ro, vec3 rd, float far, int steps) {
   if (span.y < max(span.x, 0.0)) return vec2(-1.0, 0.0);
   far = min(far, span.y);
   float t = max(0.02, span.x);
-  treesForRay(ro, rd);
   for (int i = 0; i < 140; i++) {
     if (i >= steps) break;
     vec2 h = map(ro + rd * t);
@@ -301,7 +219,6 @@ float softShadow(vec3 ro, vec3 rd, float k) {
   flutes = 0.0;
   float res = 1.0, t = 0.06;
   float exit = min(32.0, boxSpan(ro, rd).y);
-  treesOn = 0.0;
   for (int i = 0; i < 40; i++) {
     float h = map(ro + rd * t).x;
     res = min(res, k * h / t);
@@ -314,7 +231,6 @@ float softShadow(vec3 ro, vec3 rd, float k) {
 }
 
 float occlusion(vec3 p, vec3 n) {
-  treesAtPoint(p);
   flutes = 0.0;
   float occ = 0.0, w = 1.0;
   for (int i = 1; i <= 5; i++) {
@@ -405,17 +321,6 @@ vec3 marbleTexture(vec2 uv) { return toLinear(texture2D(uMarble, uv).rgb); }
 
 vec3 albedoAt(vec3 p, vec3 n, float m) {
   const float TILE = 2.4; // metres per repeat of the marble texture
-  if (m > 5.5) {
-    // olive bark: grey-brown with furrows
-    float furrow = 0.8 + 0.2 * sin(p.y * 22.0 + sin(p.x * 9.0) * 2.0);
-    return vec3(0.16, 0.12, 0.085) * furrow;
-  }
-  if (m > 4.5) {
-    // olive leaves: dusty silver-green, dappled
-    float dapple = hash12(floor(p.xz * 14.0) + floor(p.y * 14.0) * 7.1);
-    vec3 leaf = mix(vec3(0.1, 0.12, 0.065), vec3(0.26, 0.28, 0.18), dapple);
-    return mix(leaf, vec3(0.34, 0.35, 0.27), smoothstep(0.2, 0.9, n.y) * 0.45); // silvery tops
-  }
   if (m < 1.5) {
     // columns: wrap the marble around the shaft so veins run continuously
     vec3 q = vec3(abs(p.x) - ROWX, p.y, p.z - SPACING * clamp(floor(p.z / SPACING + 0.5), 0.0, LASTCOL));
@@ -463,16 +368,8 @@ vec3 shade(vec3 p, vec3 rd, vec3 n, float m, bool full) {
     bounce *= 0.35 + 1.9 * lit * down;
   }
   light += bounce;
-  // soft shade of the olive crowns on the floor, cast away from the sun
-  if (m > 1.5 && m < 2.5) {
-    vec2 away = -normalize(SUN.xz) * 2.6 / max(SUN.y, 0.3) * 0.42;
-    float da = length((p.xz - TREE_A.xz - away) * vec2(1.0, 1.25));
-    float db = length((p.xz - TREE_B.xz - away) * vec2(1.0, 1.25));
-    float treeShade = (1.0 - 0.55 * smoothstep(1.7, 0.6, da)) * (1.0 - 0.55 * smoothstep(1.7, 0.6, db));
-    light = mix(light, light * treeShade, clamp(diff * 2.0, 0.0, 1.0));
-  }
   vec3 col = albedo * light;
-  float spec = m > 4.5 ? 0.0 : pow(max(dot(reflect(rd, n), SUN), 0.0), m > 1.5 && m < 2.5 ? 60.0 : 18.0) * shadow;
+  float spec = pow(max(dot(reflect(rd, n), SUN), 0.0), m > 1.5 && m < 2.5 ? 60.0 : 18.0) * shadow;
   return col + SUN_COLOR * spec * (m > 1.5 && m < 2.5 ? 0.5 : 0.1);
 }
 
@@ -488,8 +385,7 @@ float sunShafts(vec3 ro, vec3 rd, float tmax) {
     vec3 p = ro + rd * t;
     float v = 1.0, s = 0.1;
     float exit = min(22.0, boxSpan(p, SUN).y); // past the building the air is in full sun
-    treesOn = 0.0;
-    for (int j = 0; j < 12; j++) {
+      for (int j = 0; j < 12; j++) {
       float h = map(p + SUN * s).x;
       if (h < 0.01) { v = 0.0; break; }
       s += max(h, 0.3);
