@@ -122,10 +122,18 @@ try {
             variant,
           );
           await page.locator("[data-journey]").scrollIntoViewIfNeeded();
-          await page.waitForFunction(() =>
-            ["sky", "marble"].every((name) =>
-              performance.getEntriesByType("resource").some((entry) => new RegExp(`/${name}[^/]*\\.webp$`).test(entry.name)),
-            ),
+          // The colonnade flight is a pre-rendered video, portrait on phones.
+          const flight = await page.evaluate(async () => {
+            const video = document.querySelector("[data-journey] video");
+            await new Promise((ready) => {
+              if (video.readyState >= 2) ready();
+              else video.addEventListener("loadeddata", ready, { once: true });
+            });
+            return new URL(video.currentSrc).pathname;
+          });
+          assert.match(
+            flight,
+            new RegExp(`^${mount}journey/flight-${width < 761 ? "portrait" : "landscape"}\\.(mp4|webm)$`),
           );
           await page.locator('[data-concept="botanical"]').click();
           assert.equal(
@@ -141,7 +149,7 @@ try {
           );
           assert.deepEqual(failures, [], "No build assets may fail to load");
           console.log(
-            `PASS ${mount} at ${width}px: intro media, journey textures, images, fonts, CSS, and JavaScript`,
+            `PASS ${mount} at ${width}px: intro media, journey video, images, fonts, CSS, and JavaScript`,
           );
         } finally {
           await page.close();

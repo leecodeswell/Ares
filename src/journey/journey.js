@@ -1,28 +1,13 @@
 import "./journey.css";
-import skyUrl from "./sky.webp";
-import marbleUrl from "./marble.webp";
-import { VERTEX, FRAGMENT } from "./scene.js";
+import { cameraAt } from "./camera.js";
 
 // The journey: a camera flies up the steps and down a static marble
 // colonnade, through the arch in its far wall and out into open sky, while
-// the story's words arrive in step. The building is real 3D (scene.js); only
-// the camera moves.
+// the story's words arrive in step. The flight is rendered offline at full
+// quality along a fixed path (tools/render-journey) and played here as a
+// video scrubbed by the scroll, so the visitor's GPU does no 3D work.
 
-const FLIGHT_END = 0.84; // share of the journey before the camera clears the arch
 const BEAT_FADE = 0.18;
-const PAPER = [232 / 255, 231 / 255, 221 / 255]; // the showcase background that follows
-
-// Camera keyframes through the building: [flight share, position, look-at].
-const PATH = [
-  [0.0, [-0.7, 0.3, -7.5], [-10.45, 2.1, 20.8]], // on the terrace, framed like the sanctuary photograph
-  [0.14, [-0.4, 0.9, -4.4], [-4.5, 2.5, 24]], // turning toward the steps
-  [0.28, [0, 1.6, 1.5], [0.2, 2.8, 34]], // up the steps, between the first columns
-  [0.52, [0, 1.75, 16], [0, 2.7, 52]], // halfway down the corridor
-  [0.78, [0, 1.95, 33], [0, 2.5, 70]], // the arch ahead
-  [0.92, [0, 2.1, 40.4], [0, 2.6, 75]], // at the threshold
-  [1.0, [0, 2.3, 44.5], [0, 3.2, 80]], // through, above the clouds
-];
-
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const smooth = (edge0, edge1, value) => {
   const x = clamp((value - edge0) / (edge1 - edge0));
@@ -33,48 +18,19 @@ const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const root = document.querySelector("[data-journey]");
 if (root) setUpJourney(root);
 
-// Catmull-Rom through the keyframes, so the camera glides without corners.
-function along(index, local, pick) {
-  const at = (i) => PATH[Math.min(PATH.length - 1, Math.max(0, i))][pick];
-  const p0 = at(index - 1), p1 = at(index), p2 = at(index + 1), p3 = at(index + 2);
-  const t = local, t2 = t * t, t3 = t2 * t;
-  return p1.map((_, k) =>
-    0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3),
-  );
-}
-
-/** Where the camera is, and what the frame looks like, for a share of the journey (0-1). */
-export function cameraAt(progress) {
-  const flight = clamp(progress / FLIGHT_END);
-  const sky = clamp((progress - FLIGHT_END) / (1 - FLIGHT_END));
-  let index = 0;
-  while (index < PATH.length - 2 && flight > PATH[index + 1][0]) index++;
-  const local = clamp((flight - PATH[index][0]) / (PATH[index + 1][0] - PATH[index][0]));
-  const eased = local * local * (3 - 2 * local) * 0.35 + local * 0.65;
-  let position = along(index, eased, 1);
-  let target = along(index, eased, 2);
-  if (sky > 0) {
-    // Out over the clouds the camera keeps drifting forward and lifts its gaze.
-    const lift = smooth(0, 1, sky);
-    position = [position[0], position[1] + 3.5 * lift, position[2] + 14 * lift];
-    target = [target[0], target[1] + 22 * lift, target[2]];
-  }
-  return {
-    flight,
-    position,
-    target,
-    // a wide view of the terrace and scenery at the start; a touch wider inside
-    fov: 52 + 3 * smooth(0.05, 0.3, flight),
-    glow: 0.35 * smooth(0.86, 0.99, flight) * (1 - smooth(0, 0.45, sky)),
-    paper: smooth(0.55, 1, sky),
-  };
-}
-
 function setUpJourney(journey) {
   const stage = journey.querySelector("[data-journey-stage]");
-  const canvas = journey.querySelector("[data-journey-canvas]");
+  const video = journey.querySelector("[data-journey-video]");
   const still = journey.querySelector("[data-journey-still]");
-  const scrim = journey.querySelector(".journey-scrim");
+  const frames = Number(video?.dataset.frames) || 240;
+  const fps = Number(video?.dataset.fps) || 24;
+  // For each orientation, the first encoding this browser can decode
+  // (H.264 where available, VP9 WebM otherwise).
+  const sources = {};
+  for (const source of video?.querySelectorAll("source") || []) {
+    const { orientation: shape } = source.dataset;
+    if (!sources[shape] && video.canPlayType(source.type)) sources[shape] = source.src;
+  }
   const beats = [...journey.querySelectorAll("[data-beat]")].map((element) => {
     const [start, end] = element.dataset.beat.split(" ").map(Number);
     return {
@@ -82,7 +38,6 @@ function setUpJourney(journey) {
       start,
       end,
       reading: element.hasAttribute("data-reading-beat"),
-      panel: element.classList.contains("beat-qualities"),
       links: [...element.querySelectorAll("a")],
     };
   });
@@ -106,17 +61,12 @@ function setUpJourney(journey) {
     return start + ((distance - readingStart) / (readingEnd - readingStart)) * (end - start);
   }
 
-  let gl = null;
-  let uniforms = {};
-  let ready = false;
   let progress = 0;
   let framePending = false;
-  let restTimer = 0;
-  // Resolution while moving adapts to the device; at rest one crisp frame is drawn.
-  let movingScale = 0.6;
-  let lastFrameAt = 0;
-  let slowFrames = 0;
-  let fastFrames = 0;
+  let ready = false;
+  let orientation = "";
+  let seeking = false;
+  let wantedTime = -1;
 
   function measure() {
     const rect = journey.getBoundingClientRect();
@@ -124,25 +74,24 @@ function setUpJourney(journey) {
     return storyAt(clamp(-rect.top / distance));
   }
 
-  // Each beat fades and drifts in, holds, and leaves before the next arrives.
-  // How much text is on screen over the open scene; the qualities carry their
-  // own panel, so they don't count.
-  let textCover = 0;
-
+  // Each beat fades in, travels up the screen with the scroll as the camera
+  // moves, and fades out before the next arrives. The words float over the
+  // scene with only a soft glow behind their letters for legibility.
   function placeBeats() {
-    textCover = 0;
+    const travel = window.innerHeight * 0.42;
     for (const beat of beats) {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
       const fadeIn = beat.start === 0 ? 1 : smooth(0, BEAT_FADE, local);
       const fadeOut = 1 - smooth(1 - BEAT_FADE, 1, local);
       const opacity = motionPreference.matches ? 1 : fadeIn * fadeOut;
-      // The longer reading beat settles completely while all three qualities
-      // are visible, then resumes its drift on the way out.
-      const drift = beat.reading ? 30 * (1 - fadeIn) - 30 * (1 - fadeOut) : (0.5 - clamp(local)) * 60;
+      // The qualities settle while all three are being read, then move on;
+      // every other passage keeps travelling upward with the scroll.
+      const drift = beat.reading
+        ? 0.35 * travel * (1 - fadeIn) - 0.35 * travel * (1 - fadeOut)
+        : (0.5 - clamp(local)) * travel;
       const shift = motionPreference.matches ? 0 : drift;
       beat.element.style.opacity = opacity.toFixed(3);
-      if (!beat.panel) textCover = Math.max(textCover, opacity);
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
       beat.element.style.setProperty("--beat-shift", `${shift.toFixed(1)}px`);
       // Every beat stays readable to screen readers; only links that can't be
@@ -156,79 +105,49 @@ function setUpJourney(journey) {
     }
   }
 
-  function sizeCanvas(scale) {
-    const width = Math.max(1, Math.round(stage.clientWidth * scale));
-    const height = Math.max(1, Math.round(stage.clientHeight * scale));
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
+  // Phones get the portrait render, which widens its view as the live scene did.
+  function pickSource() {
+    if (!video) return;
+    const wanted = stage.clientHeight > stage.clientWidth * 1.05 ? "portrait" : "landscape";
+    if (wanted === orientation || !sources[wanted]) return;
+    orientation = wanted;
+    ready = false;
+    journey.classList.remove("is-flying");
+    // Once the journey is near, fetch the whole flight so every frame is
+    // ready to seek to.
+    video.preload = "auto";
+    video.src = sources[wanted];
+    video.load();
   }
 
-  function restingScale() {
-    // Crisp, but capped near 1.7 million pixels.
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-    const pixels = stage.clientWidth * stage.clientHeight * ratio * ratio;
-    return ratio * Math.min(1, Math.sqrt(1.7e6 / Math.max(1, pixels)));
+  // Seek one frame at a time: a new seek waits for the last to land, so fast
+  // scrolling never queues up stale frames.
+  function seekTo(time) {
+    wantedTime = time;
+    if (!ready || seeking) return;
+    if (Math.abs(video.currentTime - time) < 0.5 / fps) return;
+    seeking = true;
+    video.currentTime = time;
   }
 
-  function render(camera, scale) {
-    sizeCanvas(scale);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    const aspect = canvas.width / canvas.height;
-    // Keep at least ~50° across on tall phone screens.
-    const fov = Math.min((75 * Math.PI) / 180, Math.max((camera.fov * Math.PI) / 180, 2 * Math.atan(Math.tan((25 * Math.PI) / 180) / aspect)));
-    gl.uniform2f(uniforms.uResolution, canvas.width, canvas.height);
-    gl.uniform3f(uniforms.uCamera, ...camera.position);
-    gl.uniform3f(uniforms.uTarget, ...camera.target);
-    gl.uniform1f(uniforms.uFov, fov);
-    // reflections, sun shafts and bounced light switch off only while moving on slow devices
-    gl.uniform1f(uniforms.uQuality, scale >= 0.45 ? 1 : 0);
-    gl.uniform1f(uniforms.uGlow, camera.glow);
-    gl.uniform1f(uniforms.uPaperAmount, camera.paper);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-  }
-
-  function draw(now = performance.now()) {
+  function draw() {
     framePending = false;
     progress = motionPreference.matches ? 0 : measure();
     placeBeats();
-    const camera = cameraAt(progress);
     journey.dataset.progress = progress.toFixed(3);
-    // The text backdrop lifts with the final fade so the page meets the next
-    // section on exactly its colour.
-    // The paper backdrop only sits behind words while they are on screen, so
-    // between passages the scenery on the left is seen clear of any haze.
-    if (scrim) scrim.style.opacity = (textCover * (1 - camera.paper)).toFixed(3);
+    const camera = cameraAt(progress);
 
     if (!ready) {
       if (still) {
-        // Without WebGL the photograph itself pushes gently toward its arch.
-        still.style.transform = `scale(${(1 + 1.4 * smooth(0, 1, camera.flight)).toFixed(4)})`;
+        // Until the flight has loaded, its first frame pushes gently toward
+        // the arch so the scroll never feels dead.
+        still.style.transform = `scale(${(1 + 0.6 * smooth(0, 1, camera.flight)).toFixed(4)})`;
         still.style.opacity = String(1 - camera.paper);
       }
       return;
     }
-    const visible = journey.getBoundingClientRect();
-    if (visible.bottom < 0 || visible.top > window.innerHeight) return;
-
-    // Adapt the moving resolution to how quickly frames come back.
-    if (lastFrameAt && now - lastFrameAt < 200) {
-      const interval = now - lastFrameAt;
-      if (interval > 34) slowFrames++;
-      else if (interval < 20) fastFrames++;
-      if (slowFrames > 4) { movingScale = Math.max(0.32, movingScale * 0.85); slowFrames = 0; fastFrames = 0; }
-      if (fastFrames > 20) { movingScale = Math.min(0.85, movingScale * 1.08); slowFrames = 0; fastFrames = 0; }
-    }
-    lastFrameAt = now;
-
-    render(camera, Math.min(movingScale, restingScale()));
-    window.clearTimeout(restTimer);
-    restTimer = window.setTimeout(() => {
-      if (!ready || motionPreference.matches) return;
-      render(cameraAt(measure()), restingScale());
-      lastFrameAt = 0;
-    }, 180);
+    const frame = Math.round(progress * (frames - 1));
+    seekTo((frame + 0.5) / fps);
   }
 
   function schedule() {
@@ -238,87 +157,43 @@ function setUpJourney(journey) {
     }
   }
 
-  function compile(type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(shader) || "Shader failed to compile");
-    }
-    return shader;
+  if (video) {
+    video.muted = true;
+    video.addEventListener("loadeddata", () => {
+      ready = true;
+      seeking = false;
+      journey.classList.add("is-flying");
+      if (still) still.style.transform = "";
+      schedule();
+    });
+    // Some mobile browsers hold back a video's frames until it has played;
+    // a muted inline video may, so nudge it once and stop at once.
+    video.addEventListener("loadedmetadata", () => {
+      if (video.readyState >= 2) return;
+      const nudge = video.play();
+      nudge?.then(() => video.pause()).catch(() => {});
+    });
+    video.addEventListener("seeked", () => {
+      seeking = false;
+      if (wantedTime >= 0 && Math.abs(video.currentTime - wantedTime) >= 0.5 / fps) seekTo(wantedTime);
+    });
+    video.addEventListener("error", () => {
+      ready = false;
+      journey.classList.remove("is-flying");
+    });
   }
-
-  function startWebGL() {
-    gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, powerPreference: "high-performance" });
-    if (!gl) return;
-    let program;
-    try {
-      program = gl.createProgram();
-      gl.attachShader(program, compile(gl.VERTEX_SHADER, VERTEX));
-      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAGMENT));
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("Program failed to link");
-      gl.useProgram(program);
-    } catch {
-      gl = null;
-      return;
-    }
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-    const position = gl.getAttribLocation(program, "aPosition");
-    gl.enableVertexAttribArray(position);
-    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    for (const name of ["uResolution", "uCamera", "uTarget", "uFov", "uSky", "uMarble", "uQuality", "uGlow", "uPaper", "uPaperAmount"]) {
-      uniforms[name] = gl.getUniformLocation(program, name);
-    }
-    gl.uniform1i(uniforms.uSky, 0);
-    gl.uniform1i(uniforms.uMarble, 1);
-    gl.uniform3f(uniforms.uPaper, ...PAPER);
-
-    const loadTexture = (unit, url, repeat) =>
-      new Promise((resolve, reject) => {
-        const image = new Image();
-        image.decoding = "async";
-        image.addEventListener("load", () => {
-          gl.activeTexture(gl.TEXTURE0 + unit);
-          gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-          const wrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-          if (repeat) gl.generateMipmap(gl.TEXTURE_2D); // the marble tile is 1024 px, so it can repeat and mipmap
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, repeat ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
-          resolve();
-        });
-        image.addEventListener("error", reject);
-        image.src = url;
-      });
-    Promise.all([loadTexture(0, skyUrl, false), loadTexture(1, marbleUrl, true)])
-      .then(() => {
-        ready = true;
-        journey.classList.add("is-flying");
-        if (still) still.style.transform = "";
-        schedule();
-      })
-      .catch(() => {});
-  }
-
-  canvas.addEventListener("webglcontextlost", (event) => {
-    event.preventDefault();
-    ready = false;
-    journey.classList.remove("is-flying");
-  });
 
   window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule, { passive: true });
+  window.addEventListener("resize", () => {
+    if (orientation) pickSource();
+    schedule();
+  }, { passive: true });
   motionPreference.addEventListener("change", () => {
-    if (!motionPreference.matches && !gl) startWebGL();
+    if (!motionPreference.matches && !orientation) pickSource();
     schedule();
   });
 
-  // Prepare the scene shortly before the journey comes into view.
+  // Start loading the flight well before the journey comes into view.
   if (motionPreference.matches) {
     placeBeats();
   } else if ("IntersectionObserver" in window) {
@@ -326,14 +201,14 @@ function setUpJourney(journey) {
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
           observer.disconnect();
-          startWebGL();
+          pickSource();
         }
       },
-      { rootMargin: "100% 0px" },
+      { rootMargin: "150% 0px" },
     );
     observer.observe(journey);
     schedule();
   } else {
-    startWebGL();
+    pickSource();
   }
 }

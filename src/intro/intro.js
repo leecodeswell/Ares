@@ -1,5 +1,6 @@
 import "./intro.css";
 import { paintLight, LIGHT_WIDTH, LIGHT_HEIGHT, FOCUS } from "./grace.js";
+import { setUpAutoplay } from "./autoplay.js";
 
 // Opening sequence: the garden loops untouched at the top of the page. As the
 // visitor scrolls, a grace-like light forms on the statue's head and then
@@ -215,5 +216,6 @@ function setUpIntro(intro) {
   window.addEventListener("resize", resize, { passive: true });
   document.fonts?.ready.then(() => layout && placeCopy());
 
+  setUpAutoplay({ intro, skip, motionPreference });
   resize();
 }

@@ -26,7 +26,7 @@
   background: #ecebe4;
 }
 .journey-still,
-.journey-canvas {
+.journey-video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -35,28 +35,26 @@
 .journey-still {
   z-index: 0;
   object-fit: cover;
-  object-position: 68% 50%;
-  transform-origin: 75% 51%;
+  /* the first frame of the flight, so the video takes over seamlessly */
+  transform-origin: 50% 48%;
 }
-.journey-canvas {
+.journey-video {
   z-index: 1;
+  object-fit: cover;
   opacity: 0;
   transition: opacity 0.5s;
 }
-.journey.is-flying .journey-canvas {
+.journey.is-flying .journey-video {
   opacity: 1;
 }
+/* No backdrop behind the words during the flight: they float over the
+   scene. The scrim is only used for the reduced-motion layout. */
 .journey-scrim {
   position: absolute;
   inset: 0;
   z-index: 2;
+  display: none;
   pointer-events: none;
-  /* just enough paper behind the words; the scenery beyond stays clear */
-  background:
-    linear-gradient(90deg, rgba(242, 240, 233, 0.8) 0%,
-      rgba(242, 240, 233, 0.55) 26%, rgba(242, 240, 233, 0.12) 46%,
-      rgba(242, 240, 233, 0) 58%),
-    linear-gradient(180deg, rgba(242, 240, 233, 0.25), transparent 18%);
 }
 
 /* ---- beats */
@@ -75,6 +73,34 @@
 }
 .journey-beat em {
   font-style: italic;
+}
+/* A soft paper-coloured glow hugs the letters so they read over marble and
+   sky alike, without any panel behind them. */
+.journey-beat {
+  text-shadow:
+    0 0 2px rgba(242, 240, 233, 0.9),
+    0 0 14px rgba(242, 240, 233, 0.85),
+    0 0 34px rgba(242, 240, 233, 0.6);
+}
+/* Small type needs a tighter, denser halo to read over fluting and veins. */
+.journey-beat .eyebrow,
+.journey-beat .section-kicker,
+.journey-lead,
+.journey-body,
+.journey-aside,
+.journey-qualities .quality h3,
+.journey-qualities p {
+  text-shadow:
+    0 0 1px rgba(242, 240, 233, 1),
+    0 0 3px rgba(242, 240, 233, 0.95),
+    0 0 7px rgba(242, 240, 233, 0.9),
+    0 0 16px rgba(242, 240, 233, 0.8),
+    0 0 30px rgba(242, 240, 233, 0.55);
+}
+.journey-beat .scene-caption-line,
+.journey-beat .kicker-line,
+.journey-rule {
+  box-shadow: 0 0 10px rgba(242, 240, 233, 0.8);
 }
 
 .beat-vision {
@@ -148,7 +174,7 @@
   margin-top: 36px;
 }
 
-/* The three qualities sit on a soft paper band near the far arch. */
+/* The three qualities float in a row near the far arch. */
 .beat-qualities {
   top: auto;
   bottom: clamp(32px, 8vh, 90px);
@@ -161,10 +187,7 @@
   padding: 34px 40px 38px;
   gap: 5vw;
   border-top: 0;
-  background: rgba(242, 240, 233, 0.8);
-  box-shadow: 0 1px 0 rgba(62, 67, 54, 0.12) inset;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: none;
 }
 .journey-qualities .quality-number {
   margin-bottom: 16px;
@@ -172,12 +195,6 @@
 }
 
 @media (max-width: 760px) {
-  .journey-scrim {
-    background:
-      linear-gradient(180deg, rgba(242, 240, 233, 0.94) 0%,
-        rgba(242, 240, 233, 0.82) 42%, rgba(242, 240, 233, 0.2) 70%,
-        rgba(242, 240, 233, 0) 82%);
-  }
   .journey-beat {
     top: 116px;
     right: var(--gutter);
@@ -235,7 +252,7 @@
     flex-direction: column;
     gap: 110px;
   }
-  .journey-canvas {
+  .journey-video {
     display: none;
   }
   .journey-still {
@@ -243,6 +260,7 @@
     opacity: 1 !important;
   }
   .journey-scrim {
+    display: block;
     background: rgba(242, 240, 233, 0.8);
   }
   .journey-beat,
@@ -258,9 +276,6 @@
     pointer-events: auto;
   }
   .journey-qualities {
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
     padding: 0;
   }
 }

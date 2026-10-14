@@ -12,7 +12,7 @@ The images were generated specifically for this project with the image-generatio
 | --- | --- | --- |
 | `ares-hero.webp` | 1672 × 941 | Ares portrait on the right; pale sky and clouds leave room for the opening typography. |
 | `ares-hero-mobile.webp` | 941 × 1672 | A portrait reframe of the same statue with room above and below for navigation and text. |
-| `ares-sanctuary.webp` | 1672 × 941 | A marble colonnade at cloud level, with a deep corridor and quiet space to the left. The journey's starting frame and the source of its two flight layers. |
+| `ares-sanctuary.webp` | 1672 × 941 | A marble colonnade at cloud level, with a deep corridor and quiet space to the left. The reference the colonnade scene was built to match, and the source of its sky (`tools/build-journey-sky.py`). |
 
 The imagery keeps the material pale and realistic: no weapons, bright gold armor, glitter effects, or decorative text baked into the photographs. Website text remains live HTML.
 
@@ -64,11 +64,11 @@ The building is fixed; the camera starts on the terrace with the front column ne
 | 55–77% | The arch grows ahead | I. II. III., the three qualities, on a soft paper band |
 | 79–97% | Through the arch, into sky | The details make it yours. |
 
-The journey is 910% of the screen height. The added 150% belongs entirely to the qualities' fully opaque interval, giving those three messages about 243% of a screen height to read (previously 93%). They stay still while the camera glides more slowly behind them. Other beats keep their previous scroll duration. On tall phone screens the camera's view widens so the corridor stays readable, and the words sit at the top over a paper gradient. While the visitor scrolls, the scene renders at a resolution suited to the device; when scrolling stops, one crisp frame is drawn. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
+The journey is 910% of the screen height. The added 150% belongs entirely to the qualities' fully opaque interval, giving those three messages about 243% of a screen height to read (previously 93%). They stay still while the camera glides more slowly behind them. Other beats keep their previous scroll duration. On tall phone screens the camera's view widens so the corridor stays readable, and the words sit at the top. No panel sits behind any of the words: they float over the scene with a soft paper-coloured glow hugging the letters, and travel upward with the scroll. The flight is pre-rendered at full quality along the fixed camera path and scrubbed as a video, so every device sees the same crisp frames with no live 3D cost. Each beat fades and drifts in and out; text that is not on screen stays readable to screen readers, and its links leave the tab order until they are visible.
 
 ## Reduced motion
 
-Images and all type movements stop under `prefers-reduced-motion: reduce`. The journey becomes one still section over the colonnade photograph with every beat visible in order. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
+Images and all type movements stop under `prefers-reduced-motion: reduce`. The journey becomes one still section over the flight's first frame, behind a light paper veil, with every beat visible in order. Apart from the opening sequence, which a visitor can skip and reduced motion bypasses, no loading sequence or mandatory animation delays navigation.
 
 ## Interaction
 

@@ -5,7 +5,7 @@ const url = process.env.ARES_TEST_URL || 'http://127.0.0.1:5173';
 const screenshotDir = process.env.ARES_SCREENSHOT_DIR || '/tmp/ares-shots';
 await mkdir(screenshotDir, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.ARES_CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
-const report = { url, checks: [], consoleErrors: [], pageErrors: [], requestsFailed: [], canceledImageRequests: [], screenshots: [] };
+const report = { url, checks: [], consoleErrors: [], pageErrors: [], requestsFailed: [], canceledImageRequests: [], canceledMediaRequests: [], screenshots: [] };
 const check = (name, passed, detail = null) => report.checks.push({ name, passed, detail });
 function watchErrors(target) {
   target.on('pageerror', error => report.pageErrors.push(error.message));
@@ -15,6 +15,8 @@ function watchErrors(target) {
     // Responsive picture swaps can cancel the previous source during a resize.
     // Actual completeness is checked on every desktop and mobile image below.
     if (request.resourceType() === 'image' && failure.error === 'net::ERR_ABORTED') report.canceledImageRequests.push(failure);
+    // Seeking a video ends one byte-range request and starts another.
+    else if (request.resourceType() === 'media' && failure.error === 'net::ERR_ABORTED') report.canceledMediaRequests.push(failure);
     else report.requestsFailed.push(failure);
   });
 }
@@ -138,6 +140,100 @@ const turnFrames = await page.evaluate(() => performance.getEntriesByType('resou
 check('The turn uses its own local frames', turnFrames.length >= 24 && turnFrames.every(name => new URL(name).origin === new URL(url).origin), { count: turnFrames.length });
 const afterTurn = await turnAt(1.6);
 check('After the turn the hero scrolls on as before, still turned', afterTurn.heroTop < 0 && afterTurn.turning, afterTurn);
+
+// The intro plays itself once: the first scroll brings out the grace, the
+// second sets the page gliding until the hero peeks in, and the visitor can
+// always take over.
+const autoplayPage = await context.newPage();
+watchErrors(autoplayPage);
+const freshIntro = async () => {
+  await autoplayPage.evaluate(() => scrollTo({ top: 0, behavior: 'instant' })).catch(() => {});
+  await autoplayPage.goto(url, { waitUntil: 'networkidle' });
+  await autoplayPage.waitForTimeout(700);
+  await autoplayPage.mouse.move(720, 500);
+};
+const glide = () => autoplayPage.evaluate(() => ({ state: document.querySelector('[data-intro]').dataset.autoplay, y: scrollY, heroTop: document.querySelector('#home').getBoundingClientRect().top, viewport: innerHeight, end: (() => { const intro = document.querySelector('[data-intro]'); return intro.offsetTop + intro.offsetHeight; })() }));
+await freshIntro();
+const beforeAutoplay = await glide();
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(700);
+const firstInput = await glide();
+const firstLit = await autoplayPage.evaluate(() => { const canvas = document.querySelector('[data-intro-light]'); const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data; let lit = 0; for (let i = 3; i < pixels.length; i += 4 * 97) if (pixels[i] > 0) lit++; return lit; });
+await autoplayPage.waitForTimeout(500);
+const firstRests = await glide();
+check('The first scroll brings out the grace and the page then rests', beforeAutoplay.state === 'first' && firstInput.state === 'armed' && firstInput.y > 0 && firstLit > 0 && Math.abs(firstRests.y - firstInput.y) < 1, { beforeAutoplay, firstInput, firstLit, firstRests });
+const glideStart = Date.now();
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(1500);
+const gliding = await glide();
+await autoplayPage.waitForFunction(() => document.querySelector('[data-intro]').dataset.autoplay === 'done', null, { timeout: 20000 }).catch(() => {});
+const glideSeconds = (Date.now() - glideStart) / 1000;
+const glideEnd = await glide();
+await autoplayPage.waitForTimeout(600);
+const glideRest = await glide();
+await autoplayPage.screenshot({ path: `${screenshotDir}/desktop-autoplay-end.png` });
+report.screenshots.push(`${screenshotDir}/desktop-autoplay-end.png`);
+check('The second scroll plays the intro on its own at a steady pace', gliding.state === 'playing' && gliding.y > firstRests.y + 60 && glideSeconds > 4 && glideSeconds < 14, { gliding, glideSeconds });
+check('The glide stops just as the top of the hero shows at the bottom of the screen', glideEnd.state === 'done' && Math.abs(glideEnd.y - (glideEnd.end - glideEnd.viewport * 0.86)) < 3 && glideEnd.heroTop > glideEnd.viewport * 0.8 && glideEnd.heroTop < glideEnd.viewport * 0.9 && Math.abs(glideRest.y - glideEnd.y) < 1, { glideEnd, glideRest });
+await autoplayPage.mouse.wheel(0, -400);
+await autoplayPage.waitForTimeout(700);
+const afterUp = await glide();
+await autoplayPage.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+await autoplayPage.waitForTimeout(300);
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(500);
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(1500);
+const secondTime = await glide();
+check('After the first time, the intro just follows the scroll both ways', afterUp.y < glideRest.y - 100 && afterUp.state === 'done' && secondTime.state === 'done' && secondTime.y < 400, { afterUp, secondTime });
+
+await freshIntro();
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(600);
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(1600);
+const hurryStart = Date.now();
+for (let i = 0; i < 3; i++) { await autoplayPage.mouse.wheel(0, 120); await autoplayPage.waitForTimeout(260); }
+await autoplayPage.waitForFunction(() => document.querySelector('[data-intro]').dataset.autoplay === 'done', null, { timeout: 20000 }).catch(() => {});
+const hurriedSeconds = (Date.now() - hurryStart) / 1000 + 1.6;
+const hurriedEnd = await glide();
+check('Scrolling down during the glide speeds it up', hurriedEnd.state === 'done' && Math.abs(hurriedEnd.y - (hurriedEnd.end - hurriedEnd.viewport * 0.86)) < 3 && hurriedSeconds < glideSeconds * 0.75, { hurriedSeconds, glideSeconds, hurriedEnd });
+
+await freshIntro();
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(600);
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(1600);
+await autoplayPage.mouse.wheel(0, -120);
+await autoplayPage.waitForTimeout(300);
+const cancelled = await glide();
+await autoplayPage.waitForTimeout(800);
+const cancelledLater = await glide();
+check('Scrolling up during the glide hands control straight back', cancelled.state === 'done' && Math.abs(cancelledLater.y - cancelled.y) < 1, { cancelled, cancelledLater });
+
+await freshIntro();
+await autoplayPage.keyboard.press('ArrowDown');
+await autoplayPage.waitForTimeout(600);
+await autoplayPage.keyboard.press('ArrowDown');
+await autoplayPage.waitForTimeout(900);
+const keyGlide = await glide();
+await autoplayPage.keyboard.press('Tab');
+await autoplayPage.waitForTimeout(300);
+const tabbed = await glide();
+await autoplayPage.waitForTimeout(700);
+const tabbedLater = await glide();
+check('Keyboard visitors can start the glide and leave it with Tab', keyGlide.state === 'playing' && tabbed.state === 'done' && Math.abs(tabbedLater.y - tabbed.y) < 1, { keyGlide, tabbed, tabbedLater });
+
+await freshIntro();
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(600);
+await autoplayPage.mouse.wheel(0, 120);
+await autoplayPage.waitForTimeout(800);
+await autoplayPage.locator('[data-intro-skip]').click();
+await autoplayPage.waitForTimeout(2500);
+const skipped = await glide();
+check('Skip intro still works while the intro is playing', skipped.state === 'done' && Math.abs(skipped.y - skipped.end) < 2, skipped);
+await autoplayPage.close();
 await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 180)); } });
 await page.waitForTimeout(1000);
 await page.screenshot({ path: `${screenshotDir}/desktop-full.png`, fullPage: true });
@@ -162,6 +258,7 @@ const journeyAt = async fraction => {
     return {
       flying: journey.classList.contains('is-flying'),
       progress: Number(journey.dataset.progress),
+      time: journey.querySelector('video').currentTime,
       shown: [...journey.querySelectorAll('[data-beat].is-shown')].map(beat => beat.className.replace('journey-beat ', '').replace(' is-shown', '')),
     };
   });
@@ -170,6 +267,10 @@ await page.waitForFunction(() => document.querySelector('[data-journey]')?.class
 const journeyStates = [];
 for (const fraction of [0.05, 0.37, 0.9]) journeyStates.push(await journeyAt(fraction));
 check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
+check('The pre-rendered flight is scrubbed to the frame matching the scroll', journeyStates.every(state => Math.abs(state.time - (Math.round(state.progress * 239) + 0.5) / 24) < 0.05), journeyStates);
+// Scrubbing back up returns to the earlier frame.
+const scrubBack = await journeyAt(0.37);
+check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
 check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
 const readingStates = [];
 for (const fraction of [0.5, 0.63, 0.76]) {
@@ -181,8 +282,10 @@ for (const fraction of [0.5, 0.63, 0.76]) {
   }));
 }
 check('All three qualities stay fully readable and steady across an extended scroll interval', readingStates.every(state => state.opacity === 1 && state.headings.length === 3 && state.top >= 0 && state.bottom <= state.viewport && Math.abs(state.top - readingStates[0].top) < 1), readingStates);
-const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] canvas')].map(canvas => ({ width: canvas.width, height: canvas.height, visible: getComputedStyle(canvas).opacity === '1' })));
-check('The flight canvas fills the stage', flightFrames.length === 1 && flightFrames[0].width > 0 && flightFrames[0].visible, flightFrames);
+const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
+check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
+const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
+check('The journey words float over the scene with no panel behind them', textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
@@ -306,10 +409,10 @@ check('Reduced motion opens directly on the hero without loading the intro loop'
 const reducedBefore = await reducedPage.locator('[data-film-image], [data-journey-still]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
 await reducedPage.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 100)); } });
 const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey-still]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
-const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] canvas')).display === 'none', beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
 const reducedTurn = await reducedPage.evaluate(() => ({ holdHidden: getComputedStyle(document.querySelector('.hero-hold-space')).display === 'none', overlayHidden: getComputedStyle(document.querySelector('.statue-turn')).display === 'none', framesRequested: performance.getEntriesByType('resource').some(entry => /(desktop|mobile)-\d\d[^/?]*\.webp$/.test(entry.name)) }));
 check('Reduced motion skips the statue turn and never loads its frames', reducedTurn.holdHidden && reducedTurn.overlayHidden && !reducedTurn.framesRequested, reducedTurn);
-check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
+const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] video')).display === 'none' && !performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)), autoplay: document.querySelector('[data-intro]').dataset.autoplay, beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
+check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
 check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));
 check('Reduced motion leaves the entire story visible', reducedContent.every(element => element.opacity === '1' && element.visibility !== 'hidden'), reducedContent);
