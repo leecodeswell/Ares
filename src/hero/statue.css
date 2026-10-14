@@ -1,15 +1,6 @@
-/* The statue's turn. The hero holds still for a short stretch of scroll while
-   Ares lowers his gaze to the colonnade below; then the page moves on as
-   before. The turn is drawn on a canvas that shares the photograph's box and
+/* The statue's turn. Ares lowers his gaze to the colonnade below while the
+   page scrolls on past him; nothing holds still for it. The turn is drawn on a canvas that shares the photograph's box and
    its scroll-linked push and drift, so each frame sits exactly on the photo. */
-.hero-hold .hero {
-  position: sticky;
-  top: 0;
-}
-.hero-hold-space {
-  height: var(--statue-hold, 55vh); /* scroll length of the turn */
-  height: var(--statue-hold, 55svh);
-}
 .statue-turn {
   pointer-events: none;
   visibility: hidden;
@@ -32,12 +23,8 @@
     transform-origin: 60% 48%;
   }
 }
-/* Reduced motion: no hold and no turn; the hero is the photograph alone. */
+/* Reduced motion: no turn; the hero is the photograph alone. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-hold .hero {
-    position: relative;
-  }
-  .hero-hold-space,
   .statue-turn {
     display: none;
   }

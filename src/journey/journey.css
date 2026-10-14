@@ -47,14 +47,18 @@
 .journey.is-flying .journey-video {
   opacity: 1;
 }
-/* No backdrop behind the words during the flight: they float over the
-   scene. The scrim is only used for the reduced-motion layout. */
+/* A soft paper veil behind the words. The wall stands on the left, behind
+   them, so the veil hides no view; the open sky on the right stays clear. */
 .journey-scrim {
   position: absolute;
   inset: 0;
   z-index: 2;
-  display: none;
   pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(242, 240, 233, 0.8) 0%,
+      rgba(242, 240, 233, 0.55) 26%, rgba(242, 240, 233, 0.12) 46%,
+      rgba(242, 240, 233, 0) 58%),
+    linear-gradient(180deg, rgba(242, 240, 233, 0.25), transparent 18%);
 }
 
 /* ---- beats */
@@ -187,7 +191,10 @@
   padding: 34px 40px 38px;
   gap: 5vw;
   border-top: 0;
-  background: none;
+  background: rgba(242, 240, 233, 0.8);
+  box-shadow: 0 1px 0 rgba(62, 67, 54, 0.12) inset;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .journey-qualities .quality-number {
   margin-bottom: 16px;
@@ -195,6 +202,12 @@
 }
 
 @media (max-width: 760px) {
+  .journey-scrim {
+    background:
+      linear-gradient(180deg, rgba(242, 240, 233, 0.94) 0%,
+        rgba(242, 240, 233, 0.82) 42%, rgba(242, 240, 233, 0.2) 70%,
+        rgba(242, 240, 233, 0) 82%);
+  }
   .journey-beat {
     top: 116px;
     right: var(--gutter);
@@ -260,7 +273,6 @@
     opacity: 1 !important;
   }
   .journey-scrim {
-    display: block;
     background: rgba(242, 240, 233, 0.8);
   }
   .journey-beat,
@@ -276,6 +288,9 @@
     pointer-events: auto;
   }
   .journey-qualities {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     padding: 0;
   }
 }

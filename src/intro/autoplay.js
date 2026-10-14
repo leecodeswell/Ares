@@ -1,5 +1,8 @@
 // The intro plays itself, once. The visitor's first scroll brings out the
-// grace; their second sets the page gliding on its own through the rays and
+// grace; their second sets the page gliding on its own. So does a first
+// scroll that is really a flurry (three or more wheel steps in one go), or
+// any scroll that carries the page past the grace into its rays, so someone
+// who assumes they must hurry through is helped along too. The glide runs through the rays and
 // the white, stopping just as the top of the hero peeks in at the bottom of
 // the screen. While it glides, scrolling up hands control straight back and
 // scrolling down hurries it along. After that (or if they cancel) the intro
@@ -19,7 +22,13 @@ const MAX_BOOST = 3.5;
 const FORWARD_KEYS = new Set(["ArrowDown", "PageDown", " ", "Spacebar"]);
 const BACK_KEYS = new Set(["ArrowUp", "PageUp", "Home"]);
 
-export function setUpAutoplay({ intro, skip, motionPreference }) {
+// Past this share of the light the grace has folded into its ball and the
+// rays are breaking out, so the flame alone is no longer on screen and the
+// glide takes over. One ordinary wheel step stays well short of it.
+const PAST_GRACE = 0.2;
+const FLURRY = 3; // wheel steps in one gesture that count as hurrying
+
+export function setUpAutoplay({ intro, skip, motionPreference, lightAt }) {
   // "first scroll" -> "armed" (waiting for the second) -> "playing" -> "done"
   let state = "first";
   let gestures = 0;
@@ -33,6 +42,9 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
   let touchStartY = 0;
   let touchStartScroll = 0;
   let lastY = window.scrollY;
+  let gesture = 0; // which wheel gesture this is, and how many steps it has had
+  let steps = 0;
+  let startedBy = -1; // the gesture that started the glide doesn't also hurry it
 
   const html = document.documentElement;
   const target = () => intro.offsetTop + intro.offsetHeight - window.innerHeight * (1 - PEEK);
@@ -58,6 +70,7 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
     setState("playing");
     html.classList.add("is-autoplaying");
     position = window.scrollY;
+    startedBy = gesture;
     started = performance.now();
     lastFrame = started;
     frame = window.requestAnimationFrame(step);
@@ -106,6 +119,11 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
       const now = performance.now();
       const fresh = now - lastWheel > GESTURE_GAP;
       lastWheel = now;
+      if (fresh) {
+        gesture += 1;
+        steps = 0;
+      }
+      steps += 1;
       if (event.deltaY < 0) {
         if (state === "playing") stop();
         return;
@@ -114,11 +132,13 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
       if (state === "playing") {
         // Scrolling down while it plays speeds it up instead of jerking ahead.
         event.preventDefault();
+        if (gesture === startedBy) return;
         if (fresh) hurry(0.6);
         else hurry(Math.min(0.25, event.deltaY / window.innerHeight));
         return;
       }
       if (fresh) countGesture();
+      else if (steps >= FLURRY) begin();
       if (state === "playing") event.preventDefault();
     },
     { passive: false },
@@ -138,7 +158,11 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
       }
       return;
     }
-    if (forward && !onControl) countGesture();
+    if (forward && !onControl) {
+      // a held-down key repeats: that's hurrying, so help them along
+      if (event.repeat) begin();
+      else countGesture();
+    }
     else if (BACK_KEYS.has(event.key) && state === "armed") gestures = 1;
   });
 
@@ -184,6 +208,8 @@ export function setUpAutoplay({ intro, skip, motionPreference }) {
       lastY = y;
       if (state === "done" || state === "playing") return;
       if (y >= target() - 2) stop();
+      // Carried past the grace by any means on the way down: play from here.
+      else if (!risen && lightAt?.() >= PAST_GRACE) begin();
       // Scrolled back up to the very top, the light is gone, so the count
       // starts over.
       else if (state === "armed" && risen && y <= 1) {

@@ -120,7 +120,7 @@ function setUpIntro(intro) {
     const rect = intro.getBoundingClientRect();
     const distance = Math.max(1, rect.height - window.innerHeight);
     const scrolled = clamp(-rect.top / distance);
-    const t = clamp((scrolled - LIGHT_START) / (LIGHT_END - LIGHT_START));
+    const t = lightProgress();
     // Twenty-four discrete poses per second keep the flicker in the same
     // illustrated world as the loop. Scrolling itself is still immediate.
     const tick = Math.floor(now / (1000 / 24));
@@ -160,6 +160,13 @@ function setUpIntro(intro) {
       layout.coverWidth,
       layout.coverHeight,
     );
+  }
+
+  // How far the light has come: 0 at the top of the page, 1 at full white.
+  function lightProgress() {
+    const rect = intro.getBoundingClientRect();
+    const scrolled = clamp(-rect.top / Math.max(1, rect.height - window.innerHeight));
+    return clamp((scrolled - LIGHT_START) / (LIGHT_END - LIGHT_START));
   }
 
   function schedule() {
@@ -216,6 +223,6 @@ function setUpIntro(intro) {
   window.addEventListener("resize", resize, { passive: true });
   document.fonts?.ready.then(() => layout && placeCopy());
 
-  setUpAutoplay({ intro, skip, motionPreference });
+  setUpAutoplay({ intro, skip, motionPreference, lightAt: () => lightProgress() });
   resize();
 }
