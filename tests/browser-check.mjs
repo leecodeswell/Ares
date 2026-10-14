@@ -290,26 +290,26 @@ const journeyAt = async fraction => {
 };
 await page.waitForFunction(() => document.querySelector('[data-journey]')?.classList.contains('is-flying'), null, { timeout: 8000 }).catch(() => {});
 const journeyStates = [];
-for (const fraction of [0.05, 0.47, 0.9]) journeyStates.push(await journeyAt(fraction));
+for (const fraction of [0.05, 0.35, 0.9]) journeyStates.push(await journeyAt(fraction));
 check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
 check('The pre-rendered flight is scrubbed to the frame matching the scroll', journeyStates.every(state => Math.abs(state.time - (Math.round(state.progress * 239) + 0.5) / 24) < 0.05), journeyStates);
 // Scrubbing back up returns to the earlier frame.
-const scrubBack = await journeyAt(0.47);
+const scrubBack = await journeyAt(0.35);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
 check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
 const readingStates = [];
-for (const fraction of [0.608, 0.6555, 0.684]) {
+for (const fraction of [0.587, 0.6208, 0.641]) {
   await journeyAt(fraction);
-  readingStates.push(await page.locator('[data-reading-beat]').evaluate(beat => {
+  readingStates.push(await page.locator('.beat-quality').nth(1).evaluate(beat => {
     const rect = beat.getBoundingClientRect();
-    return { opacity: Number(getComputedStyle(beat).opacity), centre: (rect.left + rect.right) / 2, width: innerWidth, top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
+    return { opacity: Number(getComputedStyle(beat).opacity), centre: (rect.left + rect.right) / 2, width: innerWidth, top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()), size: parseFloat(getComputedStyle(beat.querySelector('h3')).fontSize), visionSize: parseFloat(getComputedStyle(document.querySelector('#vision-title')).fontSize) };
   }));
 }
-check('The qualities glide from left to right, fully readable as they pass the centre', readingStates[0].centre < readingStates[1].centre && readingStates[1].centre < readingStates[2].centre && readingStates[1].opacity > 0.98 && Math.abs(readingStates[1].centre - readingStates[1].width / 2) < readingStates[1].width * 0.05 && readingStates[1].headings.length === 3 && readingStates[1].top >= 0 && readingStates[1].bottom <= readingStates[1].viewport, readingStates);
+check('Each quality glides from left to right as a full-size headline, readable as it passes the centre', readingStates[0].centre < readingStates[1].centre && readingStates[1].centre < readingStates[2].centre && readingStates[1].opacity > 0.98 && Math.abs(readingStates[1].centre - readingStates[1].width / 2) < readingStates[1].width * 0.05 && readingStates[1].headings.length === 1 && readingStates[1].size === readingStates[1].visionSize && readingStates[1].top >= 0 && readingStates[1].bottom <= readingStates[1].viewport, readingStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
-const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
-check('The journey words float over the scene with no panel behind them', textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
+const textBackdrop = await page.locator('.beat-quality').nth(1).evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display, subtext: document.querySelectorAll('[data-journey] .journey-beat p:not(.vision-heading), [data-journey] .eyebrow, [data-journey] .text-link').length, shadow: getComputedStyle(element.querySelector('.vision-heading')).textShadow }));
+check('The journey words are headlines only, floating with a dark outline and no panel', textBackdrop.subtext === 0 && /rgba\(26, 22, 16/.test(textBackdrop.shadow) && textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
@@ -447,7 +447,7 @@ const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey
 const reducedTurn = await reducedPage.evaluate(() => ({ overlayHidden: getComputedStyle(document.querySelector('.statue-turn')).display === 'none', framesRequested: performance.getEntriesByType('resource').some(entry => /(desktop|mobile)-\d\d[^/?]*\.webp$/.test(entry.name)) }));
 check('Reduced motion skips the statue turn and never loads its frames', reducedTurn.overlayHidden && !reducedTurn.framesRequested, reducedTurn);
 const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] video')).display === 'none' && !performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)), autoplay: document.querySelector('[data-intro]').dataset.autoplay, beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
-check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
+check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 7 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
 check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));
 check('Reduced motion leaves the entire story visible', reducedContent.every(element => element.opacity === '1' && element.visibility !== 'hidden'), reducedContent);

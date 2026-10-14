@@ -57,13 +57,15 @@
   pointer-events: none;
 }
 
-/* ---- beats */
+/* ---- beats: every passage is a headline in the same large serif, set in
+   ivory with a dark shadow hugging the letters so it reads over sunlit marble
+   and sky alike. */
 .journey-beat {
   position: absolute;
   z-index: 3;
   left: 50%;
   top: 50%;
-  width: min(44vw, 620px);
+  width: min(80vw, 1200px);
   opacity: 0;
   /* centred, then carried across by the scroll (--beat-x, set in journey.js) */
   transform: translate(calc(-50% + var(--beat-x, 0px)), -50%);
@@ -75,127 +77,24 @@
 .journey-beat em {
   font-style: italic;
 }
-/* A soft paper-coloured glow hugs the letters so they read over marble and
-   sky alike, without any panel behind them. */
-.journey-beat {
+.journey .vision-heading {
+  margin: 0;
+  color: #f7f3e9;
   text-shadow:
-    0 0 2px rgba(242, 240, 233, 0.9),
-    0 0 14px rgba(242, 240, 233, 0.85),
-    0 0 34px rgba(242, 240, 233, 0.6);
+    0 0 1px rgba(26, 22, 16, 0.85),
+    0 1px 3px rgba(26, 22, 16, 0.65),
+    0 2px 12px rgba(26, 22, 16, 0.5),
+    0 0 32px rgba(26, 22, 16, 0.32);
 }
-/* Small type, and the opening statement, get a tighter, denser halo so they
-   read cleanly over fluting, veins and bright sky. */
-.beat-vision .vision-heading,
-.beat-vision .scene-caption,
-.journey-beat .eyebrow,
-.journey-beat .section-kicker,
-.journey-lead,
-.journey-body,
-.journey-aside,
-.journey-qualities .quality h3,
-.journey-qualities p {
-  text-shadow:
-    0 0 1px rgba(242, 240, 233, 1),
-    0 0 3px rgba(242, 240, 233, 0.95),
-    0 0 7px rgba(242, 240, 233, 0.9),
-    0 0 16px rgba(242, 240, 233, 0.8),
-    0 0 30px rgba(242, 240, 233, 0.55);
+.journey .vision-line:nth-child(2) {
+  color: #e3e8d6;
 }
-.journey-beat .scene-caption-line,
-.journey-beat .kicker-line,
-.journey-rule {
-  box-shadow: 0 0 10px rgba(242, 240, 233, 0.8);
-}
-
-.beat-vision {
-  width: min(80vw, 1200px);
+.journey .vision-heading em,
+.journey .vision-line-last em {
+  color: #f1dfae;
 }
 .journey .vision-line {
   transform: translateX(calc((var(--beat-progress, 0) - 0.3) * var(--line-travel)));
-}
-.journey .scene-caption {
-  margin-bottom: 42px;
-}
-
-.journey-rule {
-  display: block;
-  width: 56px;
-  height: 1px;
-  background: #a29a7f;
-  margin-bottom: 34px;
-}
-.journey-statement {
-  font-family: var(--serif);
-  font-size: clamp(46px, 4.6vw, 82px);
-  line-height: 1;
-  letter-spacing: -0.035em;
-  color: #2a3326;
-}
-.journey-statement em,
-.journey-title em {
-  color: #7d6f4b;
-}
-.journey-aside {
-  margin-top: 30px;
-  max-width: 380px;
-  font-size: 14px;
-  line-height: 1.9;
-  color: #3f4838;
-}
-.journey .section-kicker {
-  margin-bottom: 40px;
-  color: #59634f;
-}
-.journey-title {
-  font-family: var(--serif);
-  font-size: clamp(56px, 5.6vw, 96px);
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  color: #262d23;
-}
-.journey-lead {
-  margin-top: 34px;
-  max-width: 440px;
-  font-size: 19px;
-  line-height: 1.55;
-  letter-spacing: -0.3px;
-  color: #353d30;
-}
-.journey-body {
-  margin-top: 16px;
-  max-width: 420px;
-  font-size: 13px;
-  line-height: 1.9;
-  color: #48513f;
-}
-.beat-detail .eyebrow {
-  margin-bottom: 26px;
-  color: #59634f;
-  font-size: 9px;
-  letter-spacing: 2.5px;
-}
-.beat-detail .text-link {
-  margin-top: 36px;
-}
-
-/* The three qualities float in a row near the far arch. */
-.beat-qualities {
-  top: auto;
-  bottom: clamp(32px, 8vh, 90px);
-  width: max-content;
-  max-width: calc(100vw - 2 * var(--gutter));
-  transform: translateX(calc(-50% + var(--beat-x, 0px)));
-}
-.journey-qualities {
-  margin: 0;
-  padding: 34px 40px 38px;
-  gap: 5vw;
-  border-top: 0;
-  background: none;
-}
-.journey-qualities .quality-number {
-  margin-bottom: 16px;
-  color: #6d6244;
 }
 
 @media (max-width: 760px) {
@@ -206,40 +105,8 @@
     width: auto;
     transform: translateX(var(--beat-x, 0px));
   }
-  .beat-vision {
-    width: auto;
-  }
   .journey .vision-line {
     --line-travel: 0px;
-  }
-  .journey-statement {
-    font-size: 11vw;
-  }
-  .journey-title {
-    font-size: 13vw;
-  }
-  .journey-lead {
-    margin-top: 24px;
-    font-size: 16px;
-  }
-  .journey-body {
-    font-size: 13px;
-  }
-  .beat-qualities {
-    top: 104px;
-    bottom: auto;
-  }
-  .journey-qualities {
-    grid-template-columns: 1fr;
-    gap: 18px;
-    padding: 22px 22px 24px;
-  }
-  .journey-qualities .quality-number {
-    margin: 0;
-    font-size: 34px;
-  }
-  .journey-qualities .quality h3 {
-    font-size: 23px;
   }
 }
 
@@ -268,8 +135,7 @@
     display: block;
     background: rgba(242, 240, 233, 0.8);
   }
-  .journey-beat,
-  .beat-qualities {
+  .journey-beat {
     position: relative;
     inset: auto;
     width: auto;
@@ -280,7 +146,15 @@
   .journey-beat:not(.is-shown) {
     pointer-events: auto;
   }
-  .journey-qualities {
-    padding: 0;
+  /* over the pale still the headlines go back to dark ink */
+  .journey .vision-heading {
+    color: #262d23;
+    text-shadow: none;
+  }
+  .journey .vision-line:nth-child(2) {
+    color: #6e775f;
+  }
+  .journey .vision-heading em {
+    color: #8d7a51;
   }
 }
