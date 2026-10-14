@@ -197,7 +197,7 @@ const concepts = {
     tagline: "Make a lasting impression.",
     description: "Quiet confidence. Warm light. Space for your story.",
     hours: "Considered. Timeless. Yours.",
-    note: "Ivory / soft gold / sculptural serif",
+    note: "Example: Hollis & Rose, a cupcake atelier",
   },
   botanical: {
     name: "Your business",
@@ -205,7 +205,7 @@ const concepts = {
     tagline: "A little more naturally you.",
     description: "Fresh color. Soft shapes. A welcoming place to begin.",
     hours: "Grounded. Open. Yours.",
-    note: "Sage / warm cream / organic forms",
+    note: "Example: Fernwood & Co., an estate agency",
   },
   obsidian: {
     name: "Your business",
@@ -213,8 +213,14 @@ const concepts = {
     tagline: "Made for what comes next.",
     description: "Bold contrast. Clear ideas. A presence with purpose.",
     hours: "Distinct. Direct. Yours.",
-    note: "Charcoal / champagne / precise typography",
+    note: "Example: Ashcombe Vance, a law firm",
   },
+};
+// Each direction has a full example home page, opened from the preview.
+const examplePages = {
+  ivory: "examples/bakery.html",
+  botanical: "examples/estate.html",
+  obsidian: "examples/counsel.html",
 };
 const tabs = [...document.querySelectorAll("[data-concept]")];
 const panel = document.querySelector("#concept-panel");
@@ -239,6 +245,10 @@ function selectConcept(key, focus = false) {
     if (element) element.textContent = value;
   }
   if (demoStatus) demoStatus.textContent = "";
+  for (const link of document.querySelectorAll("[data-demo-action]")) {
+    link.href = examplePages[key];
+    link.setAttribute("aria-label", `Explore the ${key} example home page`);
+  }
 }
 tabs.forEach((tab, index) => {
   tab.addEventListener("click", () => selectConcept(tab.dataset.concept));
@@ -256,11 +266,9 @@ tabs.forEach((tab, index) => {
   });
 });
 selectConcept("ivory");
-document.querySelectorAll("[data-demo-action]").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (demoStatus) {
-      demoStatus.textContent = `${currentConcept[0].toUpperCase() + currentConcept.slice(1)} is one starting point. Your website would be designed around your own business.`;
-    }
+document.querySelectorAll("[data-demo-action]").forEach((link) => {
+  link.addEventListener("click", () => {
+    // remember the direction for the inquiry form when they come back
     const themeField = document.querySelector(
       '#inquiry-form [name="direction"]',
     );

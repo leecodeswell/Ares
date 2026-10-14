@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7efe6" />
+    <meta name="description" content="Hollis &amp; Rose, a cupcake atelier. A design example by Ares in the Ivory direction." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <title>Hollis &amp; Rose — Cupcake Atelier</title>
+  </head>
+  <body class="bakery">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="cup-gold" x1="0" x2="1">
+          <stop offset="0" stop-color="#c9a46a" />
+          <stop offset="0.5" stop-color="#ead2a2" />
+          <stop offset="1" stop-color="#b98f55" />
+        </linearGradient>
+        <radialGradient id="frost-shine" cx="0.35" cy="0.3" r="0.7">
+          <stop offset="0" stop-color="#fff" stop-opacity="0.7" />
+          <stop offset="0.5" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <symbol id="cupcake" viewBox="0 0 200 240">
+        <!-- the pleated cup -->
+        <path class="cup" d="M38 128h124l-16 96c-1 6-6 10-12 10H66c-6 0-11-4-12-10z" fill="url(#cup-gold)" />
+        <g class="pleats" stroke="#9d7744" stroke-opacity="0.35" stroke-width="2">
+          <path d="M56 132l8 98M74 132l5 100M92 132l2 100M110 132l-1 100M128 132l-4 100M146 132l-8 98" />
+        </g>
+        <path d="M34 124c0-6 5-10 11-10h110c6 0 11 4 11 10s-5 10-11 10H45c-6 0-11-4-11-10z" fill="#d9b981" />
+        <!-- the swirl, three tiers -->
+        <path class="frost" d="M30 122c-8-22 12-38 32-34 4-20 30-28 46-16 18-10 44 2 44 22 22 0 34 20 22 34-30 10-114 10-144-6z" />
+        <path class="frost frost-mid" d="M48 92c-4-20 16-32 34-26 8-16 34-18 46-4 18-2 30 16 22 30-24 10-80 10-102 0z" />
+        <path class="frost frost-top" d="M70 64c-2-16 14-24 28-18 10-14 32-8 32 8 8 6 6 18-2 22-18 6-46 6-58-12z" />
+        <ellipse cx="100" cy="96" rx="80" ry="40" fill="url(#frost-shine)" />
+        <!-- berry and sprinkles -->
+        <circle class="berry" cx="104" cy="36" r="13" />
+        <path d="M104 23c2-8 8-12 14-12" stroke="#5c6b3a" stroke-width="3" fill="none" stroke-linecap="round" />
+        <circle cx="99" cy="31" r="3.5" fill="#fff" opacity="0.6" />
+        <g class="sprinkles" stroke-width="4" stroke-linecap="round">
+          <path d="M60 104l6-3M86 84l5 4M128 98l6-2M150 112l4 4M112 72l-2 6M74 116l4 3M118 114l5-3" />
+        </g>
+      </symbol>
+    </svg>
+
+    <header class="bk-header">
+      <a class="bk-brand" href="#top" aria-label="Hollis and Rose, home">
+        <span class="bk-brand-name">Hollis <i>&amp;</i> Rose</span>
+        <span class="bk-brand-script">cupcake atelier</span>
+      </a>
+      <nav class="bk-nav" aria-label="Main">
+        <a href="#flavours">Flavours</a>
+        <a href="#celebrations">Celebrations</a>
+        <a href="#kitchen">Our kitchen</a>
+        <a href="#visit">Visit</a>
+      </nav>
+      <a class="bk-button bk-button-small" href="#celebrations">Order a dozen</a>
+    </header>
+
+    <main id="top">
+      <section class="bk-hero">
+        <div class="bk-hero-copy">
+          <p class="bk-eyebrow">Baked at dawn &middot; King Street, Charleston</p>
+          <h1>Small cakes,<br /><em>made with great care.</em></h1>
+          <p class="bk-lede">
+            Vanilla beans split by hand, butter from the dairy up the road, and
+            buttercream piped one swirl at a time. Every morning at six, the
+            ovens go on and the street starts to smell like Sunday.
+          </p>
+          <div class="bk-actions">
+            <a class="bk-button" href="#flavours">See today’s flavours</a>
+            <a class="bk-link" href="#celebrations">Order for an occasion <span aria-hidden="true">→</span></a>
+          </div>
+          <dl class="bk-facts">
+            <div><dt>12</dt><dd>flavours a week</dd></div>
+            <div><dt>6 am</dt><dd>first tray out</dd></div>
+            <div><dt>2014</dt><dd>baking on King St.</dd></div>
+          </dl>
+        </div>
+        <div class="bk-hero-art" aria-hidden="true">
+          <div class="bk-plinth"></div>
+          <svg class="bk-hero-cake" style="--frost: #f6e3dc; --frost-2: #f1d1c8; --frost-3: #ecc2b8; --berry: #b8324a"><use href="#cupcake" /></svg>
+          <span class="bk-seal">Fresh<br />from<br /><b>6 am</b></span>
+        </div>
+      </section>
+
+      <section class="bk-flavours" id="flavours" aria-labelledby="flavours-title">
+        <div class="bk-section-head">
+          <p class="bk-eyebrow">This week at the counter</p>
+          <h2 id="flavours-title">Twelve flavours,<br /><em>six favourites.</em></h2>
+          <p>Baked in small batches through the day. When a tray is gone, it is gone until tomorrow.</p>
+        </div>
+        <ul class="bk-menu">
+          <li style="--frost: #f6e9dc; --frost-2: #efdcc6; --frost-3: #e8cfb2; --berry: #c99a54">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Madagascar Vanilla</h3>
+            <p>Bean-flecked sponge, Swiss meringue buttercream.</p>
+            <span>$4.50</span>
+          </li>
+          <li style="--frost: #f5d4d2; --frost-2: #efc1c0; --frost-3: #e6aaaa; --berry: #b8324a">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Rosewater &amp; Raspberry</h3>
+            <p>Raspberry heart, rosewater cream, freeze-dried petals.</p>
+            <span>$5.00</span>
+          </li>
+          <li style="--frost: #6b4a3a; --frost-2: #5c3e30; --frost-3: #4f3328; --berry: #d8b06a">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Salted Caramel Mocha</h3>
+            <p>Dark chocolate crumb, espresso ganache, flaked salt.</p>
+            <span>$5.00</span>
+          </li>
+          <li style="--frost: #eef0d8; --frost-2: #e0e5bf; --frost-3: #d2d9a6; --berry: #e2b13c">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Lemon Elderflower</h3>
+            <p>Lemon curd centre, elderflower buttercream.</p>
+            <span>$4.75</span>
+          </li>
+          <li style="--frost: #e9dff0; --frost-2: #dccdea; --frost-3: #cbb8de; --berry: #6d4b8f">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Lavender Honey</h3>
+            <p>Local wildflower honey, a whisper of lavender.</p>
+            <span>$4.75</span>
+          </li>
+          <li style="--frost: #fbf7f0; --frost-2: #f2ebde; --frost-3: #e9dfcc; --berry: #b8324a">
+            <svg aria-hidden="true"><use href="#cupcake" /></svg>
+            <h3>Red Velvet</h3>
+            <p>Buttermilk cocoa sponge, whipped cream cheese.</p>
+            <span>$4.75</span>
+          </li>
+        </ul>
+        <p class="bk-note">Gluten-free and vegan bakes every Friday and Saturday &middot; Ask about our nut-free kitchen days.</p>
+      </section>
+
+      <section class="bk-celebrate" id="celebrations" aria-labelledby="celebrate-title">
+        <div class="bk-celebrate-card">
+          <p class="bk-eyebrow">Celebrations &amp; weddings</p>
+          <h2 id="celebrate-title">For the moments<br /><em>worth gathering for.</em></h2>
+          <ol class="bk-steps">
+            <li><b>Choose</b><span>Pick from the menu or dream up a flavour with us.</span></li>
+            <li><b>Taste</b><span>Come by for a tasting box of four, on the house for weddings.</span></li>
+            <li><b>Collect</b><span>Boxed, ribboned and ready, or delivered across the peninsula.</span></li>
+          </ol>
+          <div class="bk-actions">
+            <a class="bk-button" href="#visit">Plan an order</a>
+            <span class="bk-small">Dozens from $52 &middot; 48 hours’ notice</span>
+          </div>
+        </div>
+        <figure class="bk-quote">
+          <blockquote>“They made two hundred tiny vanilla cakes for our wedding and every single one looked like it had been wrapped in silk.”</blockquote>
+          <figcaption>Margaret &amp; James, married in May</figcaption>
+        </figure>
+      </section>
+
+      <section class="bk-kitchen" id="kitchen" aria-labelledby="kitchen-title">
+        <div class="bk-kitchen-mark" aria-hidden="true"><span>H&amp;R</span></div>
+        <div>
+          <p class="bk-eyebrow">Our kitchen</p>
+          <h2 id="kitchen-title">A tiny shop with<br /><em>very particular habits.</em></h2>
+          <p>
+            Eleanor Hollis and her sister Rose opened the shop with one oven and
+            their grandmother’s recipe box. Ten years on, there are three ovens
+            and the same rules: real butter, nothing from a packet, and nothing
+            leaves the kitchen that we wouldn’t serve at our own table.
+          </p>
+        </div>
+      </section>
+
+      <section class="bk-visit" id="visit" aria-labelledby="visit-title">
+        <div>
+          <p class="bk-eyebrow">Come and visit</p>
+          <h2 id="visit-title">214 King Street</h2>
+          <p>Charleston, South Carolina<br />Between the bookshop and the florist.</p>
+          <a class="bk-link" href="#top">hello@hollisandrose.example <span aria-hidden="true">→</span></a>
+        </div>
+        <table class="bk-hours">
+          <caption>Opening hours</caption>
+          <tr><th scope="row">Tuesday – Friday</th><td>7 am – 6 pm</td></tr>
+          <tr><th scope="row">Saturday</th><td>8 am – 5 pm</td></tr>
+          <tr><th scope="row">Sunday</th><td>9 am – 2 pm</td></tr>
+          <tr><th scope="row">Monday</th><td>Resting</td></tr>
+        </table>
+      </section>
+    </main>
+
+    <footer class="bk-footer">
+      <span class="bk-brand-name">Hollis <i>&amp;</i> Rose</span>
+      <span>Small cakes, made with great care.</span>
+    </footer>
+
+    <div class="ares-ribbon" role="note">
+      <span>A fictional bakery &middot; Ares design example, Ivory direction</span>
+      <a href="../#showcase">Back to Ares</a>
+    </div>
+    <script type="module" src="../src/examples/bakery.js"></script>
+  </body>
+</html>

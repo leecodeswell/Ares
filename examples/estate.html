@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef0e6" />
+    <meta name="description" content="Fernwood &amp; Co., homes with room to grow. A design example by Ares in the Botanical direction." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <title>Fernwood &amp; Co. — Homes with room to grow</title>
+  </head>
+  <body class="estate">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <symbol id="leaf" viewBox="0 0 40 40"><path d="M4 36C4 16 16 4 36 4c0 20-12 32-32 32Z" fill="currentColor" /><path d="M6 34 30 10" stroke="#fff" stroke-opacity="0.5" stroke-width="1.4" /></symbol>
+      <symbol id="house-cottage" viewBox="0 0 320 200">
+        <path d="M60 182V98l70-58 70 58v84z" class="h-wall" />
+        <path d="M44 108l86-74 86 74" class="h-roof" />
+        <path d="M200 182v-62h80v62z" class="h-wall h-wing" />
+        <path d="M192 124l48-34 48 34" class="h-roof" />
+        <rect x="112" y="128" width="36" height="54" rx="18" class="h-door" />
+        <rect x="76" y="112" width="26" height="30" rx="3" class="h-window" />
+        <rect x="158" y="112" width="26" height="30" rx="3" class="h-window" />
+        <rect x="222" y="134" width="36" height="26" rx="3" class="h-window" />
+        <path d="M150 34v-14h16v28" class="h-roof" />
+      </symbol>
+      <symbol id="house-modern" viewBox="0 0 320 200">
+        <path d="M40 182v-86h140v86z" class="h-wall" />
+        <path d="M160 182V70h120v112z" class="h-wall h-wing" />
+        <path d="M30 96h160M150 70h140" class="h-roof" />
+        <rect x="60" y="114" width="96" height="42" rx="2" class="h-window" />
+        <rect x="182" y="92" width="76" height="38" rx="2" class="h-window" />
+        <rect x="200" y="142" width="34" height="40" rx="2" class="h-door" />
+      </symbol>
+      <symbol id="house-farm" viewBox="0 0 320 200">
+        <path d="M50 182V92l110-56 110 56v90z" class="h-wall" />
+        <path d="M34 100l126-72 126 72" class="h-roof" />
+        <path d="M30 182h260" class="h-roof" />
+        <rect x="142" y="120" width="36" height="62" rx="2" class="h-door" />
+        <rect x="80" y="112" width="34" height="38" rx="2" class="h-window" />
+        <rect x="206" y="112" width="34" height="38" rx="2" class="h-window" />
+        <circle cx="160" cy="76" r="12" class="h-window" />
+      </symbol>
+    </svg>
+
+    <header class="es-header">
+      <a class="es-brand" href="#top" aria-label="Fernwood and Co., home">
+        <svg aria-hidden="true"><use href="#leaf" /></svg>
+        <span>Fernwood <i>&amp;</i> Co.</span>
+      </a>
+      <nav class="es-nav" aria-label="Main">
+        <a href="#homes">Homes for sale</a>
+        <a href="#neighbourhoods">Neighbourhoods</a>
+        <a href="#approach">Selling with us</a>
+        <a href="#team">About</a>
+      </nav>
+      <a class="es-button es-button-light" href="#team">Book a valuation</a>
+    </header>
+
+    <main id="top">
+      <section class="es-hero">
+        <div class="es-hero-copy">
+          <p class="es-eyebrow"><svg aria-hidden="true"><use href="#leaf" /></svg> Independent estate agents since 2009</p>
+          <h1>Find the place you’ll <em>put down roots.</em></h1>
+          <p class="es-lede">
+            Garden flats, family houses and quiet places at the edge of town.
+            We know every street we sell on, and we’ll walk you round them,
+            not just the rooms.
+          </p>
+        </div>
+        <form class="es-search" role="search" aria-label="Search homes">
+          <label>
+            <span>Where</span>
+            <input type="text" name="where" placeholder="Town, street or school" autocomplete="off" />
+          </label>
+          <label>
+            <span>Home</span>
+            <select name="type">
+              <option>Any home</option>
+              <option>House</option>
+              <option>Cottage</option>
+              <option>Garden flat</option>
+            </select>
+          </label>
+          <label>
+            <span>Up to</span>
+            <select name="budget">
+              <option>Any price</option>
+              <option>$450,000</option>
+              <option>$650,000</option>
+              <option>$900,000</option>
+              <option>$1.2 million</option>
+            </select>
+          </label>
+          <button class="es-button" type="submit">Search homes</button>
+        </form>
+        <ul class="es-hero-stats">
+          <li><b>1,140</b><span>homes sold</span></li>
+          <li><b>23 days</b><span>average to sale</span></li>
+          <li><b>4.9 / 5</b><span>from 600 reviews</span></li>
+        </ul>
+      </section>
+
+      <section class="es-homes" id="homes" aria-labelledby="homes-title">
+        <div class="es-head">
+          <div>
+            <p class="es-eyebrow">New this week</p>
+            <h2 id="homes-title">Homes with <em>room to grow.</em></h2>
+          </div>
+          <a class="es-link" href="#homes">View all 38 homes <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="es-cards">
+          <article class="es-card">
+            <div class="es-card-photo es-photo-a">
+              <svg aria-hidden="true"><use href="#house-cottage" /></svg>
+              <span class="es-tag">New</span>
+            </div>
+            <div class="es-card-body">
+              <p class="es-price">$685,000</p>
+              <h3>Willow Lane Cottage</h3>
+              <p class="es-address">14 Willow Lane, Old Orchard</p>
+              <ul class="es-specs"><li>3 beds</li><li>2 baths</li><li>1,840 sq ft</li><li>Walled garden</li></ul>
+            </div>
+          </article>
+          <article class="es-card">
+            <div class="es-card-photo es-photo-b">
+              <svg aria-hidden="true"><use href="#house-modern" /></svg>
+              <span class="es-tag es-tag-gold">Open house Sat</span>
+            </div>
+            <div class="es-card-body">
+              <p class="es-price">$1,140,000</p>
+              <h3>The Glasshouse</h3>
+              <p class="es-address">2 Fern Hollow, Ridgeway</p>
+              <ul class="es-specs"><li>4 beds</li><li>3 baths</li><li>2,960 sq ft</li><li>Woodland views</li></ul>
+            </div>
+          </article>
+          <article class="es-card">
+            <div class="es-card-photo es-photo-c">
+              <svg aria-hidden="true"><use href="#house-farm" /></svg>
+              <span class="es-tag">Reduced</span>
+            </div>
+            <div class="es-card-body">
+              <p class="es-price">$849,000</p>
+              <h3>Meadowbank Farmhouse</h3>
+              <p class="es-address">Meadowbank Road, Linfield</p>
+              <ul class="es-specs"><li>5 beds</li><li>3 baths</li><li>1.4 acres</li><li>Orchard</li></ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="es-areas" id="neighbourhoods" aria-labelledby="areas-title">
+        <div class="es-areas-copy">
+          <p class="es-eyebrow">Neighbourhood guides</p>
+          <h2 id="areas-title">Where life <em>grows slower.</em></h2>
+          <p>Schools, train times, the best bakery, the park with the good swings. Our guides are written by the people who live there.</p>
+        </div>
+        <ul class="es-areas-list">
+          <li><b>Old Orchard</b><span>Victorian terraces, a Saturday market, 18 min to the city.</span><em>from $540k</em></li>
+          <li><b>Ridgeway</b><span>Woodland walks and wide gardens on the hill.</span><em>from $780k</em></li>
+          <li><b>Linfield</b><span>Village green, two pubs and a very good primary school.</span><em>from $610k</em></li>
+          <li><b>Riverside</b><span>Garden flats by the water and the new footbridge.</span><em>from $390k</em></li>
+        </ul>
+      </section>
+
+      <section class="es-approach" id="approach" aria-labelledby="approach-title">
+        <p class="es-eyebrow">Selling with us</p>
+        <h2 id="approach-title">We sell homes the way <em>you’d want yours sold.</em></h2>
+        <ol class="es-steps">
+          <li><b>Walk it with us</b><span>A free valuation, in person, with an honest number and the reasons behind it.</span></li>
+          <li><b>Show it at its best</b><span>Natural-light photography, a floor plan and a story about the house, not just its rooms.</span></li>
+          <li><b>See it home</b><span>One person from first viewing to the keys, answering their phone on a Sunday.</span></li>
+        </ol>
+      </section>
+
+      <section class="es-team" id="team" aria-labelledby="team-title">
+        <figure class="es-quote">
+          <blockquote>“Ivy found us the house before it was even listed, then talked us out of the one we thought we wanted. She was right.”</blockquote>
+          <figcaption>The Okafor family, Linfield</figcaption>
+        </figure>
+        <div class="es-cta">
+          <h2 id="team-title">Thinking of moving?</h2>
+          <p>Book a no-obligation valuation. We’ll bring coffee and an honest opinion.</p>
+          <a class="es-button" href="#top">Book a valuation</a>
+          <p class="es-contact">Call Ivy or Tom on (555) 014-2290 &middot; 8 Market Street, Old Orchard</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="es-footer">
+      <span class="es-brand"><svg aria-hidden="true"><use href="#leaf" /></svg><span>Fernwood <i>&amp;</i> Co.</span></span>
+      <span>Homes with room to grow.</span>
+    </footer>
+
+    <div class="ares-ribbon" role="note">
+      <span>A fictional estate agency &middot; Ares design example, Botanical direction</span>
+      <a href="../#showcase">Back to Ares</a>
+    </div>
+    <script type="module" src="../src/examples/estate.js"></script>
+  </body>
+</html>

@@ -701,7 +701,8 @@ em {
   border: 1px solid color-mix(in srgb, var(--preview-ink) 40%, transparent);
   padding: 13px 19px;
   border-radius: 30px;
-  display: flex;
+  display: inline-flex;
+  text-decoration: none;
   gap: 22px;
   align-items: center;
   color: inherit;

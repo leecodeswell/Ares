@@ -1,0 +1,43 @@
+/* The note that marks each page as an Ares design example, with the way back. */
+.ares-ribbon {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: rgba(24, 26, 22, 0.86);
+  color: #f2f0e9;
+  font: 500 12px/1.2 "DM Sans", Arial, sans-serif;
+  letter-spacing: 0.02em;
+  transform: translateX(-50%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+.ares-ribbon span {
+  opacity: 0.78;
+}
+.ares-ribbon a {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #f2f0e9;
+  color: #22251f;
+  text-decoration: none;
+}
+.ares-ribbon a:hover,
+.ares-ribbon a:focus-visible {
+  background: #fff;
+}
+@media (max-width: 520px) {
+  .ares-ribbon span {
+    display: none;
+  }
+  .ares-ribbon {
+    padding: 6px;
+  }
+}

@@ -1,0 +1,536 @@
+/* Ashcombe Vance: the Obsidian direction as a trial and business law firm.
+   Charcoal and stone, champagne light; a precise Didone with a quiet sans. */
+:root {
+  --obsidian: #111112;
+  --stone: #1b1b1d;
+  --slate: #26262a;
+  --line: rgba(232, 214, 182, 0.16);
+  --champagne: #d9bf8f;
+  --pale: #efe7da;
+  --muted: #a39c92;
+  --serif: "Bodoni Moda", "Didot", Georgia, serif;
+  --sans: "DM Sans", Arial, sans-serif;
+  --gutter: clamp(22px, 5vw, 96px);
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body.counsel {
+  margin: 0;
+  background: var(--obsidian);
+  color: var(--pale);
+  font: 400 16px/1.75 var(--sans);
+}
+a {
+  color: inherit;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+h1 em,
+h2 em {
+  color: var(--champagne);
+  font-style: italic;
+}
+p {
+  margin: 0;
+}
+:focus-visible {
+  outline: 1px solid var(--champagne);
+  outline-offset: 4px;
+}
+.cv-eyebrow {
+  color: var(--champagne);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+.cv-button {
+  display: inline-block;
+  padding: 17px 30px;
+  border: 1px solid var(--champagne);
+  background: var(--champagne);
+  color: var(--obsidian);
+  font: 500 13px/1 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.cv-button:hover {
+  background: transparent;
+  color: var(--champagne);
+}
+.cv-button-ghost {
+  padding: 13px 20px;
+  background: transparent;
+  color: var(--pale);
+  border-color: rgba(239, 231, 218, 0.4);
+}
+.cv-button-ghost:hover {
+  border-color: var(--champagne);
+}
+.cv-link {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: 1px solid var(--champagne);
+  padding-bottom: 3px;
+}
+
+.cv-header {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  padding: 26px var(--gutter);
+  border-bottom: 1px solid var(--line);
+}
+.cv-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+}
+.cv-monogram {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--champagne);
+  color: var(--champagne);
+  font: italic 400 18px/1 var(--serif);
+}
+.cv-brand-name {
+  display: grid;
+  font: 400 22px/1.1 var(--serif);
+  letter-spacing: 0.02em;
+}
+.cv-brand-name small {
+  color: var(--muted);
+  font: 500 10px/1.6 var(--sans);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.cv-nav {
+  display: flex;
+  gap: 32px;
+  margin-left: auto;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.cv-nav a {
+  text-decoration: none;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.cv-nav a:hover {
+  color: var(--pale);
+}
+
+/* hero: evening light through the blinds of the eleventh floor */
+.cv-hero {
+  display: grid;
+  align-content: end;
+  gap: 34px;
+  min-height: max(720px, 100svh);
+  padding: 160px var(--gutter) 64px;
+  background:
+    linear-gradient(90deg, rgba(17, 17, 18, 0.92) 0%, rgba(17, 17, 18, 0.55) 55%, rgba(17, 17, 18, 0.1) 100%),
+    linear-gradient(0deg, var(--obsidian) 0%, transparent 35%),
+    url("./counsel.webp") center / cover;
+}
+.cv-hero h1 {
+  font-size: clamp(56px, 8.4vw, 136px);
+}
+.cv-hero-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) auto;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px 60px;
+}
+.cv-lede {
+  color: #cfc7bb;
+  font-size: 17px;
+}
+.cv-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 30px;
+}
+.cv-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 26px 0 0;
+  padding: 26px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.cv-hero-stats li {
+  display: grid;
+  gap: 4px;
+  padding-right: 20px;
+}
+.cv-hero-stats b {
+  color: var(--pale);
+  font: 400 clamp(32px, 3.4vw, 50px)/1 var(--serif);
+}
+.cv-hero-stats span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* practice */
+.cv-practice {
+  padding: 120px var(--gutter);
+}
+.cv-head {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: start;
+  gap: 30px;
+  margin-bottom: 60px;
+}
+.cv-head h2,
+.cv-results h2,
+.cv-consult h2 {
+  font-size: clamp(42px, 5.2vw, 82px);
+}
+.cv-areas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.cv-areas li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-height: 330px;
+  padding: 34px 30px 70px 0;
+  border-right: 1px solid var(--line);
+  transition: background 0.35s;
+}
+.cv-areas li + li {
+  padding-left: 30px;
+}
+.cv-areas li:last-child {
+  border-right: 0;
+}
+.cv-areas li:hover {
+  background: linear-gradient(180deg, rgba(217, 191, 143, 0.07), transparent);
+}
+.cv-num {
+  color: var(--champagne);
+  font: italic 400 22px/1 var(--serif);
+}
+.cv-areas h3 {
+  font-size: 30px;
+}
+.cv-areas p {
+  color: var(--muted);
+  font-size: 15px;
+}
+.cv-areas a {
+  position: absolute;
+  bottom: 26px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--champagne);
+  text-decoration: none;
+  transition: background 0.25s, color 0.25s;
+}
+.cv-areas li:hover a {
+  background: var(--champagne);
+  color: var(--obsidian);
+}
+
+/* results */
+.cv-results {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 60px;
+  padding: 110px var(--gutter);
+  background:
+    linear-gradient(rgba(27, 27, 29, 0.9), rgba(27, 27, 29, 0.96)),
+    url("./counsel-small.webp") 80% 30% / cover;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.cv-results h2 {
+  margin: 18px 0 26px;
+}
+.cv-fine {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.cv-cases {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cv-cases li {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 6px 30px;
+  padding: 30px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cv-cases li:first-child {
+  padding-top: 0;
+}
+.cv-cases b {
+  grid-row: span 2;
+  color: var(--champagne);
+  font: 400 clamp(36px, 3.6vw, 52px)/1 var(--serif);
+}
+.cv-cases span {
+  font-size: 17px;
+}
+.cv-cases em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* the firm */
+.cv-firm {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 70px;
+  align-items: center;
+  padding: 130px var(--gutter);
+}
+.cv-quote {
+  margin: 0;
+  padding-left: 40px;
+  border-left: 1px solid var(--champagne);
+}
+.cv-quote blockquote {
+  margin: 0 0 26px;
+  font: italic 400 clamp(30px, 3.4vw, 50px)/1.18 var(--serif);
+}
+.cv-quote figcaption {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.cv-firm-copy h2 {
+  margin: 16px 0 22px;
+  font-size: clamp(38px, 4vw, 58px);
+}
+.cv-firm-copy > p:not(.cv-eyebrow) {
+  color: #cfc7bb;
+}
+.cv-partners {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 36px 0 0;
+}
+.cv-partners div {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.cv-partners dt {
+  font: 400 22px/1.2 var(--serif);
+}
+.cv-partners dd {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* consultation */
+.cv-consult {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 70px;
+  padding: 110px var(--gutter) 130px;
+  background: var(--stone);
+  border-top: 1px solid var(--line);
+}
+.cv-consult h2 {
+  margin: 18px 0 26px;
+}
+.cv-consult-note {
+  max-width: 440px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.cv-consult address {
+  margin-top: 34px;
+  color: #cfc7bb;
+  font-style: normal;
+  line-height: 1.8;
+}
+.cv-consult address a {
+  color: var(--champagne);
+  text-decoration: none;
+  font: 400 24px/2 var(--serif);
+}
+.cv-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 28px 30px;
+}
+.cv-form label {
+  display: grid;
+  gap: 6px;
+}
+.cv-form .cv-wide {
+  grid-column: 1 / -1;
+}
+.cv-form span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.cv-form input,
+.cv-form select,
+.cv-form textarea {
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(239, 231, 218, 0.3);
+  border-radius: 0;
+  background: transparent;
+  color: var(--pale);
+  font: 400 17px/1.4 var(--sans);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cv-form select option {
+  background: var(--stone);
+}
+.cv-form textarea {
+  resize: vertical;
+}
+.cv-form input:focus,
+.cv-form select:focus,
+.cv-form textarea:focus {
+  border-bottom-color: var(--champagne);
+}
+.cv-form .cv-button {
+  justify-self: start;
+}
+.cv-form-status {
+  grid-column: 1 / -1;
+  color: var(--champagne);
+  font-size: 14px;
+}
+.cv-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 34px var(--gutter) 96px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+.cv-footer .cv-brand-name {
+  color: var(--pale);
+}
+
+@media (max-width: 1000px) {
+  .cv-nav {
+    display: none;
+  }
+  .cv-header .cv-button-ghost {
+    margin-left: auto;
+  }
+  .cv-areas {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cv-areas li:nth-child(2) {
+    border-right: 0;
+  }
+  .cv-areas li:nth-child(3) {
+    padding-left: 0;
+  }
+  .cv-areas li:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .cv-results,
+  .cv-firm,
+  .cv-consult,
+  .cv-head,
+  .cv-hero-foot {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .cv-header .cv-button-ghost {
+    display: none;
+  }
+  .cv-hero {
+    background:
+      linear-gradient(180deg, rgba(17, 17, 18, 0.5) 0%, rgba(17, 17, 18, 0.88) 60%, var(--obsidian)),
+      url("./counsel-small.webp") 75% center / cover;
+  }
+  .cv-hero-stats,
+  .cv-areas,
+  .cv-form,
+  .cv-partners {
+    grid-template-columns: 1fr;
+  }
+  .cv-hero-stats {
+    gap: 18px;
+  }
+  .cv-areas li,
+  .cv-areas li + li {
+    min-height: 0;
+    padding: 30px 0 80px;
+    border-right: 0;
+    border-top: 1px solid var(--line);
+  }
+  .cv-cases li {
+    grid-template-columns: 1fr;
+  }
+  .cv-cases b {
+    grid-row: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .cv-areas li,
+  .cv-button,
+  .cv-areas a {
+    transition: none;
+  }
+}

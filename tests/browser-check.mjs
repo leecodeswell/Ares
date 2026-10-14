@@ -313,9 +313,20 @@ if (await conceptButtons.count()) {
   }
   const action = page.locator('[data-demo-action]').first();
   if (await action.count()) {
-    await action.click();
-    const status = await page.locator('#demo-status').textContent();
-    check('Demo interaction produces a status', !!status?.trim(), status);
+    const examples = [];
+    for (const button of await conceptButtons.all()) {
+      await button.click();
+      examples.push(await action.getAttribute('href'));
+    }
+    check('Explore the possibilities opens each direction\'s example home page', examples.join() === 'examples/bakery.html,examples/estate.html,examples/counsel.html', examples);
+    for (const href of examples) {
+      const examplePage = await context.newPage();
+      watchErrors(examplePage);
+      await examplePage.goto(new URL(href, url).href, { waitUntil: 'networkidle' });
+      const info = await examplePage.evaluate(() => ({ heading: document.querySelector('h1')?.textContent.trim(), back: document.querySelector('.ares-ribbon a')?.getAttribute('href'), overflow: document.documentElement.scrollWidth > innerWidth, backdrop: getComputedStyle(document.querySelector('main section')).backgroundImage.includes('url(') }));
+      check(`Example ${href} loads with its backdrop and a way back`, !!info.heading && info.back === '../#showcase' && !info.overflow && info.backdrop, info);
+      await examplePage.close();
+    }
   } else check('Demo action exists', false);
 } else check('Concept buttons exist', false);
 

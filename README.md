@@ -39,6 +39,10 @@ After the hero, a pinned stage flies a camera from the terrace (framed like the 
 - Until the video has loaded, its first frame pushes gently forward. Under reduced motion the video is never downloaded and the journey becomes one still section over that first frame with every beat visible.
 - The three qualities have a longer reading hold: about 243vh of fully visible text, up from 93vh. An extra 150vh is added only to that interval, slowing the camera while the text stays still. Adjust `--reading-scroll` in `src/journey/journey.css` to change that added reading space.
 
+### The example home pages
+
+Each design direction in "Explore the possibilities" opens a full example home page for a fictional business: Ivory is Hollis & Rose, a cupcake atelier (`examples/bakery.html`); Botanical is Fernwood & Co., an estate agency (`examples/estate.html`); Obsidian is Ashcombe Vance, a law firm (`examples/counsel.html`). The pages are reached only from the preview's "Explore the possibilities" button, which follows the selected tab; each has a "Back to Ares" link. Their styles and scripts live in `src/examples/`. Their background photographs are rendered by `tools/build-example-backdrops.py` (warm bakery light, a sunlit garden, evening light through blinds on dark stone), since no stock-photo service is used.
+
 ### Going back to the classic site
 
 The site as it was before the journey (separate vision, craft and detail sections) is kept on the `classic` branch. To return to it, either deploy that branch, or restore it onto `main`:
