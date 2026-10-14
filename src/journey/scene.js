@@ -145,6 +145,15 @@ vec2 map(vec3 p) {
   float attic = sdBox(vec3(abs(p.x) - ROWX, p.y - (SPRING + 1.55), p.z - 20.6), vec3(0.83, 1.55, 21.4));
   stone = min(stone, attic);
 
+  // the right aisle is closed by an outer wall with a pilaster opposite each
+  // column, under a flat aisle ceiling crossed by beams
+  float pzw = p.z - SPACING * clamp(floor(p.z / SPACING + 0.5), 0.0, LASTCOL);
+  float sideWall = sdBox(p - vec3(6.55, 4.425, 20.6), vec3(0.3, 4.425, 21.4));
+  float pilaster = sdBox(vec3(p.x - 6.18, p.y - 3.6, pzw), vec3(0.1, 3.6, 0.42));
+  float aisleCeiling = sdBox(p - vec3(5.0, SPRING + 0.25, 20.6), vec3(1.6, 0.25, 21.4));
+  float aisleBeam = sdBox(vec3(p.x - 4.9, p.y - (SPRING - 0.15), pzw), vec3(1.4, 0.2, 0.2));
+  stone = min(stone, min(min(sideWall, pilaster), min(aisleCeiling, aisleBeam)));
+
   // far wall with a moulded arch: archivolt, keystone and flanking pilasters
   float endWall = sdBox(p - vec3(0.0, 5.6, ENDZ + 0.4), vec3(4.0, 5.6, 0.4));
   vec2 a = vec2(p.x, p.y - 4.2);
