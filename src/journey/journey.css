@@ -61,11 +61,12 @@
 .journey-beat {
   position: absolute;
   z-index: 3;
-  left: var(--gutter);
+  left: 50%;
   top: 50%;
   width: min(44vw, 620px);
   opacity: 0;
-  transform: translateY(calc(-50% + var(--beat-shift, 0px)));
+  /* centred, then carried across by the scroll (--beat-x, set in journey.js) */
+  transform: translate(calc(-50% + var(--beat-x, 0px)), -50%);
   will-change: opacity, transform;
 }
 .journey-beat:not(.is-shown) {
@@ -181,9 +182,9 @@
 .beat-qualities {
   top: auto;
   bottom: clamp(32px, 8vh, 90px);
-  width: auto;
-  right: var(--gutter);
-  transform: translateY(var(--beat-shift, 0px));
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--gutter));
+  transform: translateX(calc(-50% + var(--beat-x, 0px)));
 }
 .journey-qualities {
   margin: 0;
@@ -200,9 +201,10 @@
 @media (max-width: 760px) {
   .journey-beat {
     top: 116px;
+    left: var(--gutter);
     right: var(--gutter);
     width: auto;
-    transform: translateY(var(--beat-shift, 0px));
+    transform: translateX(var(--beat-x, 0px));
   }
   .beat-vision {
     width: auto;

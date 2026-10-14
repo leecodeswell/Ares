@@ -78,23 +78,29 @@ function setUpJourney(journey) {
   // Each beat fades in, travels up the screen with the scroll as the camera
   // moves, and fades out before the next arrives. The words float over the
   // scene with only a soft glow behind their letters for legibility.
+  // Each passage glides across the screen from left to right with the
+  // scroll: it arrives on the left, passes through the centre while it is
+  // read, and drifts off toward the sky on the right, fading as it goes.
   function placeBeats() {
-    const travel = window.innerHeight * 0.42;
+    const width = window.innerWidth;
+    const narrow = width <= 760;
+    const gutter = Math.min(64, width * 0.06);
     for (const beat of beats) {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
-      const fadeIn = beat.start === 0 ? 1 : smooth(0, BEAT_FADE, local);
-      const fadeOut = 1 - smooth(1 - BEAT_FADE, 1, local);
+      const fadeIn = beat.start === 0 ? 1 : smooth(0, 0.15, local);
+      const fadeOut = 1 - smooth(0.62, 1, local);
       const opacity = motionPreference.matches ? 1 : fadeIn * fadeOut;
-      // The qualities settle while all three are being read, then move on;
-      // every other passage keeps travelling upward with the scroll.
-      const drift = beat.reading
-        ? 0.35 * travel * (1 - fadeIn) - 0.35 * travel * (1 - fadeOut)
-        : (0.5 - clamp(local)) * travel;
-      const shift = motionPreference.matches ? 0 : drift;
+      // where it starts (left), passes the centre, and leaves (right)
+      const box = beat.element.offsetWidth;
+      const from = narrow ? -0.3 * width : -Math.max(0.15 * width, width / 2 - gutter - box / 2);
+      const to = narrow ? 0.6 * width : width / 2 - box / 2 + 0.12 * width;
+      const at = clamp(local);
+      const x = at < 0.45 ? from * (1 - at / 0.45) : (to * (at - 0.45)) / 0.55;
+      const glide = motionPreference.matches ? 0 : x;
       beat.element.style.opacity = opacity.toFixed(3);
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
-      beat.element.style.setProperty("--beat-shift", `${shift.toFixed(1)}px`);
+      beat.element.style.setProperty("--beat-x", `${glide.toFixed(1)}px`);
       // Every beat stays readable to screen readers; only links that can't be
       // seen leave the tab order.
       const shown = opacity > 0.05;

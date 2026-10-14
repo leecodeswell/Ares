@@ -298,15 +298,14 @@ const scrubBack = await journeyAt(0.47);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
 check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
 const readingStates = [];
-for (const fraction of [0.61, 0.665, 0.72]) {
+for (const fraction of [0.608, 0.6555, 0.684]) {
   await journeyAt(fraction);
   readingStates.push(await page.locator('[data-reading-beat]').evaluate(beat => {
-    const style = getComputedStyle(beat);
     const rect = beat.getBoundingClientRect();
-    return { opacity: Number(style.opacity), top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
+    return { opacity: Number(getComputedStyle(beat).opacity), centre: (rect.left + rect.right) / 2, width: innerWidth, top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
   }));
 }
-check('All three qualities stay fully readable and steady while they are shown', readingStates.every(state => state.opacity === 1 && state.headings.length === 3 && state.top >= 0 && state.bottom <= state.viewport && Math.abs(state.top - readingStates[0].top) < 1), readingStates);
+check('The qualities glide from left to right, fully readable as they pass the centre', readingStates[0].centre < readingStates[1].centre && readingStates[1].centre < readingStates[2].centre && readingStates[1].opacity > 0.98 && Math.abs(readingStates[1].centre - readingStates[1].width / 2) < readingStates[1].width * 0.05 && readingStates[1].headings.length === 3 && readingStates[1].top >= 0 && readingStates[1].bottom <= readingStates[1].viewport, readingStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
 const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
