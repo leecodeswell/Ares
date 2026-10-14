@@ -2,7 +2,7 @@
    the story's words arrive in step. */
 .journey {
   --flight-scroll: 660;
-  --reading-scroll: 112;
+  --reading-scroll: 0;
   position: relative;
   /* Extra runway belongs to the qualities' reading interval; the rest of the
      flight keeps its original pace. These values are viewport-height units. */

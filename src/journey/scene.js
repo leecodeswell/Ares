@@ -176,19 +176,16 @@ vec2 map(vec3 p) {
   float ceiling = vault(p);
   if (ceiling < res.x) res = vec2(ceiling, 4.0);
 
-  // corridor floor, steps and the lower terrace with its parapet
+  // corridor floor, steps and the lower terrace with its parapets: one
+  // cohesive base. The corridor platform ends in a straight edge at z = -1.0;
+  // two solid steps the full width of the platform lead down to the terrace,
+  // which runs right up under them, so nothing floats and nothing gaps.
   float floorSlab = sdBox(p - vec3(0.0, -1.5, 20.6), vec3(7.2, 1.5, 21.6));
-  float step1 = sdBox(p - vec3(1.35, -0.1, -1.25), vec3(3.25, 0.1, 0.55));
-  float step2 = sdBox(p - vec3(1.35, -0.3, -1.8), vec3(3.25, 0.1, 0.55));
-  float step3 = sdBox(p - vec3(1.35, -0.5, -2.35), vec3(3.25, 0.1, 0.55));
-  // the front-left corner stands on a raised block, the steps run off to its right
-  float pedestal = sdRoundBox(p - vec3(-3.15, -0.3, -1.25), vec3(1.25, 0.32, 0.6), 0.02);
-  step1 = min(step1, pedestal);
-  float terrace = sdBox(p - vec3(0.0, -1.6, -13.4), vec3(14.0, 1.0, 10.6));
-  float parapet = sdRoundBox(p - vec3(-13.6, -0.15, -13.4), vec3(0.32, 0.47, 10.6), 0.04);
-  // the low wall along the terrace edge, running left from the front block
-  parapet = min(parapet, sdRoundBox(p - vec3(-9.2, -0.3, -3.05), vec3(4.8, 0.32, 0.24), 0.04));
-  float ground = min(min(floorSlab, terrace), min(min(step1, step2), min(step3, parapet)));
+  float stepUpper = sdBox(p - vec3(0.0, -0.4, -1.275), vec3(7.2, 0.2, 0.275));
+  float stepLower = sdBox(p - vec3(0.0, -0.5, -1.825), vec3(7.2, 0.1, 0.275));
+  float terrace = sdBox(p - vec3(0.0, -1.6, -12.5), vec3(14.0, 1.0, 11.5));
+  float parapet = sdRoundBox(vec3(abs(p.x) - 13.6, p.y + 0.15, p.z + 12.5), vec3(0.32, 0.47, 11.5), 0.04);
+  float ground = min(min(floorSlab, terrace), min(min(stepUpper, stepLower), parapet));
   if (ground < res.x) res = vec2(ground, 2.0);
   return res;
 }
@@ -243,8 +240,9 @@ float softShadow(vec3 ro, vec3 rd, float k) {
   return res * res * (3.0 - 2.0 * res);
 }
 
-float occlusion(vec3 p, vec3 n) {
-  flutes = 0.0;
+float occlusion(vec3 p, vec3 n, bool detail) {
+  // the vault keeps its coffers here, so each recess darkens into its corners
+  flutes = detail ? 1.0 : 0.0;
   float occ = 0.0, w = 1.0;
   for (int i = 1; i <= 5; i++) {
     float h = 0.08 * float(i) * float(i);
@@ -355,14 +353,22 @@ vec3 albedoAt(vec3 p, vec3 n, float m) {
   vec3 c = marbleTexture(p.zy / TILE) * w.x + marbleTexture(p.xz / TILE + 0.5) * w.y + marbleTexture(p.xy / TILE + 0.25) * w.z;
   // broad walls and the vault read better with quieter veining
   vec3 quiet = mix(c, vec3(0.77, 0.67, 0.52), 0.3);
-  return m > 3.5 ? quiet * vec3(0.98, 0.96, 0.94) : quiet;
+  if (m < 3.5) return quiet;
+  // the vault: every coffer cut from a slightly different stone, with soft
+  // weathering drifting across the barrel, so it reads as carved marble
+  vec2 v = vec2(p.x, p.y - SPRING);
+  float cellW = PI * VAULT_R / 5.0;
+  vec2 cell = vec2(floor(atan(v.y, v.x) * VAULT_R / cellW), floor(p.z / 1.6));
+  float tint = 0.93 + 0.1 * hash12(cell + 11.7);
+  float weather = noise2(vec2(atan(v.y, v.x) * 2.2, p.z * 0.45)) * 0.6 + noise2(vec2(atan(v.y, v.x) * 7.0, p.z * 1.7)) * 0.4;
+  return quiet * vec3(0.98, 0.96, 0.94) * tint * (0.9 + 0.16 * weather);
 }
 
 vec3 shade(vec3 p, vec3 rd, vec3 n, float m, bool full) {
   vec3 albedo = albedoAt(p, n, m);
   float diff = max(dot(n, SUN), 0.0);
   float shadow = full && diff > 0.0 ? softShadow(p + n * 0.03, SUN, 10.0) : (full ? 0.0 : 1.0);
-  float ao = full ? occlusion(p, n) : 1.0;
+  float ao = full ? occlusion(p, n, m > 3.5) : 1.0;
   float skyLight = 0.5 + 0.5 * n.y;
   vec3 light = SUN_COLOR * 2.45 * diff * shadow
              + vec3(0.62, 0.62, 0.7) * 0.34 * skyLight * ao
