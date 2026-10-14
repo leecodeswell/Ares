@@ -82,7 +82,10 @@
     0 0 14px rgba(242, 240, 233, 0.85),
     0 0 34px rgba(242, 240, 233, 0.6);
 }
-/* Small type needs a tighter, denser halo to read over fluting and veins. */
+/* Small type, and the opening statement, get a tighter, denser halo so they
+   read cleanly over fluting, veins and bright sky. */
+.beat-vision .vision-heading,
+.beat-vision .scene-caption,
 .journey-beat .eyebrow,
 .journey-beat .section-kicker,
 .journey-lead,
