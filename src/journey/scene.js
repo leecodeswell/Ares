@@ -2,10 +2,10 @@
 // functions) and rendered by ray marching. The building never moves; only the
 // camera does. Units are metres: the corridor runs along +z, the floor is y = 0.
 //
-// Layout: a terrace and steps lead up to a corridor between two rows of
-// fourteen Corinthian columns (x = ±3, 3.2 m apart). A coffered barrel vault
-// spans the corridor; a wall with pilasters closes the right-hand aisle; the
-// left is open to the sky. The far wall (z = 42) has an arched opening.
+// Layout: a terrace and steps lead up to a corridor between two rows of nine
+// broad Corinthian columns (x = ±3, 4.6 m apart). A coffered barrel vault
+// spans the corridor; both sides are open to the sky, the clouds and the
+// mountains. The far wall (z = 42) has an arched opening.
 
 export const VERTEX = `
 attribute vec2 aPosition;
@@ -27,8 +27,9 @@ uniform vec3 uPaper;
 uniform float uPaperAmount;
 
 #define PI 3.14159265
-#define SPACING 3.2
-#define LASTCOL 13.0
+#define SPACING 4.6
+#define LASTCOL 8.0
+#define COLSCALE 1.25    // columns are drawn 25% broader than their base design
 #define ROWX 3.0
 #define COLR 0.42
 #define SHAFT_TOP 6.25
@@ -39,8 +40,8 @@ uniform float uPaperAmount;
 #define FRONTZ -0.7
 
 const vec3 SUN = normalize(vec3(-0.84, 0.42, -0.22));   // toward the sun: low, from the left
-const vec3 SUN_COLOR = vec3(1.0, 0.86, 0.72);
-const vec3 HAZE = vec3(0.95, 0.89, 0.84);
+const vec3 SUN_COLOR = vec3(1.0, 0.84, 0.66);
+const vec3 HAZE = vec3(0.9, 0.84, 0.78);
 
 // Ids: 1 column, 2 floor, 3 stone (walls, entablature), 4 vault
 float flutes = 1.0; // shadows and occlusion skip fine detail, which only adds noise
@@ -102,11 +103,11 @@ float column(vec3 q) {
 float entablature(vec3 p, float x0) {
   vec3 q = vec3(p.x - x0, p.y, p.z - 20.6);
   float len = 21.35;
-  float architrave = sdBox(q - vec3(0.0, CAP_TOP + 0.38, 0.0), vec3(0.62, 0.25, len));
-  float fascia = sdBox(q - vec3(0.0, CAP_TOP + 0.66, 0.0), vec3(0.66, 0.04, len));
-  float frieze = sdBox(q - vec3(0.0, CAP_TOP + 0.9, 0.0), vec3(0.58, 0.2, len));
-  float cornice = sdBox(q - vec3(0.0, CAP_TOP + 1.2, 0.0), vec3(0.8, 0.1, len + 0.15));
-  float lip = max(length(vec2(abs(q.x) - 0.74, q.y - (CAP_TOP + 1.12))) - 0.12, abs(q.z) - len - 0.15);
+  float architrave = sdBox(q - vec3(0.0, CAP_TOP + 0.38, 0.0), vec3(0.78, 0.25, len));
+  float fascia = sdBox(q - vec3(0.0, CAP_TOP + 0.66, 0.0), vec3(0.83, 0.04, len));
+  float frieze = sdBox(q - vec3(0.0, CAP_TOP + 0.9, 0.0), vec3(0.74, 0.2, len));
+  float cornice = sdBox(q - vec3(0.0, CAP_TOP + 1.2, 0.0), vec3(0.98, 0.1, len + 0.15));
+  float lip = max(length(vec2(abs(q.x) - 0.92, q.y - (CAP_TOP + 1.12))) - 0.12, abs(q.z) - len - 0.15);
   return min(min(architrave, fascia), min(frieze, min(cornice, lip)));
 }
 
@@ -137,23 +138,15 @@ float vault(vec3 p) {
 vec2 map(vec3 p) {
   // column rows on both sides, repeated along z
   vec3 q = vec3(abs(p.x) - ROWX, p.y, p.z - SPACING * clamp(floor(p.z / SPACING + 0.5), 0.0, LASTCOL));
-  vec2 res = vec2(column(q), 1.0);
+  vec2 res = vec2(column(vec3(q.x / COLSCALE, q.y, q.z / COLSCALE)), 1.0);
 
   // entablature and attic over both rows, the vault between them
   float stone = min(entablature(p, -ROWX), entablature(p, ROWX));
-  float attic = sdBox(vec3(abs(p.x) - ROWX, p.y - (SPRING + 1.55), p.z - 20.6), vec3(0.66, 1.55, 21.4));
+  float attic = sdBox(vec3(abs(p.x) - ROWX, p.y - (SPRING + 1.55), p.z - 20.6), vec3(0.83, 1.55, 21.4));
   stone = min(stone, attic);
 
-  // right aisle: outer wall with pilasters, and a beamed ceiling
-  float wall = sdBox(p - vec3(6.55, 4.6, 20.6), vec3(0.3, 4.6, 21.4));
-  float pz = p.z - SPACING * clamp(floor(p.z / SPACING + 0.5), 0.0, LASTCOL);
-  float pilaster = sdBox(vec3(p.x - 6.18, p.y - 3.6, pz), vec3(0.1, 3.6, 0.42));
-  float aisleCeiling = sdBox(p - vec3(5.0, SPRING + 0.25, 20.6), vec3(1.6, 0.25, 21.4));
-  float beam = sdBox(vec3(p.x - 4.9, p.y - (SPRING - 0.15), pz), vec3(1.4, 0.2, 0.2));
-  stone = min(stone, min(min(wall, pilaster), min(aisleCeiling, beam)));
-
   // far wall with a moulded arch: archivolt, keystone and flanking pilasters
-  float endWall = sdBox(p - vec3(1.5, 5.6, ENDZ + 0.4), vec3(5.4, 5.6, 0.4));
+  float endWall = sdBox(p - vec3(0.0, 5.6, ENDZ + 0.4), vec3(4.0, 5.6, 0.4));
   vec2 a = vec2(p.x, p.y - 4.2);
   float opening = min(sdBox(vec3(p.x, p.y - 2.1, p.z - ENDZ - 0.4), vec3(1.3, 2.1, 1.0)),
                       max(length(a) - 1.3, abs(p.z - ENDZ - 0.4) - 1.0));
@@ -171,10 +164,10 @@ vec2 map(vec3 p) {
   if (ceiling < res.x) res = vec2(ceiling, 4.0);
 
   // corridor floor, steps and the lower terrace with its parapet
-  float floorSlab = sdBox(p - vec3(1.1, -1.5, 20.6), vec3(5.7, 1.5, 21.6));
-  float step1 = sdBox(p - vec3(2.35, -0.1, -1.25), vec3(4.45, 0.1, 0.55));
-  float step2 = sdBox(p - vec3(2.35, -0.3, -1.8), vec3(4.45, 0.1, 0.55));
-  float step3 = sdBox(p - vec3(2.35, -0.5, -2.35), vec3(4.45, 0.1, 0.55));
+  float floorSlab = sdBox(p - vec3(0.0, -1.5, 20.6), vec3(7.2, 1.5, 21.6));
+  float step1 = sdBox(p - vec3(1.35, -0.1, -1.25), vec3(3.25, 0.1, 0.55));
+  float step2 = sdBox(p - vec3(1.35, -0.3, -1.8), vec3(3.25, 0.1, 0.55));
+  float step3 = sdBox(p - vec3(1.35, -0.5, -2.35), vec3(3.25, 0.1, 0.55));
   // the front-left corner stands on a raised block, the steps run off to its right
   float pedestal = sdRoundBox(p - vec3(-3.15, -0.3, -1.25), vec3(1.25, 0.32, 0.6), 0.02);
   step1 = min(step1, pedestal);
@@ -195,8 +188,23 @@ vec3 normalAt(vec3 p) {
     map(p + e.yyx).x - map(p - e.yyx).x));
 }
 
+// Everything in the scene sits inside this box; rays that leave it can only
+// meet the sky, so they stop marching at once.
+const vec3 BOX_MIN = vec3(-14.2, -2.7, -24.2);
+const vec3 BOX_MAX = vec3(14.2, 11.6, 43.2);
+vec2 boxSpan(vec3 ro, vec3 rd) {
+  vec3 inv = 1.0 / rd;
+  vec3 t0 = (BOX_MIN - ro) * inv;
+  vec3 t1 = (BOX_MAX - ro) * inv;
+  vec3 lo = min(t0, t1), hi = max(t0, t1);
+  return vec2(max(max(lo.x, lo.y), lo.z), min(min(hi.x, hi.y), hi.z));
+}
+
 vec2 march(vec3 ro, vec3 rd, float far, int steps) {
-  float t = 0.02;
+  vec2 span = boxSpan(ro, rd);
+  if (span.y < max(span.x, 0.0)) return vec2(-1.0, 0.0);
+  far = min(far, span.y);
+  float t = max(0.02, span.x);
   for (int i = 0; i < 140; i++) {
     if (i >= steps) break;
     vec2 h = map(ro + rd * t);
@@ -210,11 +218,12 @@ vec2 march(vec3 ro, vec3 rd, float far, int steps) {
 float softShadow(vec3 ro, vec3 rd, float k) {
   flutes = 0.0;
   float res = 1.0, t = 0.06;
+  float exit = min(32.0, boxSpan(ro, rd).y);
   for (int i = 0; i < 40; i++) {
     float h = map(ro + rd * t).x;
     res = min(res, k * h / t);
     t += clamp(h, 0.04, 0.7);
-    if (res < 0.01 || t > 32.0) break;
+    if (res < 0.01 || t > exit) break;
   }
   flutes = 1.0;
   res = clamp(res, 0.0, 1.0);
@@ -235,15 +244,74 @@ float occlusion(vec3 p, vec3 n) {
 
 vec3 toLinear(vec3 c) { return pow(c, vec3(2.2)); }
 
-// The site's sky photograph wrapped around the scene by direction, a little warmer.
+float hash11(float x) { return fract(sin(x * 127.1) * 43758.5453); }
+float noise1(float x) {
+  float i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(hash11(i), hash11(i + 1.0), f);
+}
+// Ridged noise along the horizon: sharp peaks, soft valleys.
+float ridges(float az) {
+  float h = 0.0, a = 0.55, f = 1.3;
+  for (int i = 0; i < 5; i++) {
+    float r = 1.0 - abs(2.0 * noise1(az * f + float(i) * 3.7) - 1.0);
+    h += a * r * r;
+    a *= 0.5;
+    f *= 2.1;
+  }
+  return h;
+}
+
+float noise2(vec2 x) {
+  vec2 i = floor(x), f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
+             mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+#define CLOUD_TOP 0.008  // elevation of the cloud sea's upper edge, in this mapping
+
+// The site's sky photograph wrapped around the scene by direction, a little
+// warmer, with two small, far peaks just clearing the cloud sea.
 vec3 skyColor(vec3 rd) {
   float az = atan(rd.x, rd.z);
   float el = asin(clamp(rd.y, -1.0, 1.0));
   vec2 uv = vec2(0.36 + az / 2.2, 0.53 - el / 1.05);
   uv = 1.0 - abs(1.0 - mod(uv, 2.0));
-  vec3 c = toLinear(texture2D(uSky, uv).rgb) * vec3(1.06, 1.0, 0.93);
+  vec3 c = toLinear(texture2D(uSky, uv).rgb) * vec3(1.03, 0.98, 0.9);
+  // The photograph's sunlit edges (seen out of the left side) are close to
+  // white. Bring just those regions down, a touch cooler, so they read as sky
+  // and cloud rather than glare; the rest of the photograph is untouched.
+  float edge = max(smoothstep(0.28, 0.02, uv.x), smoothstep(0.74, 0.98, uv.x));
+  float band = smoothstep(-0.08, 0.02, el) * (1.0 - smoothstep(0.5, 0.65, el));
+  float glare = edge * band;
+  c *= mix(vec3(1.0), vec3(0.8, 0.79, 0.84), glare);
+  c = mix(c, max((c - 0.5) * 1.22 + 0.5, 0.0), glare * 0.7);
+  // a little more body in the cloud sea so its shapes read
+  float sea = smoothstep(0.06, -0.04, el);
+  c = mix(c, max((c - 0.5) * 1.2 + 0.5, 0.0), sea * 0.6);
+
+  // Above the clouds: only two small, far peaks barely clear the cloud sea,
+  // one off each side, softened by haze (the photograph's own peak is in the
+  // sky texture). [azimuth, half-width, height above the clouds]
+  for (int k = 0; k < 2; k++) {
+    vec3 peak = k == 0 ? vec3(-0.9, 0.15, 0.05) : vec3(0.85, 0.12, 0.036);
+    float dx = (az - peak.x) / peak.y;
+    float shape = exp(-dx * dx * 1.6) * (0.85 + 0.15 * ridges(az * 9.0 + float(k) * 4.0));
+    float top = CLOUD_TOP - 0.01 + peak.z * shape;
+    if (el < top && abs(dx) < 2.5) {
+      vec2 cell = vec2(az * 40.0, el * 90.0);
+      float crag = noise2(cell) * 0.6 + noise2(cell * 2.3 + 4.0) * 0.4;
+      float lit = clamp(0.55 + dx * 0.25 + (crag - 0.5) * 0.4, 0.0, 1.0);  // sun from the left
+      vec3 rock = mix(vec3(0.6, 0.57, 0.58), vec3(0.84, 0.72, 0.6), lit);
+      rock = mix(rock, c, 0.42);                                             // far and hazy
+      float feet = smoothstep(CLOUD_TOP - 0.012, CLOUD_TOP + 0.016, el);   // clouds wrap their feet
+      c = mix(c, rock, feet);
+    }
+  }
+  // only a faint warmth toward the sun, no bloom
   float sun = max(dot(rd, SUN), 0.0);
-  return c + vec3(0.32, 0.2, 0.1) * pow(sun, 8.0) + vec3(0.08, 0.045, 0.015) * pow(sun, 2.0);
+  return c + vec3(0.05, 0.03, 0.012) * pow(sun, 8.0);
 }
 
 vec3 marbleTexture(vec2 uv) { return toLinear(texture2D(uMarble, uv).rgb); }
@@ -262,7 +330,7 @@ vec3 albedoAt(vec3 p, vec3 n, float m) {
     vec2 slab = floor(p.xz / 1.8);
     vec2 offset = vec2(hash12(slab), hash12(slab + 7.3));
     vec3 c = marbleTexture(p.xz / (TILE * 1.4) + offset * 3.0);
-    c = mix(c, vec3(0.84, 0.8, 0.75), 0.32); // polished slabs show finer, quieter veins
+    c = mix(c, vec3(0.78, 0.68, 0.53), 0.25); // polished slabs show finer, quieter veins
     c *= 0.95 + 0.08 * hash12(slab + 3.1);
     vec2 g = abs(fract(p.xz / 1.8) - 0.5);
     float joint = smoothstep(0.494, 0.5, max(g.x, g.y));
@@ -273,7 +341,7 @@ vec3 albedoAt(vec3 p, vec3 n, float m) {
   w /= w.x + w.y + w.z;
   vec3 c = marbleTexture(p.zy / TILE) * w.x + marbleTexture(p.xz / TILE + 0.5) * w.y + marbleTexture(p.xy / TILE + 0.25) * w.z;
   // broad walls and the vault read better with quieter veining
-  vec3 quiet = mix(c, vec3(0.83, 0.79, 0.74), 0.38);
+  vec3 quiet = mix(c, vec3(0.77, 0.67, 0.52), 0.3);
   return m > 3.5 ? quiet * vec3(0.98, 0.96, 0.94) : quiet;
 }
 
@@ -283,7 +351,7 @@ vec3 shade(vec3 p, vec3 rd, vec3 n, float m, bool full) {
   float shadow = full && diff > 0.0 ? softShadow(p + n * 0.03, SUN, 10.0) : (full ? 0.0 : 1.0);
   float ao = full ? occlusion(p, n) : 1.0;
   float skyLight = 0.5 + 0.5 * n.y;
-  vec3 light = SUN_COLOR * 3.0 * diff * shadow
+  vec3 light = SUN_COLOR * 2.45 * diff * shadow
              + vec3(0.62, 0.62, 0.7) * 0.34 * skyLight * ao
              + vec3(0.9, 0.76, 0.62) * 0.1 * ao;
   // Light bounced up from the sunlit floor: surfaces facing down (the vault,
@@ -305,23 +373,25 @@ vec3 shade(vec3 p, vec3 rd, vec3 n, float m, bool full) {
 // Sun shafts: how much sunlit haze the eye ray crosses before it hits something.
 float sunShafts(vec3 ro, vec3 rd, float tmax) {
   float jitter = hash12(gl_FragCoord.xy);
-  float span = min(tmax, 42.0);
+  vec2 box = boxSpan(ro, rd);
+  float span = clamp(min(tmax, box.y), 0.0, 42.0);
   float lit = 0.0;
   flutes = 0.0;
-  for (int i = 0; i < 10; i++) {
-    float t = (float(i) + jitter) / 10.0 * span;
+  for (int i = 0; i < 8; i++) {
+    float t = (float(i) + jitter) / 8.0 * span;
     vec3 p = ro + rd * t;
     float v = 1.0, s = 0.1;
-    for (int j = 0; j < 14; j++) {
+    float exit = min(22.0, boxSpan(p, SUN).y); // past the building the air is in full sun
+      for (int j = 0; j < 12; j++) {
       float h = map(p + SUN * s).x;
       if (h < 0.01) { v = 0.0; break; }
-      s += max(h, 0.15);
-      if (s > 22.0) break;
+      s += max(h, 0.3);
+      if (s > exit) break;
     }
     lit += v;
   }
   flutes = 1.0;
-  return lit / 10.0;
+  return lit / 8.0;
 }
 
 vec3 render(vec3 ro, vec3 rd) {
@@ -348,7 +418,7 @@ vec3 render(vec3 ro, vec3 rd) {
       float fresnel = 0.1 + 0.35 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
       col = mix(col, refl, fresnel);
     }
-    col = mix(col, toLinear(HAZE) * 1.1, 1.0 - exp(-hit.x * 0.005));
+    col = mix(col, toLinear(HAZE), 1.0 - exp(-hit.x * 0.0035));
   }
   if (uQuality > 0.5) {
     // Sun shafts: air in the colonnade's shadow reads a touch darker, sunlit
@@ -356,7 +426,9 @@ vec3 render(vec3 ro, vec3 rd) {
     float shafts = sunShafts(ro, rd, dist);
     float phase = 0.6 + 0.4 * pow(max(dot(rd, SUN), 0.0), 3.0);
     float depth = 1.0 - exp(-min(dist, 42.0) * 0.06);
-    col *= mix(1.0, 0.9 + 0.2 * shafts * phase, depth);
+    // open sky only catches a trace, so the colonnade's shade never ghosts into it
+    depth *= hit.x < 0.0 ? 0.3 : 1.0;
+    col *= mix(1.0, 0.92 + 0.16 * shafts * phase, depth);
   }
   return col;
 }
@@ -364,7 +436,7 @@ vec3 render(vec3 ro, vec3 rd) {
 // Identity through the mid-tones (so the sky photograph keeps its contrast),
 // with a soft shoulder for sunlit marble.
 vec3 shoulder(vec3 x) {
-  const float knee = 0.72;
+  const float knee = 0.6;
   return mix(x, knee + (1.0 - knee) * (1.0 - exp(-(x - knee) / (1.0 - knee))), step(knee, x));
 }
 

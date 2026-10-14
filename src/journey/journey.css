@@ -51,11 +51,12 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  /* just enough paper behind the words; the scenery beyond stays clear */
   background:
-    linear-gradient(90deg, rgba(242, 240, 233, 0.9) 0%,
-      rgba(242, 240, 233, 0.72) 30%, rgba(242, 240, 233, 0.22) 56%,
-      rgba(242, 240, 233, 0) 70%),
-    linear-gradient(180deg, rgba(242, 240, 233, 0.35), transparent 22%);
+    linear-gradient(90deg, rgba(242, 240, 233, 0.8) 0%,
+      rgba(242, 240, 233, 0.55) 26%, rgba(242, 240, 233, 0.12) 46%,
+      rgba(242, 240, 233, 0) 58%),
+    linear-gradient(180deg, rgba(242, 240, 233, 0.25), transparent 18%);
 }
 
 /* ---- beats */
