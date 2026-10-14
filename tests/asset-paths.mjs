@@ -112,6 +112,15 @@ try {
             }
             return false;
           });
+          // the statue's turn: this screen's frames load (tiny ones are inlined)
+          const variant = width < 761 ? "mobile" : "desktop";
+          await page.waitForFunction(
+            (variant) =>
+              performance
+                .getEntriesByType("resource")
+                .filter((entry) => new RegExp(`/${variant}-\\d\\d-[^/]*\\.webp$`).test(entry.name)).length >= 20,
+            variant,
+          );
           await page.locator("[data-journey]").scrollIntoViewIfNeeded();
           await page.waitForFunction(() =>
             ["sky", "marble"].every((name) =>

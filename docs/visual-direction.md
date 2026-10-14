@@ -36,6 +36,18 @@ The light changes pose at up to 24 frames per second while visible. It stops aft
 
 Native scroll events update a single animation frame at a time. The hero's image moves slowly within an oversized frame, scaling from 1.04 to 1.21 on desktop with up to 80 px of upward drift (phones: 1.04–1.13 and 30 px). As the hero scrolls away, ARES slides left while the eyebrow and signature slide right and the tagline drifts left.
 
+## The statue's turn
+
+The hero holds for about five wheel notches while Ares lowers his gaze toward the colonnade, the next scene. The order follows how people look: the eyes move first (the carved irises come level), the head stirs, then the head bows about the skull while the neck bends a little behind it, and the eyes settle lower still. At the end the head has turned about 20° (13° at the skull, 7° in the neck). The easing is slow-in, slow-out and has no bounce: the motion is that of stone.
+
+The marble is never redrawn. The head moves as one rigid piece, so its veins, carving and light stay exactly as photographed; the neck bends smoothly between the jaw and the cloak, and the hair curls bend with it. The cloak, the shoulder and the columns stay perfectly still; only the background the head uncovers is filled, once, from the visible parts of the same columns and sky, and it does not move afterwards.
+
+| Asset | Size | Purpose |
+| --- | --- | --- |
+| `src/hero/statue/desktop-01…24.webp` | patches of 1672 × 941 | The turn for the landscape photograph |
+| `src/hero/statue/mobile-01…24.webp` | patches of 941 × 1672 | The turn for the portrait photograph |
+| `tools/statue-turn/*.json` | | Traced outlines, pivots, angles, timing and the columns behind |
+
 ## The journey
 
 The middle of the site is one flight through a real 3D colonnade built to match the sanctuary photograph. Two rows of fourteen Corinthian columns (leafy bells, attic bases, fluting and entasis) stand 3.2 m apart under a moulded entablature. A coffered barrel vault with rosettes and a rib over every pair of columns spans the corridor; a pilastered wall closes the right-hand aisle; the left is open to the photograph's sky and sea of clouds. The front corner stands on a raised block with the steps to its right and a low wall running along the terrace, as in the photograph, and the far wall has a moulded arch with a keystone.

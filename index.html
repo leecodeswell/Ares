@@ -115,11 +115,15 @@
     </section>
 
     <main id="main">
+      <div class="hero-hold" data-statue-hold>
       <section class="hero" id="home" data-film-scene aria-labelledby="hero-title">
         <picture class="film-visual hero-visual">
           <source media="(max-width: 760px)" srcset="/images/ares-hero-mobile.webp" width="941" height="1672" />
           <img src="/images/ares-hero.webp" alt="A monumental marble statue of Ares beside Greek columns above a sea of clouds." width="1672" height="941" loading="eager" fetchpriority="high" decoding="async" data-film-image />
         </picture>
+        <div class="film-visual hero-visual statue-turn" aria-hidden="true">
+          <canvas data-film-layer data-statue-canvas></canvas>
+        </div>
         <div class="hero-scrim" aria-hidden="true"></div>
         <div class="hero-content">
           <p class="eyebrow hero-eyebrow">
@@ -155,6 +159,8 @@
           ><span>01 — THE BEGINNING</span>
         </div>
       </section>
+      <div class="hero-hold-space" aria-hidden="true"></div>
+      </div>
 
       <section class="journey" id="vision" data-journey aria-labelledby="vision-title">
         <span class="journey-mark" id="craft" style="--at: 0.36" aria-hidden="true"></span>

@@ -118,6 +118,26 @@ await page.waitForTimeout(300);
 await page.locator('[data-intro-skip]').click();
 await page.waitForFunction(end => Math.abs(scrollY - end) < 2, introTop.end, { timeout: 8000 }).catch(() => {});
 check('Skip intro lands on the hero', await page.evaluate(end => Math.abs(scrollY - end) < 2, introTop.end));
+// The statue's turn: the hero holds while Ares lowers his gaze, frame by frame.
+const turnAt = async fraction => {
+  await page.evaluate(f => { const hold = document.querySelector('[data-statue-hold]'); const space = hold.querySelector('.hero-hold-space'); scrollTo({ top: hold.offsetTop + space.offsetHeight * f, behavior: 'instant' }); }, fraction);
+  await page.waitForTimeout(500);
+  return page.evaluate(() => ({ heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), turning: document.querySelector('.statue-turn').classList.contains('is-turning'), film: getComputedStyle(document.querySelector('#home')).getPropertyValue('--film-progress').trim() }));
+};
+await page.waitForFunction(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).length >= 24, null, { timeout: 15000 }).catch(() => {});
+const turnStates = [];
+for (const fraction of [0, 0.5, 1]) {
+  turnStates.push({ fraction, ...(await turnAt(fraction)) });
+  if (fraction === 1) {
+    await page.screenshot({ path: `${screenshotDir}/desktop-statue-turned.png` });
+    report.screenshots.push(`${screenshotDir}/desktop-statue-turned.png`);
+  }
+}
+check('The hero opens on the untouched photograph, then holds while the statue turns', !turnStates[0].turning && turnStates[1].turning && turnStates[2].turning && turnStates.every(state => state.heroTop === 0 && Number(state.film) === 0), turnStates);
+const turnFrames = await page.evaluate(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).map(entry => entry.name));
+check('The turn uses its own local frames', turnFrames.length >= 24 && turnFrames.every(name => new URL(name).origin === new URL(url).origin), { count: turnFrames.length });
+const afterTurn = await turnAt(1.6);
+check('After the turn the hero scrolls on as before, still turned', afterTurn.heroTop < 0 && afterTurn.turning, afterTurn);
 await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 180)); } });
 await page.waitForTimeout(1000);
 await page.screenshot({ path: `${screenshotDir}/desktop-full.png`, fullPage: true });
@@ -287,6 +307,8 @@ const reducedBefore = await reducedPage.locator('[data-film-image], [data-journe
 await reducedPage.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 100)); } });
 const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey-still]').evaluateAll(images => images.map(image => getComputedStyle(image).transform));
 const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] canvas')).display === 'none', beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
+const reducedTurn = await reducedPage.evaluate(() => ({ holdHidden: getComputedStyle(document.querySelector('.hero-hold-space')).display === 'none', overlayHidden: getComputedStyle(document.querySelector('.statue-turn')).display === 'none', framesRequested: performance.getEntriesByType('resource').some(entry => /(desktop|mobile)-\d\d[^/?]*\.webp$/.test(entry.name)) }));
+check('Reduced motion skips the statue turn and never loads its frames', reducedTurn.holdHidden && reducedTurn.overlayHidden && !reducedTurn.framesRequested, reducedTurn);
 check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
 check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));

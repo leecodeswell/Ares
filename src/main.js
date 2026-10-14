@@ -1,6 +1,7 @@
 import "./style.css";
 import { introEnd } from "./intro/intro.js";
 import "./journey/journey.js";
+import "./hero/statue.js";
 import "@fontsource/cormorant-garamond/latin-400.css";
 import "@fontsource/cormorant-garamond/latin-500.css";
 import "@fontsource/cormorant-garamond/latin-400-italic.css";
@@ -19,7 +20,7 @@ const parallaxElements = [...document.querySelectorAll("[data-parallax]")];
 const filmScenes = [...document.querySelectorAll("[data-film-scene]")].map(
   (element) => ({
     element,
-    images: [...element.querySelectorAll("[data-film-image]")],
+    images: [...element.querySelectorAll("[data-film-image], [data-film-layer]")],
   }),
 );
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
