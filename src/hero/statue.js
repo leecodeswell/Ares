@@ -9,6 +9,8 @@ import { STATUE_FRAMES } from "./statue-frames.js";
 // rigidly, the neck bent, the columns behind rebuilt), drawn on a canvas that
 // shares the photograph's box and transform.
 
+const STILL = 0.3; // share of the hold spent on the original pose
+
 const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const hold = document.querySelector("[data-statue-hold]");
 const canvas = hold?.querySelector("[data-statue-canvas]");
@@ -66,7 +68,10 @@ function setUpTurn() {
     const images = loaded.get(name);
     if (!variant || !images) return hide();
     const rect = hold.getBoundingClientRect();
-    const t = Math.min(1, Math.max(0, -rect.top / Math.max(1, space.offsetHeight)));
+    // The first stretch of the hold keeps the untouched photograph, so the
+    // visitor sees his head fully in its original pose before it moves.
+    const held = Math.min(1, Math.max(0, -rect.top / Math.max(1, space.offsetHeight)));
+    const t = Math.max(0, (held - STILL) / (1 - STILL));
     let frame = Math.round(t * variant.frames.length);
     // a frame still downloading falls back to the nearest earlier one
     while (frame > 0 && !images[frame - 1]) frame -= 1;

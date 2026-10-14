@@ -7,8 +7,10 @@
   top: 0;
 }
 .hero-hold-space {
-  height: var(--statue-hold, 55vh); /* scroll length of the turn */
-  height: var(--statue-hold, 55svh);
+  /* scroll length of the hold: a still moment on the original pose (30%),
+     then the turn, which keeps its original 55vh */
+  height: var(--statue-hold, 79vh);
+  height: var(--statue-hold, 79svh);
 }
 .statue-turn {
   pointer-events: none;

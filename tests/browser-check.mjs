@@ -128,14 +128,15 @@ const turnAt = async fraction => {
 };
 await page.waitForFunction(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).length >= 24, null, { timeout: 15000 }).catch(() => {});
 const turnStates = [];
-for (const fraction of [0, 0.5, 1]) {
+for (const fraction of [0, 0.2, 0.5, 1]) {
   turnStates.push({ fraction, ...(await turnAt(fraction)) });
   if (fraction === 1) {
     await page.screenshot({ path: `${screenshotDir}/desktop-statue-turned.png` });
     report.screenshots.push(`${screenshotDir}/desktop-statue-turned.png`);
   }
 }
-check('The hero opens on the untouched photograph, then holds while the statue turns', !turnStates[0].turning && turnStates[1].turning && turnStates[2].turning && turnStates.every(state => state.heroTop === 0 && Number(state.film) === 0), turnStates);
+check('The hero opens on the untouched photograph, then holds while the statue turns', !turnStates[0].turning && turnStates[2].turning && turnStates[3].turning && turnStates.every(state => state.heroTop === 0 && Number(state.film) === 0), turnStates);
+check('The head stays in its original pose for the first stretch of the hold', !turnStates[1].turning, turnStates[1]);
 const turnFrames = await page.evaluate(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).map(entry => entry.name));
 check('The turn uses its own local frames', turnFrames.length >= 24 && turnFrames.every(name => new URL(name).origin === new URL(url).origin), { count: turnFrames.length });
 const afterTurn = await turnAt(1.6);
