@@ -92,12 +92,14 @@
   font-size: clamp(44px, 5.1vw, 88px);
   line-height: 1.12;
   letter-spacing: 0.03em;
-  color: #f5f0e6;
+  color: #1c1a16;
+  /* a soft ivory glow, close and quiet, so the dark letters lift off marble
+     and sky alike */
   text-shadow:
-    0 1px 2px rgba(34, 28, 20, 0.7),
-    0 0 6px rgba(34, 28, 20, 0.45),
-    0 2px 18px rgba(34, 28, 20, 0.4),
-    0 0 40px rgba(34, 28, 20, 0.25);
+    0 0 1px rgba(246, 242, 232, 0.9),
+    0 0 8px rgba(246, 242, 232, 0.75),
+    0 0 22px rgba(246, 242, 232, 0.55),
+    0 0 48px rgba(246, 242, 232, 0.35);
 }
 /* Inscribed capitals: no italics or second colours, only a quiet champagne
    for the words that carry the meaning. */
@@ -112,7 +114,7 @@
 .journey .vision-heading em,
 .journey .vision-line-last em {
   font-style: normal;
-  color: #dcc792;
+  color: #4d3d20;
 }
 .journey .vision-line {
   transform: translateX(calc((var(--beat-progress, 0) - 0.3) * var(--line-travel)));
