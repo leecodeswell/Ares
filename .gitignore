@@ -7,3 +7,5 @@ dist/
 !.env.example
 playwright-report/
 test-results/
+tools/render-journey/out/
+journey-frames/

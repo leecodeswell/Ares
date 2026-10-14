@@ -59,6 +59,8 @@ try {
             if (response.status() >= 400) failures.push(response.url());
           });
           page.on("requestfailed", (request) => {
+            // Seeking a video ends one byte-range request and starts another.
+            if (request.resourceType() === "media" && request.failure()?.errorText === "net::ERR_ABORTED") return;
             failures.push(`${request.url()}: ${request.failure()?.errorText}`);
           });
           const url = `http://127.0.0.1:${server.address().port}${mount}`;
@@ -156,6 +158,9 @@ try {
         }
       }
     } finally {
+      // A paused video download holds its connection open; end it so the
+      // server can close.
+      server.closeAllConnections();
       await new Promise((closed) => server.close(closed));
     }
   }

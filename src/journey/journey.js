@@ -66,7 +66,8 @@ function setUpJourney(journey) {
   let ready = false;
   let orientation = "";
   let seeking = false;
-  let wantedTime = -1;
+  let wantedFrame = -1;
+  let shownFrame = -1;
 
   function measure() {
     const rect = journey.getBoundingClientRect();
@@ -121,13 +122,15 @@ function setUpJourney(journey) {
   }
 
   // Seek one frame at a time: a new seek waits for the last to land, so fast
-  // scrolling never queues up stale frames.
-  function seekTo(time) {
-    wantedTime = time;
-    if (!ready || seeking) return;
-    if (Math.abs(video.currentTime - time) < 0.5 / fps) return;
+  // scrolling never queues up stale frames. Frames are tracked by index, not
+  // by currentTime, which browsers may report snapped to the frame's start.
+  function seekTo(frame) {
+    wantedFrame = frame;
+    if (!ready || seeking || frame === shownFrame) return;
     seeking = true;
-    video.currentTime = time;
+    shownFrame = frame;
+    // aim for the middle of the frame so rounding never lands on a neighbour
+    video.currentTime = (frame + 0.5) / fps;
   }
 
   function draw() {
@@ -146,8 +149,7 @@ function setUpJourney(journey) {
       }
       return;
     }
-    const frame = Math.round(progress * (frames - 1));
-    seekTo((frame + 0.5) / fps);
+    seekTo(Math.round(progress * (frames - 1)));
   }
 
   function schedule() {
@@ -162,6 +164,7 @@ function setUpJourney(journey) {
     video.addEventListener("loadeddata", () => {
       ready = true;
       seeking = false;
+      shownFrame = -1;
       journey.classList.add("is-flying");
       if (still) still.style.transform = "";
       schedule();
@@ -169,13 +172,21 @@ function setUpJourney(journey) {
     // Some mobile browsers hold back a video's frames until it has played;
     // a muted inline video may, so nudge it once and stop at once.
     video.addEventListener("loadedmetadata", () => {
-      if (video.readyState >= 2) return;
-      const nudge = video.play();
-      nudge?.then(() => video.pause()).catch(() => {});
+      window.setTimeout(() => {
+        if (video.readyState >= 2) return;
+        video
+          .play()
+          ?.then(() => {
+            video.pause();
+            shownFrame = -1; // put the right frame back after the nudge
+            schedule();
+          })
+          .catch(() => {});
+      }, 1500);
     });
     video.addEventListener("seeked", () => {
       seeking = false;
-      if (wantedTime >= 0 && Math.abs(video.currentTime - wantedTime) >= 0.5 / fps) seekTo(wantedTime);
+      if (wantedFrame >= 0 && wantedFrame !== shownFrame) seekTo(wantedFrame);
     });
     video.addEventListener("error", () => {
       ready = false;
