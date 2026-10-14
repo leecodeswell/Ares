@@ -131,23 +131,25 @@ check('Skip intro lands on the hero', await page.evaluate(end => Math.abs(scroll
 const turnAt = async passed => {
   await page.evaluate(f => scrollTo({ top: document.querySelector('#home').offsetTop + innerHeight * f, behavior: 'instant' }), passed);
   await page.waitForTimeout(250);
-  return page.evaluate(f => { const layer = document.querySelector('.statue-turn'); return { passed: f, heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), expectedTop: -Math.round(innerHeight * f), frame: Number(layer.dataset.frame || 0), eye: Number(layer.dataset.eye || NaN), headerBottom: Math.round(document.querySelector('.site-header').getBoundingClientRect().bottom), viewport: innerHeight }; }, passed);
+  return page.evaluate(f => { const layer = document.querySelector('.statue-turn'); return { passed: f, heroTop: Math.round(document.querySelector('#home').getBoundingClientRect().top), expectedTop: -Math.round(innerHeight * f), frame: Number(layer.dataset.frame || 0), eye: Number(layer.dataset.eye || NaN), chin: Number(layer.dataset.chin || NaN), headerBottom: Math.round(document.querySelector('.site-header').getBoundingClientRect().bottom), viewport: innerHeight }; }, passed);
 };
 await page.waitForFunction(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).length >= 24, null, { timeout: 15000 }).catch(() => {});
 await page.waitForTimeout(500);
 const turnStates = [];
-for (let passed = 0; passed <= 0.7; passed += 0.02) turnStates.push(await turnAt(Number(passed.toFixed(2))));
+for (let passed = -0.6; passed <= 0.7; passed += 0.02) turnStates.push(await turnAt(Number(passed.toFixed(2))));
 const firstFull = turnStates.findIndex(state => state.frame === 24);
-check('The head is seen at rest before the turn begins', turnStates.filter(state => state.passed <= 0.02).every(state => state.frame === 0), turnStates.slice(0, 3));
+const firstMove = turnStates.findIndex(state => state.frame > 0);
+check('The turn begins as soon as his whole head is in view', firstMove > 0 && turnStates.slice(0, firstMove).every(state => state.frame === 0) && turnStates[firstMove].chin <= turnStates[firstMove].viewport && turnStates[firstMove - 1].chin > turnStates[firstMove].viewport * 0.94, { before: turnStates[firstMove - 1], at: turnStates[firstMove] });
 check('Nothing holds the page: the hero scrolls on while the statue turns', turnStates.every(state => Math.abs(state.heroTop - state.expectedTop) <= 1), turnStates.filter(state => Math.abs(state.heroTop - state.expectedTop) > 1));
 check('The turn follows the scroll frame by frame', turnStates.every((state, index) => index === 0 || state.frame >= turnStates[index - 1].frame) && new Set(turnStates.map(state => state.frame)).size >= 12, turnStates.map(state => state.frame));
+check('The whole turn takes about five wheel steps', firstFull > firstMove && (turnStates[firstFull].passed - turnStates[firstMove].passed) * turnStates[firstFull].viewport / 100 >= 4 && (turnStates[firstFull].passed - turnStates[firstMove].passed) * turnStates[firstFull].viewport / 100 <= 7.5, { from: turnStates[firstMove].passed, to: turnStates[firstFull].passed });
 check('He reaches his last frame just before his eyes leave the screen', firstFull > 0 && turnStates[firstFull].eye > turnStates[firstFull].headerBottom && turnStates[firstFull].eye < turnStates[firstFull].headerBottom + turnStates[firstFull].viewport * 0.1 && turnStates[firstFull - 1].frame < 24, { before: turnStates[firstFull - 1], at: turnStates[firstFull] });
 await turnAt(turnStates[firstFull]?.passed ?? 0.4);
 await page.screenshot({ path: `${screenshotDir}/desktop-statue-turned.png` });
 report.screenshots.push(`${screenshotDir}/desktop-statue-turned.png`);
 const turnFrames = await page.evaluate(() => performance.getEntriesByType('resource').filter(entry => /desktop-\d\d[^/?]*\.webp$/.test(entry.name)).map(entry => entry.name));
 check('The turn uses its own local frames', turnFrames.length >= 24 && turnFrames.every(name => new URL(name).origin === new URL(url).origin), { count: turnFrames.length });
-const backUp = await turnAt(0);
+const backUp = await turnAt(-0.6);
 check('Scrolling back up returns him to his original pose', backUp.frame === 0, backUp);
 
 // The intro plays itself once: the first scroll brings out the grace, the
@@ -308,7 +310,7 @@ check('All three qualities stay fully readable and steady across an extended scr
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
 const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
-check('The journey words sit on a soft paper veil over the wall', textBackdrop.background !== 'rgba(0, 0, 0, 0)' && textBackdrop.scrim === 'block', textBackdrop);
+check('The journey words float over the scene with no panel behind them', textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 

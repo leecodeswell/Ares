@@ -11,14 +11,15 @@ import { STATUE_FRAMES } from "./statue-frames.js";
 // rigidly, the neck bent, the columns behind rebuilt), drawn on a canvas that
 // shares the photograph's box and transform.
 
-// Where his eye ends up once he has bowed, on each photograph (its own
-// pixels; the eye in tools/statue-turn/*.json carried through the final head
-// and neck turn), and when he turns: he starts once the hero has risen a
-// little past resting at the top, so his head is seen still first, and lands
-// on his last frame just before that eye slips under the site header, the
-// top of what can be seen. Both margins are shares of the screen height.
+// Where his eye ends up once he has bowed and where his chin is at rest, on
+// each photograph (its own pixels; the eye from tools/statue-turn/*.json carried
+// through the final head and neck turn). He starts turning as soon as his
+// whole head has risen into view (his chin clears the bottom of the screen)
+// and lands on his last frame just before that eye slips under the site
+// header, the top of what can be seen. Margins are shares of the screen height.
 const EYES = { desktop: [1105, 440], mobile: [477, 578] };
-const TURN_START = 0.04;
+const CHINS = { desktop: 560, mobile: 700 };
+const TURN_START = 0.03;
 const TURN_END = 0.03;
 
 const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,7 +31,6 @@ if (hold && canvas && photo && Object.keys(STATUE_FRAMES).length) setUpTurn();
 
 function setUpTurn() {
   const layer = canvas.parentElement;
-  let restEye = null; // the eye's height on screen while the hero rests at the top
   const context = canvas.getContext("2d");
   const loaded = new Map(); // variant name -> array of decoded frames (or null)
   let shown = -1;
@@ -123,27 +123,26 @@ function setUpTurn() {
 
   // The eye's position on screen, through the same cover fit and scroll-linked
   // push as the photograph (the canvas carries that transform).
-  function eyeOnScreen(name, variant) {
+  function eyeOnScreen(name, variant, chin = false) {
     const box = getComputedStyle(canvas);
     const width = parseFloat(box.width);
     const height = parseFloat(box.height);
     const scale = Math.max(width / variant.width, height / variant.height);
     const py = parseFloat(getComputedStyle(photo).objectPosition.split(" ")[1]) / 100;
-    const layoutY = (height - variant.height * scale) * py + EYES[name][1] * scale;
+    const layoutY = (height - variant.height * scale) * py + (chin ? CHINS[name] : EYES[name][1]) * scale;
     const drawn = canvas.getBoundingClientRect();
     return drawn.top + (layoutY / height) * drawn.height;
   }
 
   // 0 while the hero rests (and just after), 1 as his eye reaches the top.
   function turnAt(name, variant) {
-    const rect = hold.getBoundingClientRect();
     const eye = eyeOnScreen(name, variant);
     layer.dataset.eye = eye.toFixed(1);
-    // Learn where the eye sits at rest whenever the hero hasn't moved up yet;
-    // a page opened mid-scroll estimates it from the photograph's own layout.
-    if (rect.top >= 0) restEye = eye - rect.top;
-    const rest = restEye ?? eye + Math.max(0, -rect.top);
-    const start = rest - TURN_START * window.innerHeight;
+    // The eye's height on screen at the moment the chin clears the bottom edge
+    // (the two move together, so their distance holds).
+    const chin = eyeOnScreen(name, variant, true);
+    layer.dataset.chin = chin.toFixed(1);
+    const start = eye + (1 - TURN_START) * window.innerHeight - chin;
     const header = document.querySelector(".site-header")?.getBoundingClientRect();
     const top = header && header.bottom > 0 && header.bottom < window.innerHeight * 0.3 ? header.bottom : 0;
     const end = top + TURN_END * window.innerHeight;

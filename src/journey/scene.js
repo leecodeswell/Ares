@@ -158,7 +158,8 @@ vec2 map(vec3 p) {
   stone = min(stone, min(min(sideWall, pilaster), min(aisleCeiling, aisleBeam)));
 
   // far wall with a moulded arch: archivolt, keystone and flanking pilasters
-  float endWall = sdBox(p - vec3(0.0, 5.6, ENDZ + 0.4), vec3(4.0, 5.6, 0.4));
+  // (it runs on across the walled aisle to meet the outer wall)
+  float endWall = sdBox(p - vec3(1.425, 5.6, ENDZ + 0.4), vec3(5.425, 5.6, 0.4));
   vec2 a = vec2(p.x, p.y - 4.2);
   float opening = min(sdBox(vec3(p.x, p.y - 2.1, p.z - ENDZ - 0.4), vec3(1.3, 2.1, 1.0)),
                       max(length(a) - 1.3, abs(p.z - ENDZ - 0.4) - 1.0));
