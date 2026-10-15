@@ -93,7 +93,10 @@ function setUpJourney(journey) {
     beats.forEach((beat, index) => {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
-      const offset = (progress - centres[index]) / step; // -1 one place left, +1 one place right
+      // -1 one place left, +1 one place right; the first passage is already
+      // waiting in the centre when the flight begins
+      const raw = (progress - centres[index]) / step;
+      const offset = index === 0 ? Math.max(0, raw) : raw;
       const x = motionPreference.matches ? 0 : offset * spacing;
       const turn = motionPreference.matches ? 0 : clamp(offset, -1.5, 1.5) * -32;
       const box = beat.element.offsetWidth;

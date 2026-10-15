@@ -95,18 +95,17 @@
   margin: 0;
   font-family: "Cinzel", var(--serif);
   font-weight: 600;
-  font-size: clamp(28px, 2.8vw, 46px);
-  line-height: 1.2;
+  font-size: clamp(44px, 5.1vw, 88px);
+  line-height: 1.12;
   letter-spacing: 0.05em;
-  color: #2e261a;
-  /* a firm light outline traced around every letter, with a close halo
-     behind it, so the dark capitals hold up over fluting, veins and sky */
-  -webkit-text-stroke: 0.14em rgba(250, 247, 238, 0.96);
-  paint-order: stroke fill;
+  color: #1c1a16;
+  /* a soft ivory glow, close and quiet, so the dark letters lift off marble
+     and sky alike */
   text-shadow:
-    0 0 2px rgba(250, 247, 238, 0.95),
-    0 0 6px rgba(250, 247, 238, 0.8),
-    0 0 16px rgba(250, 247, 238, 0.45);
+    0 0 1px rgba(246, 242, 232, 0.9),
+    0 0 8px rgba(246, 242, 232, 0.75),
+    0 0 22px rgba(246, 242, 232, 0.55),
+    0 0 48px rgba(246, 242, 232, 0.35);
 }
 .journey .vision-line,
 .journey .vision-line:nth-child(2),
@@ -120,6 +119,8 @@
 }
 .journey .vision-line:nth-child(2) {
   --line-travel: 18vw;
+  /* the second line in the garden's sage, as in the hero */
+  color: #4a5640;
 }
 .journey .vision-line:nth-child(3) {
   --line-travel: -9vw;
@@ -130,7 +131,7 @@
 .journey .vision-heading em {
   display: inline;
   font-style: normal;
-  color: #4a3210;
+  color: #5c4519;
 }
 
 @media (max-width: 760px) {
@@ -143,7 +144,7 @@
     transform: translateX(var(--beat-x, 0px)) rotateY(var(--beat-turn, 0deg));
   }
   .journey .vision-heading {
-    font-size: 6.4vw;
+    font-size: 9vw;
   }
   .journey .vision-line,
   .journey .vision-line-last {
