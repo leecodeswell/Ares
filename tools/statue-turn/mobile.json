@@ -3967,11 +3967,12 @@
   830
  ],
  "motion": {
-  "head": 12,
-  "neck": 7,
+  "head": 8,
+  "neck": 12,
   "stir": 1.2,
   "eye_level": 1.0,
-  "eye_down": 0.6
+  "eye_down": 0.6,
+  "neck_from": 0.18
  },
  "eye": {
   "center": [
@@ -4098,5 +4099,7 @@
   960
  ],
  "sheet_columns": 6,
- "quality": 90
+ "quality": 90,
+ "bend_soften": 12,
+ "head_turn_from": 0.4
 }

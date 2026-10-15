@@ -380,7 +380,9 @@ def pose(spec, t):
     eyes = m["eye_level"] * ease(0.0, 0.3, t) + m["eye_down"] * ease_in_out(0.5, 1.0, t)
     stir = m["stir"] * ease(0.05, 0.32, t)
     bow = ease_in_out(0.25, 0.95, t)
-    lean = ease_in_out(0.35, 1.0, t)
+    # the neck starts with the head and carries much of the turn, so the
+    # throat follows the chin instead of folding under it
+    lean = ease_in_out(m.get("neck_from", 0.2), 0.97, t)
     head = math.radians(stir + m["head"] * bow)
     neck = math.radians(m["neck"] * lean)
     return {"eyes": eyes, "head": head, "neck": neck}
@@ -506,6 +508,8 @@ def build(name, debug_root=None):
     patches = []
     photo_box = photo[y0:y1, x0:x1]
     neck_layer = np.maximum(neck, ndimage.grey_dilation(head, size=5) * (s > 0.97))
+    # the original neck, used to fill any gap the motion opens in it
+    neck_under = np.clip(neck - cloak, 0, 1).astype(np.float32)
     for i in range(1, count + 1):
         t = i / count
         p = pose(spec, t)
@@ -539,6 +543,13 @@ def build(name, debug_root=None):
             patch = hole[y0:y1, x0:x1] | ndimage.binary_dilation(cover > 0.01, iterations=2)
             patch &= ~(cloak[y0:y1, x0:x1] > 0.999) | (cover > 0.01)
         patches.append(patch)
+        # wherever the moved statue leaves a gap in the neck (it pulled away or
+        # the bend folded), show the neck's own marble from the photograph,
+        # never the background behind it
+        near = cv2.dilate((cover > 0.5).astype(np.uint8), np.ones((15, 15), np.uint8)) > 0
+        gap = neck_under[y0:y1, x0:x1] * near * (1 - cover)
+        gap = np.clip(gap, 0, 1)[..., None]
+        frame = photo_box * gap + frame * (1 - gap)
         frames.append(frame)
         if debug is not None:
             full = photo.copy()
