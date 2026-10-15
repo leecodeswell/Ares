@@ -306,11 +306,11 @@ const reader = await page.evaluate(() => ({ open: document.querySelector('.scrol
 await page.keyboard.press('Escape');
 await page.locator('.scroll-index-toggle').click();
 const listed = await page.locator('#scroll-index-list button').count();
-await page.locator('#scroll-index-list button').nth(4).click();
+await page.locator('#scroll-index-list button').nth(3).click();
 const fromList = await page.evaluate(() => document.querySelector('.scroll-reader').open && document.querySelector('.scroll-reader-label').textContent);
 await page.keyboard.press('Escape');
 await page.locator('.scroll-index-toggle').click();
-check('Scroll I opens its passage, and every scroll is reachable from the list', reader.open && /Your themes/.test(reader.heading) && reader.beatsHidden && listed === 5 && /Scroll V/.test(fromList), { reader, listed, fromList });
+check('Scroll I opens its passage, and every scroll is reachable from the list', reader.open && /Your themes/.test(reader.heading) && reader.beatsHidden && listed === 4 && /Scroll IV/.test(fromList), { reader, listed, fromList });
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
@@ -448,7 +448,7 @@ const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey
 const reducedTurn = await reducedPage.evaluate(() => ({ overlayHidden: getComputedStyle(document.querySelector('.statue-turn')).display === 'none', framesRequested: performance.getEntriesByType('resource').some(entry => /(desktop|mobile)-\d\d[^/?]*\.webp$/.test(entry.name)) }));
 check('Reduced motion skips the statue turn and never loads its frames', reducedTurn.overlayHidden && !reducedTurn.framesRequested, reducedTurn);
 const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] video')).display === 'none' && !performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)), autoplay: document.querySelector('[data-intro]').dataset.autoplay, beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
-check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
+check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 4 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
 check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));
 check('Reduced motion leaves the entire story visible', reducedContent.every(element => element.opacity === '1' && element.visibility !== 'hidden'), reducedContent);

@@ -576,3 +576,34 @@
     animation: none;
   }
 }
+/* the reader's copy of a passage drops the overlay's moving, wide layouts */
+.scroll-reader .scroll-reader-passage .vision-heading {
+  font-size: clamp(32px, 6vw, 46px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+.scroll-reader .scroll-reader-passage .vision-line {
+  display: block;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  transform: none;
+}
+.scroll-reader .scroll-reader-passage .qualities {
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.scroll-reader .scroll-reader-passage .quality-number {
+  display: inline;
+  margin: 0;
+  font-size: 28px;
+}
+.scroll-reader .scroll-reader-passage .quality h3 {
+  font-size: 26px;
+}
+.scroll-reader .scroll-reader-passage .vision-line-last {
+  font-size: inherit;
+}

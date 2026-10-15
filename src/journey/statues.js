@@ -8,10 +8,11 @@
 //  - the final grade is matched to the hero photograph's marble.
 import AULE from "./aule-sdf.json";
 
-export const STATUE_COUNT = 5;
-export const STATUE_X = 2.95;
+export const STATUE_COUNT = 4;
+export const STATUE_X = 2.45; // at the front of the column line, so phones see them too
 const SCALE = 1.15, YAW = 1.05; // turned toward the approaching visitor
-export const statueZ = (i) => 2.3 + 9.2 * i;
+// one every other bay, starting a bay in from the entrance
+export const statueZ = (i) => 2.3 + 9.2 * (i + 1);
 // the scroll's centre, in scene coordinates (before the display mirror)
 export const scrollPoint = (i) => {
   const lx = -0.37 * SCALE, ly = 2.3 * SCALE, lz = -0.225 * SCALE;
@@ -48,7 +49,7 @@ float smin(float a, float b, float k) {
   return mix(b, a, h) - k * h * (1.0 - h);
 }
 float smax(float a, float b, float k) { return -smin(-a, -b, k); }
-float statueIndex(float z) { return clamp(floor((z - 2.3) / 9.2 + 0.5), 0.0, 4.0); }
+float statueIndex(float z) { return clamp(floor((z - 2.3) / 9.2 + 0.5), 1.0, 4.0); }
 
 // A nub head with the original ring crest: the first design's head and dome
 // blended into one smooth shape, with no brim and no neck.

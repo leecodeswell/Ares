@@ -9,7 +9,7 @@ import { STATUE_COUNT, scrollPoint } from "./statues.js";
 const VIDEO = { landscape: [1920, 1080], portrait: [864, 1536] };
 const NUMERALS = ["I", "II", "III", "IV", "V"];
 const EDGE = 30; // markers that leave the screen while their statue is near stay pinned this far in
-const NEAR = 18; // metres: closer than this, a statue's marker is offered
+const NEAR = 22; // metres: closer than this, a statue's marker is offered
 
 const sub = (a, b) => a.map((v, i) => v - b[i]);
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
