@@ -309,17 +309,19 @@
   opacity: 0;
   pointer-events: none;
 }
-/* the papyrus: a sheet between two rollers, large and centred */
+/* the papyrus: a sheet between two marble rollers, large and centred */
 .papyrus {
-  --papyrus-w: min(660px, calc(100vw - 48px));
-  --papyrus-h: min(580px, calc(100svh - 150px));
+  --papyrus-w: min(900px, calc(100vw - 64px));
+  /* centred in the view below the site's header */
+  --papyrus-h: min(720px, calc(100svh - var(--papyrus-header, 108px) - 64px));
+  --papyrus-ink: #2b1f0f;
   position: absolute;
-  top: 50%;
+  top: calc(50% + var(--papyrus-header, 108px) / 2);
   left: 50%;
   width: var(--papyrus-w);
   height: var(--papyrus-h);
   margin: calc(var(--papyrus-h) / -2) 0 0 calc(var(--papyrus-w) / -2);
-  color: #2c2416;
+  color: var(--papyrus-ink);
   transform-origin: 50% 50%;
 }
 .papyrus[hidden] {
@@ -327,44 +329,54 @@
 }
 .papyrus-sheet {
   position: absolute;
-  inset: 14px 18px;
+  inset: 18px 24px;
   overflow: hidden;
+  /* worn, darkened edges over the papyrus itself (papyrus.webp: crossed strips of reed pith) */
   background:
-    linear-gradient(90deg, rgba(120, 90, 40, 0.28), transparent 7%, transparent 93%, rgba(120, 90, 40, 0.28)),
-    linear-gradient(180deg, rgba(110, 80, 30, 0.2), transparent 9%, transparent 91%, rgba(110, 80, 30, 0.2)),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.012 .9' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .22  0 0 0 .28 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9 .015' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .38  0 0 0 0 .2  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
-    #e9dcbc;
-  box-shadow: inset 0 0 40px rgba(120, 90, 40, 0.25), 0 26px 70px rgba(0, 0, 0, 0.45);
+    linear-gradient(90deg, rgba(92, 60, 22, 0.42), rgba(92, 60, 22, 0.1) 4%, transparent 11%, transparent 89%, rgba(92, 60, 22, 0.1) 96%, rgba(92, 60, 22, 0.42)),
+    linear-gradient(180deg, rgba(82, 52, 18, 0.32), transparent 7%, transparent 93%, rgba(82, 52, 18, 0.32)),
+    radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(110, 76, 30, 0.22)),
+    url("./papyrus.webp") center / 760px repeat,
+    #dfc898;
+  box-shadow:
+    inset 0 0 0 1px rgba(90, 60, 25, 0.25),
+    inset 0 0 60px rgba(100, 66, 24, 0.28),
+    0 30px 80px rgba(0, 0, 0, 0.5);
   clip-path: inset(50% 0 50% 0);
 }
+/* marble rollers, shaded as cylinders, with marble end knobs */
 .papyrus-roll {
   position: absolute;
   right: 0;
   left: 0;
   z-index: 2;
-  height: 30px;
-  border-radius: 15px;
+  height: 40px;
+  border-radius: 20px;
   background:
-    repeating-linear-gradient(90deg, transparent 0 18px, rgba(80, 60, 30, 0.08) 18px 20px),
-    linear-gradient(#a99a82, #efe8da 38%, #d9cfbd 60%, #8a7d68);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+    linear-gradient(rgba(30, 24, 16, 0.42), rgba(255, 255, 255, 0.28) 32%, rgba(255, 255, 255, 0.06) 52%, rgba(30, 24, 16, 0.18) 74%, rgba(20, 16, 10, 0.55)),
+    url("./marble.webp") 0 0 / 420px,
+    #d9d2c4;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
 }
 .papyrus-roll::before,
 .papyrus-roll::after {
   content: "";
   position: absolute;
-  top: -5px;
-  width: 22px;
-  height: 40px;
-  border-radius: 11px;
-  background: linear-gradient(#8f8370, #e6dfd0 40%, #7d715d);
+  top: -8px;
+  width: 30px;
+  height: 56px;
+  border-radius: 15px;
+  background:
+    linear-gradient(rgba(30, 24, 16, 0.45), rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.05) 55%, rgba(20, 16, 10, 0.6)),
+    url("./marble.webp") 40px 20px / 260px,
+    #d4ccbd;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 .papyrus-roll::before {
-  left: -14px;
+  left: -20px;
 }
 .papyrus-roll::after {
-  right: -14px;
+  right: -20px;
 }
 .papyrus-roll-top {
   top: 0;
@@ -378,72 +390,79 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
-  padding: 48px clamp(28px, 7%, 64px) 40px;
+  gap: 20px;
+  padding: 64px clamp(36px, 8%, 88px) 56px;
   overflow: auto;
   opacity: 0;
+  /* ink sits slightly into the fibres */
+  text-shadow: 0 0 1px rgba(70, 45, 12, 0.28);
 }
 .papyrus-label {
   margin: 0;
-  color: #6b5a3a;
-  font: 500 11px/1.3 "DM Sans", sans-serif;
-  letter-spacing: 0.18em;
+  color: #6a5230;
+  font: 600 14px/1.3 "Cinzel", Georgia, serif;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
-/* the passage's copy, without the overlay's moving, wide layouts */
+/* the passage's copy, in inscriptional capitals over a book face, without
+   the overlay's moving, wide layouts */
 .papyrus-passage {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
-.papyrus .papyrus-passage :is(h2, h3) {
+.papyrus .papyrus-passage :is(h2, h3, .journey-statement) {
   margin: 0;
-  color: #2c2416;
-  font-family: var(--serif);
+  color: var(--papyrus-ink);
+  font-family: "Cinzel", Georgia, serif;
   font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: 0;
+  line-height: 1.12;
+  letter-spacing: 0.01em;
   text-wrap: balance;
 }
 .papyrus .papyrus-passage h2,
 .papyrus .papyrus-passage .vision-heading {
-  font-size: clamp(32px, 5.4vw, 48px);
+  font-size: clamp(40px, 4.6vw, 64px);
+}
+.papyrus .papyrus-passage .journey-statement {
+  max-width: none;
+  font-size: clamp(34px, 3.9vw, 52px);
 }
 .papyrus .papyrus-passage .vision-line {
   display: block;
-  color: inherit;
   margin: 0;
   padding: 0;
+  color: inherit;
   font-size: inherit;
   text-align: left;
   transform: none;
 }
+/* emphasis in the book face's italic, the way a scribe would set it apart */
 .papyrus .papyrus-passage em {
-  color: #8a5f1e;
+  color: #7d4f12;
+  font-family: "EB Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
 }
-.papyrus .papyrus-passage :is(p, .journey-statement) {
+.papyrus .papyrus-passage p:not(.journey-statement, .eyebrow) {
   max-width: 60ch;
   margin: 0;
-  color: #3a3020;
-  font: 400 19px/1.5 var(--serif);
-}
-.papyrus .papyrus-passage .journey-statement {
-  color: #2c2416;
-  font-size: clamp(28px, 4.6vw, 40px);
-  line-height: 1.12;
+  color: #3a2b16;
+  font: 400 clamp(21px, 1.7vw, 25px)/1.5 "EB Garamond", Georgia, serif;
 }
 .papyrus .papyrus-passage :is(.journey-rule, .scene-caption-line, .kicker-line) {
   display: none;
 }
 .papyrus .papyrus-passage :is(.eyebrow, .section-kicker, .scene-caption) {
-  color: #6b5a3a;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  color: #6a5230;
+  font: 500 13px/1.4 "Cinzel", Georgia, serif;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 .papyrus .papyrus-passage .qualities {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 16px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -451,16 +470,17 @@
 .papyrus .papyrus-passage .quality {
   display: flex;
   align-items: baseline;
-  gap: 14px;
+  gap: 18px;
 }
 .papyrus .papyrus-passage .quality-number {
   display: inline;
+  min-width: 1.6em;
   margin: 0;
-  color: #8a6a34;
-  font-size: 28px;
+  color: #7d5a26;
+  font: 600 34px/1 "Cinzel", Georgia, serif;
 }
 .papyrus .papyrus-passage .quality h3 {
-  font-size: 26px;
+  font-size: clamp(30px, 3vw, 40px);
 }
 .papyrus .papyrus-passage .quality br {
   display: none;

@@ -136,10 +136,11 @@ export function setUpScrolls(journey, stage, beats, { scrollToRead }) {
     const words = clamp((open - 0.82) / 0.18);
     const point = screenPoint(story.visit, camera);
     const dx = (point.x - stage.clientWidth / 2) * (1 - fly);
-    const dy = (point.y - stage.clientHeight / 2) * (1 - fly);
+    const centre = papyrus.offsetTop + papyrus.offsetHeight / 2; // below the header, not the stage's middle
+    const dy = (point.y - centre) * (1 - fly);
     papyrus.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${(0.16 + 0.84 * fly).toFixed(4)})`;
     papyrus.style.opacity = (0.4 + 0.6 * fly).toFixed(3);
-    const half = papyrus.clientHeight / 2 - 15;
+    const half = papyrus.clientHeight / 2 - 20; // the rollers are 40px tall
     const inset = (50 * (1 - unroll)).toFixed(2);
     sheet.style.clipPath = `inset(${inset}% 0 ${inset}% 0)`;
     rollTop.style.transform = `translateY(${(half * (1 - unroll)).toFixed(1)}px)`;
