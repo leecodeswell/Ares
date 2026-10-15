@@ -290,27 +290,40 @@ const journeyAt = async fraction => {
 };
 await page.waitForFunction(() => document.querySelector('[data-journey]')?.classList.contains('is-flying'), null, { timeout: 8000 }).catch(() => {});
 const journeyStates = [];
-for (const fraction of [0.05, 0.47, 0.9]) journeyStates.push(await journeyAt(fraction));
+// before the first statue, so no hover pulls the flight in
+for (const fraction of [0.03, 0.1, 0.17]) journeyStates.push(await journeyAt(fraction));
 check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
 check('The pre-rendered flight is scrubbed to the frame matching the scroll', journeyStates.every(state => Math.abs(state.time - (Math.round(state.progress * 239) + 0.5) / 24) < 0.05), journeyStates);
-// Scrubbing back up returns to the earlier frame.
-const scrubBack = await journeyAt(0.47);
+const scrubBack = await journeyAt(0.1);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
-check('The statues\' scroll markers appear as the flight passes them, scroll I first', journeyStates[0].markers.includes('I') && journeyStates[1].markers.length > 0, journeyStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
-// Every passage is optional: hidden during the flight, opened from its scroll or the list.
-await journeyAt(0.05);
-await page.locator('.scroll-marker:not([hidden])', { hasText: /^I$/ }).click();
-const reader = await page.evaluate(() => ({ open: document.querySelector('.scroll-reader').open, heading: document.querySelector('.scroll-reader-passage h2')?.textContent.replace(/\s+/g, ' ').trim(), beatsHidden: [...document.querySelectorAll('[data-beat]')].every(beat => getComputedStyle(beat).display === 'none') }));
-await page.keyboard.press('Escape');
+// Scrolling on past the first statue's approach glides into its hover and holds there.
+const statueState = () => page.evaluate(() => ({ held: document.documentElement.classList.contains('is-journey-held'), progress: Number(document.querySelector('[data-journey]').dataset.progress), cue: document.querySelector('.scroll-cue:not([hidden])')?.textContent || null, open: !document.querySelector('.papyrus').hidden, heading: document.querySelector('.papyrus-passage h2')?.textContent.replace(/\s+/g, ' ').trim() || null, label: document.querySelector('.papyrus-label').textContent, beatsHidden: [...document.querySelectorAll('[data-beat]')].every(beat => getComputedStyle(beat).display === 'none') }));
+await page.evaluate(([box]) => scrollTo({ top: box.top + (box.height - innerHeight) * 0.215, behavior: 'instant' }), [journeyBox]);
+await page.waitForTimeout(1600);
+const arrived = await statueState();
+await page.keyboard.press('ArrowDown');
+await page.waitForTimeout(1700);
+const opened = await statueState();
+await page.screenshot({ path: `${screenshotDir}/desktop-journey-scroll-open.png` });
+report.screenshots.push(`${screenshotDir}/desktop-journey-scroll-open.png`);
+await page.keyboard.press('ArrowDown');
+await page.waitForTimeout(2200);
+const flownOn = await statueState();
+check('The flight holds at statue I; one scroll opens its passage and the next rolls it up and flies on', arrived.held && arrived.cue === 'I' && !arrived.open && opened.open && /Your themes/.test(opened.heading) && opened.beatsHidden && !flownOn.open && !flownOn.held && flownOn.progress > arrived.progress, { arrived, opened, flownOn });
 await page.locator('.scroll-index-toggle').click();
 const listed = await page.locator('#scroll-index-list button').count();
-await page.locator('#scroll-index-list button').nth(4).click();
-const fromList = await page.evaluate(() => document.querySelector('.scroll-reader').open && document.querySelector('.scroll-reader-label').textContent);
+await page.locator('#scroll-index-list button').nth(3).click();
+await page.waitForTimeout(2600);
+const fromList = await statueState();
 await page.keyboard.press('Escape');
-await page.locator('.scroll-index-toggle').click();
-check('Scroll I opens its passage, and every scroll is reachable from the list', reader.open && /Your themes/.test(reader.heading) && reader.beatsHidden && listed === 5 && /Scroll V/.test(fromList), { reader, listed, fromList });
+await page.waitForTimeout(1300);
+const afterEscape = await statueState();
+check('Every scroll is reachable from the list, and Escape rolls it up', listed === 4 && fromList.open && /Scroll IV/.test(fromList.label) && !afterEscape.open, { listed, fromList, afterEscape });
+// back out of the hover, up the corridor, so the rest of the page scrolls freely
+await page.keyboard.press('ArrowUp');
+await page.waitForTimeout(1500);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
@@ -426,8 +439,11 @@ for (const width of [390, 320, 768]) {
     check('Mobile navigation closes after selecting a link', await menu.getAttribute('aria-expanded') === 'false');
     await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 140)); } });
     await page.waitForTimeout(1000);
-    const mobileImages = await page.locator('img').evaluateAll(elements => elements.map(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0 })));
-    check('All mobile photographs load after scrolling', mobileImages.length >= 3 && mobileImages.every(image => image.loaded), mobileImages);
+    // the journey is desktop-only, so its still never loads on phones
+    const mobileImages = await page.locator('img:not([data-journey-still])').evaluateAll(elements => elements.map(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0 })));
+    check('All mobile photographs load after scrolling', mobileImages.length >= 2 && mobileImages.every(image => image.loaded), mobileImages);
+    const mobileJourney = await page.evaluate(() => ({ hidden: getComputedStyle(document.querySelector('[data-journey]')).display === 'none', visionLinks: [...document.querySelectorAll('[data-vision-link]')].map(link => link.getAttribute('href')), flightRequested: performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)) }));
+    check('Phones skip the journey: hidden, never loaded, and its links lead on to the showcase', mobileJourney.hidden && !mobileJourney.flightRequested && mobileJourney.visionLinks.length > 0 && mobileJourney.visionLinks.every(href => href === '#showcase'), mobileJourney);
     await page.screenshot({ path: `${screenshotDir}/mobile-full.png`, fullPage: true });
     report.screenshots.push(`${screenshotDir}/mobile-full.png`);
   }
@@ -448,7 +464,7 @@ const reducedAfter = await reducedPage.locator('[data-film-image], [data-journey
 const reducedTurn = await reducedPage.evaluate(() => ({ overlayHidden: getComputedStyle(document.querySelector('.statue-turn')).display === 'none', framesRequested: performance.getEntriesByType('resource').some(entry => /(desktop|mobile)-\d\d[^/?]*\.webp$/.test(entry.name)) }));
 check('Reduced motion skips the statue turn and never loads its frames', reducedTurn.overlayHidden && !reducedTurn.framesRequested, reducedTurn);
 const reducedJourney = await reducedPage.evaluate(() => ({ canvasHidden: getComputedStyle(document.querySelector('[data-journey] video')).display === 'none' && !performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)), autoplay: document.querySelector('[data-intro]').dataset.autoplay, beats: [...document.querySelectorAll('[data-beat]')].map(beat => getComputedStyle(beat).opacity) }));
-check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 5 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
+check('Reduced motion shows the journey as one still section with every beat visible', reducedJourney.canvasHidden && reducedJourney.autoplay === 'done' && reducedJourney.beats.length === 4 && reducedJourney.beats.every(value => value === '1'), reducedJourney);
 check('Reduced motion keeps every photograph stationary', reducedBefore.length >= 2 && reducedBefore.every((value, index) => value === reducedAfter[index]), { before: reducedBefore, after: reducedAfter });
 const reducedContent = await reducedPage.locator('main h1, main h2, [data-reveal]').evaluateAll(elements => elements.map(element => ({ selector: element.id || element.className, opacity: getComputedStyle(element).opacity, visibility: getComputedStyle(element).visibility })));
 check('Reduced motion leaves the entire story visible', reducedContent.every(element => element.opacity === '1' && element.visibility !== 'hidden'), reducedContent);

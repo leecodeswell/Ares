@@ -10,8 +10,8 @@ set -e
 frames=${1:-journey-frames}
 out=public/journey
 mkdir -p "$out"
-# Phones get a lighter portrait encode; their screens hide the difference.
-for shape in landscape portrait; do
+# The journey is desktop-only, so only the landscape flight is encoded.
+for shape in landscape; do
   if [ "$shape" = landscape ]; then h264=21; vp9=33; else h264=24; vp9=36; fi
   ffmpeg -loglevel error -y -framerate 24 -i "$frames/$shape/f_%03d.png" -vf hflip \
     -c:v libx264 -preset veryslow -tune film -crf $h264 -g 4 -keyint_min 4 -bf 0 -sc_threshold 0 \
