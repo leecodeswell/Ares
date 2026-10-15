@@ -284,7 +284,7 @@ const journeyAt = async fraction => {
       flying: journey.classList.contains('is-flying'),
       progress: Number(journey.dataset.progress),
       time: journey.querySelector('video').currentTime,
-      shown: [...journey.querySelectorAll('[data-beat].is-shown')].map(beat => beat.className.replace('journey-beat ', '').replace(' is-shown', '')),
+      markers: [...journey.querySelectorAll('.scroll-marker')].filter(marker => !marker.hidden).map(marker => marker.textContent),
     };
   });
 };
@@ -296,21 +296,21 @@ check('The pre-rendered flight is scrubbed to the frame matching the scroll', jo
 // Scrubbing back up returns to the earlier frame.
 const scrubBack = await journeyAt(0.47);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
-check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
-const readingStates = [];
-for (const fraction of [0.61, 0.665, 0.72]) {
-  await journeyAt(fraction);
-  readingStates.push(await page.locator('[data-reading-beat]').evaluate(beat => {
-    const style = getComputedStyle(beat);
-    const rect = beat.getBoundingClientRect();
-    return { opacity: Number(style.opacity), top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
-  }));
-}
-check('All three qualities stay fully readable while they ride past', readingStates.every(state => state.opacity === 1 && state.headings.length === 3 && state.top >= 0 && state.bottom <= state.viewport), readingStates);
+check('The statues\' scroll markers appear as the flight passes them, scroll I first', journeyStates[0].markers.includes('I') && journeyStates[1].markers.length > 0, journeyStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
-const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
-check('The journey words float over the scene with no panel behind them', textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
+// Every passage is optional: hidden during the flight, opened from its scroll or the list.
+await journeyAt(0.05);
+await page.locator('.scroll-marker:not([hidden])', { hasText: /^I$/ }).click();
+const reader = await page.evaluate(() => ({ open: document.querySelector('.scroll-reader').open, heading: document.querySelector('.scroll-reader-passage h2')?.textContent.replace(/\s+/g, ' ').trim(), beatsHidden: [...document.querySelectorAll('[data-beat]')].every(beat => getComputedStyle(beat).display === 'none') }));
+await page.keyboard.press('Escape');
+await page.locator('.scroll-index-toggle').click();
+const listed = await page.locator('#scroll-index-list button').count();
+await page.locator('#scroll-index-list button').nth(4).click();
+const fromList = await page.evaluate(() => document.querySelector('.scroll-reader').open && document.querySelector('.scroll-reader-label').textContent);
+await page.keyboard.press('Escape');
+await page.locator('.scroll-index-toggle').click();
+check('Scroll I opens its passage, and every scroll is reachable from the list', reader.open && /Your themes/.test(reader.heading) && reader.beatsHidden && listed === 5 && /Scroll V/.test(fromList), { reader, listed, fromList });
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 

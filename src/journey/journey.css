@@ -286,3 +286,285 @@
     padding: 0;
   }
 }
+
+/* ---- scrolls: the passages open from the statues' scrolls (scrolls.js) */
+@media (prefers-reduced-motion: no-preference) {
+  .journey.has-scrolls .journey-beat {
+    display: none;
+  }
+}
+.scroll-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.scroll-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(242, 240, 233, 0.85);
+  border-radius: 50%;
+  background: rgba(41, 46, 39, 0.32);
+  color: var(--paper);
+  font: 600 16px/1 var(--serif);
+  pointer-events: auto;
+  backdrop-filter: blur(3px);
+  transition: background 0.2s, color 0.2s;
+}
+.scroll-marker::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px solid var(--paper);
+  border-radius: 50%;
+  opacity: 0;
+  animation: scroll-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.scroll-marker::after {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + 8px);
+  padding: 6px 9px;
+  border-radius: 4px;
+  background: rgba(41, 46, 39, 0.66);
+  color: var(--paper);
+  font: 500 10px/1 "DM Sans", sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.scroll-marker:hover,
+.scroll-marker:focus-visible {
+  background: var(--gold);
+}
+.scroll-marker:hover::after,
+.scroll-marker:focus-visible::after,
+.scroll-marker.is-pinned::after {
+  opacity: 1;
+}
+.scroll-marker:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+}
+.scroll-marker[hidden] {
+  display: none;
+}
+.scroll-marker.is-read {
+  border-style: dashed;
+}
+.scroll-marker.is-read::before {
+  animation: none;
+}
+@keyframes scroll-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.scroll-index {
+  position: absolute;
+  left: var(--gutter);
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.scroll-index ol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.scroll-index ol[hidden] {
+  display: none;
+}
+.scroll-index button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid rgba(242, 240, 233, 0.4);
+  border-radius: 99px;
+  background: rgba(41, 46, 39, 0.66);
+  color: var(--paper);
+  font: 500 12px/1.2 "DM Sans", sans-serif;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+.scroll-index button:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+.scroll-index-number {
+  min-width: 2.2em;
+  font: 600 15px/1 var(--serif);
+}
+.scroll-index-read {
+  margin-left: auto;
+  padding-left: 12px;
+  opacity: 0;
+}
+.is-read .scroll-index-read {
+  opacity: 0.65;
+}
+.scroll-reader {
+  width: min(620px, calc(100% - 32px));
+  max-height: calc(100svh - 48px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  overflow: visible;
+}
+.scroll-reader::backdrop {
+  background: rgba(41, 46, 39, 0.5);
+  backdrop-filter: blur(3px);
+}
+.scroll-reader-roller {
+  position: relative;
+  z-index: 1;
+  height: 20px;
+  margin: 0 -14px;
+  border-radius: 10px;
+  background: linear-gradient(#cfccc4, #f4f2ec 45%, #a9a69d);
+}
+.scroll-reader-sheet {
+  position: relative;
+  max-height: calc(100svh - 96px);
+  overflow: auto;
+  padding: 48px clamp(24px, 6vw, 56px) 36px;
+  background: linear-gradient(90deg, #e3e0d6, var(--paper) 8%, #f8f7f2 50%, var(--paper) 92%, #e3e0d6);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  animation: scroll-unroll 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes scroll-unroll {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.scroll-reader-label {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font: 500 11px/1.3 "DM Sans", sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.scroll-reader-passage {
+  display: grid;
+  gap: 14px;
+}
+.scroll-reader-passage :is(h2, h3) {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.scroll-reader-passage h2 {
+  font-size: clamp(32px, 6vw, 46px);
+}
+.scroll-reader-passage h3 {
+  font-size: 26px;
+}
+.scroll-reader-passage :is(p, .journey-statement) {
+  margin: 0;
+  max-width: 60ch;
+  font: 400 19px/1.5 var(--serif);
+}
+.scroll-reader-passage .journey-statement {
+  font-size: clamp(26px, 5vw, 36px);
+  line-height: 1.15;
+}
+.scroll-reader-passage em {
+  color: var(--gold);
+}
+.scroll-reader-passage .vision-line {
+  display: block;
+}
+.scroll-reader-passage :is(.journey-rule, .scene-caption-line, .kicker-line) {
+  display: none;
+}
+.scroll-reader-passage .qualities {
+  display: grid;
+  gap: 14px;
+}
+.scroll-reader-passage .quality {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+}
+.scroll-reader-passage .quality br {
+  display: none;
+}
+.scroll-reader-passage :is(.eyebrow, .section-kicker) {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.scroll-reader-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 30px/1 var(--serif);
+}
+.scroll-reader-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+}
+.scroll-reader-nav button {
+  padding: 11px 16px;
+  border: 1px solid rgba(41, 46, 39, 0.35);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--ink);
+  font: 500 13px/1 "DM Sans", sans-serif;
+}
+.scroll-reader-nav button[hidden] {
+  display: none;
+}
+:is(.scroll-reader-close, .scroll-reader-nav button):is(:hover, :focus-visible) {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-markers,
+  .scroll-index {
+    display: none;
+  }
+  .scroll-reader-sheet,
+  .scroll-marker::before {
+    animation: none;
+  }
+}
