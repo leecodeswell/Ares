@@ -1,5 +1,5 @@
 import "./journey.css";
-import { cameraAt } from "./camera.js";
+import { cameraAt, VISITS } from "./camera.js";
 import { setUpScrolls } from "./scrolls.js";
 
 // The journey: a camera flies up the steps and down a static marble
@@ -9,7 +9,6 @@ import { setUpScrolls } from "./scrolls.js";
 // quality along a fixed path (tools/render-journey) and played here as a
 // video scrubbed by the scroll, so the visitor's GPU does no 3D work.
 
-const BEAT_FADE = 0.18;
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const smooth = (edge0, edge1, value) => {
   const x = clamp((value - edge0) / (edge1 - edge0));
@@ -57,25 +56,39 @@ function setUpJourney(journey) {
   });
   // With motion, the passages live on the statues' scrolls; with reduced
   // motion there is no flight, and they read as one section over the still.
-  const scrolls = setUpScrolls(journey, stage, beats, { cameraAt, reduced: () => motionPreference.matches });
-  const readingBeat = beats.find((beat) => beat.reading);
+  const scrolls = setUpScrolls(journey, stage, beats, { cameraAt, scrollToRead: (index) => scrollToRead(index) });
   const journeyStyle = getComputedStyle(journey);
   const flightScroll = Number.parseFloat(journeyStyle.getPropertyValue("--flight-scroll"));
   const readingScroll = Number.parseFloat(journeyStyle.getPropertyValue("--reading-scroll"));
 
-  // Stretch only the qualities' fully opaque interval. The camera keeps moving
-  // gently behind the words, and every other beat retains its original runway.
+  // The flight takes --flight-scroll of the page; at each statue's hover the
+  // frame holds for an equal share of --reading-scroll while the scroll keeps
+  // going, and the statue's papyrus unrolls, stays open and rolls up again
+  // across that stretch (scrolls.js). So the papyrus simply follows scrolling.
+  let story = { visit: null, local: 0 };
   function storyAt(scrollProgress) {
-    if (!readingBeat || !flightScroll || !readingScroll) return scrollProgress;
-    const span = readingBeat.end - readingBeat.start;
-    const start = readingBeat.start + span * BEAT_FADE;
-    const end = readingBeat.end - span * BEAT_FADE;
+    const holds = VISITS.length && readingScroll ? readingScroll / VISITS.length : 0;
     const distance = scrollProgress * (flightScroll + readingScroll);
-    const readingStart = start * flightScroll;
-    const readingEnd = end * flightScroll + readingScroll;
-    if (distance <= readingStart) return distance / flightScroll;
-    if (distance >= readingEnd) return (distance - readingScroll) / flightScroll;
-    return start + ((distance - readingStart) / (readingEnd - readingStart)) * (end - start);
+    let held = 0;
+    for (const visit of VISITS) {
+      const at = visit.hold * flightScroll + held;
+      if (distance < at) break;
+      if (distance < at + holds) {
+        story = { visit: visit.index, local: (distance - at) / holds };
+        return visit.hold;
+      }
+      held += holds;
+    }
+    story = { visit: null, local: 0 };
+    return clamp((distance - held) / flightScroll);
+  }
+  /** The page scroll at which a statue's papyrus is fully open (for the list of scrolls). */
+  function scrollToRead(index) {
+    const holds = readingScroll / VISITS.length;
+    const visit = VISITS[index];
+    const distance = visit.hold * flightScroll + holds * (index + 0.5);
+    const range = Math.max(1, journey.offsetHeight - window.innerHeight);
+    return journey.offsetTop + (distance / (flightScroll + readingScroll)) * range;
   }
 
   let progress = 0;
@@ -168,7 +181,7 @@ function setUpJourney(journey) {
     journey.dataset.progress = progress.toFixed(3);
     // markers follow the frame on screen, so they never drift from the picture
     const camera = cameraAt(ready ? Math.round(progress * (frames - 1)) / (frames - 1) : progress);
-    scrolls.place();
+    if (!motionPreference.matches) scrolls.update(story, camera);
 
     if (!ready) {
       if (still) {
@@ -224,10 +237,7 @@ function setUpJourney(journey) {
     });
   }
 
-  window.addEventListener("scroll", () => {
-    if (!motionPreference.matches && !phone.matches) scrolls.onScroll();
-    schedule();
-  }, { passive: true });
+  window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", () => {
     if (orientation) pickSource();
     schedule();
