@@ -9,10 +9,10 @@
 import AULE from "./aule-sdf.json";
 
 export const STATUE_COUNT = 4;
-export const STATUE_X = 2.45; // at the front of the column line, so phones see them too
+export const STATUE_X = 2.15; // a little in front of the column line, where they are easy to see
 const SCALE = 1.15, YAW = 1.05; // turned toward the approaching visitor
-// one every other bay, starting a bay in from the entrance
-export const statueZ = (i) => 2.3 + 9.2 * (i + 1);
+// one every other bay, starting a bay in from the entrance, a metre past its middle
+export const statueZ = (i) => 3.3 + 9.2 * (i + 1);
 // the scroll's centre, in scene coordinates (before the display mirror)
 export const scrollPoint = (i) => {
   const lx = -0.37 * SCALE, ly = 2.3 * SCALE, lz = -0.225 * SCALE;
@@ -49,7 +49,7 @@ float smin(float a, float b, float k) {
   return mix(b, a, h) - k * h * (1.0 - h);
 }
 float smax(float a, float b, float k) { return -smin(-a, -b, k); }
-float statueIndex(float z) { return clamp(floor((z - 2.3) / 9.2 + 0.5), 1.0, 4.0); }
+float statueIndex(float z) { return clamp(floor((z - 3.3) / 9.2 + 0.5), 1.0, 4.0); }
 
 // A nub head with the original ring crest: the first design's head and dome
 // blended into one smooth shape, with no brim and no neck.
@@ -99,7 +99,7 @@ float aule(vec3 s) {
 // x: distance, y: 5 statue, 6 scroll
 vec2 statue(vec3 p) {
   float idx = statueIndex(p.z);
-  vec3 w0 = vec3(p.x - ${STATUE_X.toFixed(2)}, p.y, p.z - (2.3 + 9.2 * idx));
+  vec3 w0 = vec3(p.x - ${STATUE_X.toFixed(2)}, p.y, p.z - (3.3 + 9.2 * idx));
   float cy = cos(${YAW}), sy = sin(${YAW});
   vec3 s = vec3(w0.x * cy + w0.z * sy, w0.y, -w0.x * sy + w0.z * cy) / ${SCALE.toFixed(2)};
   float bound = sdBox(s - vec3(-0.1, 1.38, -0.2), vec3(0.5, 1.4, 0.68)) * ${SCALE.toFixed(2)};

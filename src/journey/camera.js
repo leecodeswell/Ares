@@ -1,6 +1,11 @@
 // The journey's camera path through the colonnade. The site plays a video
 // rendered along this path (tools/render-journey); the path lives here so the
-// renderer and any future re-render agree on it exactly.
+// renderer and the site agree on it exactly.
+//
+// The flight runs down the corridor and stops at each statue: the camera
+// turns to face the statue's scroll, holds there (the site opens the scroll
+// while the frame holds), then turns back and carries on.
+import { STATUE_COUNT, statueZ, scrollPoint } from "./statues.js";
 
 export const FLIGHT_END = 0.84; // share of the journey before the camera clears the arch
 
@@ -31,8 +36,8 @@ function along(index, local, pick) {
   );
 }
 
-/** Where the camera is, and what the frame looks like, for a share of the journey (0-1). */
-export function cameraAt(progress) {
+/** The flight alone, without the stops at the statues. */
+function flightAt(progress) {
   const flight = clamp(progress / FLIGHT_END);
   const sky = clamp((progress - FLIGHT_END) / (1 - FLIGHT_END));
   let index = 0;
@@ -55,5 +60,70 @@ export function cameraAt(progress) {
     fov: 52 + 3 * smooth(0.05, 0.3, flight),
     glow: 0.35 * smooth(0.86, 0.99, flight) * (1 - smooth(0, 0.45, sky)),
     paper: smooth(0.55, 1, sky),
+  };
+}
+
+// ---- the stops at the statues
+const VISIT = 0.075;   // share of the journey each stop takes: turn in, hold, turn back
+const TURN = 0.38;     // share of a stop spent turning in (and again turning back)
+const AHEAD = 3.4;     // the camera stops this far short of the statue, along the corridor
+
+// Where along the flight the camera is AHEAD metres short of each statue.
+const stopFlights = Array.from({ length: STATUE_COUNT }, (_, i) => {
+  const wanted = statueZ(i) - AHEAD;
+  let best = 0;
+  for (let k = 0; k <= 2000; k++) {
+    const f = (k / 2000) * FLIGHT_END;
+    if (flightAt(f).position[2] <= wanted) best = f;
+  }
+  return best;
+});
+
+// The journey's timeline: travel between stops gets the remaining share in
+// proportion to the flight it covers.
+const travel = 1 - VISIT * STATUE_COUNT;
+const segments = [];
+{
+  let t = 0, f = 0;
+  stopFlights.forEach((stop, i) => {
+    const span = (stop - f) * travel;
+    segments.push({ kind: "travel", t0: t, t1: t + span, f0: f, f1: stop });
+    t += span;
+    segments.push({ kind: "visit", t0: t, t1: t + VISIT, f0: stop, f1: stop, index: i });
+    t += VISIT;
+    f = stop;
+  });
+  segments.push({ kind: "travel", t0: t, t1: 1, f0: f, f1: 1 });
+}
+
+/** Each stop's window on the journey (0-1), and the moment its frame holds on the statue. */
+export const VISITS = segments.filter((s) => s.kind === "visit").map((s) => ({
+  index: s.index,
+  start: s.t0,
+  hold: (s.t0 + s.t1) / 2,
+  end: s.t1,
+}));
+
+const normalize = (a) => {
+  const length = Math.hypot(...a);
+  return a.map((v) => v / length);
+};
+
+/** Where the camera is, and what the frame looks like, for a share of the journey (0-1). */
+export function cameraAt(progress) {
+  const t = clamp(progress);
+  const segment = segments.find((s) => t <= s.t1) || segments[segments.length - 1];
+  const local = segment.t1 > segment.t0 ? (t - segment.t0) / (segment.t1 - segment.t0) : 0;
+  if (segment.kind === "travel") return flightAt(segment.f0 + (segment.f1 - segment.f0) * local);
+  // a stop: turn toward the statue's scroll, hold, turn back
+  const base = flightAt(segment.f0);
+  const look = smooth(0, TURN, local) * (1 - smooth(1 - TURN, 1, local));
+  const ahead = normalize(base.target.map((v, k) => v - base.position[k]));
+  const toward = normalize(scrollPoint(segment.index).map((v, k) => v - base.position[k]));
+  const direction = normalize(ahead.map((v, k) => v + (toward[k] - v) * look));
+  return {
+    ...base,
+    target: base.position.map((v, k) => v + direction[k] * 10),
+    fov: base.fov * (1 - 0.14 * look), // a gentle push in on the statue
   };
 }
