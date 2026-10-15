@@ -352,6 +352,10 @@
 .scroll-marker.is-pinned::after {
   opacity: 1;
 }
+/* statues stand on the left, so a marker pinned to the edge labels inward */
+.scroll-marker.is-pinned::after {
+  left: 0;
+}
 .scroll-marker:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 3px;
@@ -413,6 +417,10 @@
 .scroll-index button:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 2px;
+}
+.scroll-index-toggle.scroll-index-toggle {
+  display: block;
+  width: auto;
 }
 .scroll-index-number {
   min-width: 2.2em;

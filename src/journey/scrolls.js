@@ -51,7 +51,7 @@ export function setUpScrolls(journey, stage, beats) {
     const copy = passages[index].element.cloneNode(true);
     // the copy must not repeat the ids the page already uses
     for (const element of [copy, ...copy.querySelectorAll("[id]")]) element.removeAttribute("id");
-    copy.removeAttribute("aria-labelledby");
+    for (const name of ["aria-labelledby", "data-beat", "data-reading-beat", "data-label"]) copy.removeAttribute(name);
     copy.className = "scroll-reader-passage";
     copy.style.cssText = "";
     body.replaceChildren(copy);
