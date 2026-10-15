@@ -86,7 +86,8 @@ function setUpJourney(journey) {
     const width = window.innerWidth;
     const narrow = width <= 760;
     // screen distance between neighbouring tablets
-    const spacing = narrow ? width * 0.95 : width * 0.62;
+    // far enough apart that at most two are ever on screen together
+    const spacing = narrow ? width * 1.15 : width * 0.95;
     const centres = beats.map((beat) => (beat.start + beat.end) / 2);
     const step = centres.length > 1 ? (centres[centres.length - 1] - centres[0]) / (centres.length - 1) : 1;
     beats.forEach((beat, index) => {
@@ -98,6 +99,8 @@ function setUpJourney(journey) {
       const box = beat.element.offsetWidth;
       beat.element.style.opacity = "1";
       beat.element.style.setProperty("--beat-turn", `${turn.toFixed(2)}deg`);
+      // lines part away from the centre and close as the passage crosses it
+      beat.element.style.setProperty("--beat-offset", motionPreference.matches ? "0" : clamp(offset, -1.5, 1.5).toFixed(4));
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
       beat.element.style.setProperty("--beat-x", `${x.toFixed(1)}px`);
       // Every beat stays readable to screen readers; only links that can't be

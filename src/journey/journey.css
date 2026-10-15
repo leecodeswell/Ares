@@ -87,43 +87,19 @@
   pointer-events: none;
 }
 
-/* Each passage is chiselled into an arch-topped stone tablet, rendered as
-   real stone (tools/build-journey-tablets.py). The tablet image carries the
-   inscription; the words themselves stay in the page for screen readers and
-   search, visually hidden. */
-.journey-tablet {
-  display: block;
-  width: clamp(340px, 40vw, 660px);
-  height: auto;
-  max-width: 86vw;
-  margin: 0 auto;
-  /* the slab's weight in the colonnade's low light */
-  filter: drop-shadow(0 22px 26px rgba(30, 22, 12, 0.42)) drop-shadow(0 3px 4px rgba(30, 22, 12, 0.35));
-}
-.beat-quality .journey-tablet {
-  width: clamp(300px, 34vw, 560px);
-}
-.journey-words {
-  position: absolute !important;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* The last line, out in the sky, is set in the inscription's capitals,
-   standing free and small so the reveal stays clear. */
+/* Every passage is set like the last: Cinzel capitals in dark ink with a
+   hairline of light under each stroke, standing free over the scene. As a
+   passage rides past, its lines part in opposite directions, the way the
+   hero's words do, and come together as it crosses the centre. */
 .journey .vision-heading {
   margin: 0;
   font-family: "Cinzel", var(--serif);
   font-weight: 600;
+  font-size: clamp(28px, 2.8vw, 46px);
+  line-height: 1.2;
   letter-spacing: 0.05em;
   color: rgba(58, 48, 34, 0.92);
+  text-shadow: 0 1px 0 rgba(255, 252, 244, 0.6);
 }
 .journey .vision-line,
 .journey .vision-line:nth-child(2),
@@ -131,27 +107,23 @@
   display: block;
   padding-left: 0;
   color: inherit;
-  transform: none;
+  --line-travel: -14vw;
+  transform: translateX(calc(var(--beat-offset, 0) * var(--line-travel)));
+  will-change: transform;
+}
+.journey .vision-line:nth-child(2) {
+  --line-travel: 18vw;
+}
+.journey .vision-line:nth-child(3) {
+  --line-travel: -9vw;
+}
+.journey .vision-line-last {
+  font-size: 0.82em;
 }
 .journey .vision-heading em {
   display: inline;
   font-style: normal;
   color: rgba(96, 70, 30, 0.95);
-}
-
-/* Out through the arch the sky belongs to the reveal: the last line stands
-   free, without a tablet, small and quiet over the clouds. */
-.journey .beat-detail .vision-heading {
-  background: none;
-  border: 0;
-  outline: 0;
-  box-shadow: none;
-  font-size: clamp(28px, 2.8vw, 46px);
-  text-shadow: 0 1px 0 rgba(255, 252, 244, 0.6);
-}
-.journey .beat-detail .vision-heading::before,
-.journey .beat-detail .vision-heading::after {
-  content: none;
 }
 
 @media (max-width: 760px) {
@@ -163,9 +135,15 @@
     max-width: none;
     transform: translateX(var(--beat-x, 0px)) rotateY(var(--beat-turn, 0deg));
   }
-  .journey-tablet,
-  .beat-quality .journey-tablet {
-    width: 82vw;
+  .journey .vision-heading {
+    font-size: 6.4vw;
+  }
+  .journey .vision-line,
+  .journey .vision-line-last {
+    --line-travel: -8vw;
+  }
+  .journey .vision-line:nth-child(2) {
+    --line-travel: 10vw;
   }
 }
 
