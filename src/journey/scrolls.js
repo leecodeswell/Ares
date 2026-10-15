@@ -128,6 +128,7 @@ export function setUpScrolls(journey, stage, beats, { cameraAt, reduced }) {
       mode = "arrived";
       busyUntil = performance.now() + 450;
       setHint(`Scroll to open scroll ${NUMERALS[target.index]}`);
+      place();
     });
   }
   function leave(direction) {
@@ -289,7 +290,10 @@ export function setUpScrolls(journey, stage, beats, { cameraAt, reduced }) {
       if (opener?.focus && opener !== close && document.contains(opener)) opener.focus({ preventScroll: true });
       mode = "arrived";
       if (flyOn) leave(1);
-      else setHint(`Scroll to open scroll ${NUMERALS[index]}`);
+      else {
+        setHint(`Scroll to open scroll ${NUMERALS[index]}`);
+        place();
+      }
     });
   }
   close.addEventListener("click", () => rollUp(true));
@@ -316,6 +320,7 @@ export function setUpScrolls(journey, stage, beats, { cameraAt, reduced }) {
   }
 
   // every frame: keep the cue on the statue's scroll while the camera hovers
+  // (also called on arriving, since a hover holds the frame and nothing else redraws)
   function place() {
     if (mode === "arrived" && visit) {
       const point = screenPoint(visit.index);
