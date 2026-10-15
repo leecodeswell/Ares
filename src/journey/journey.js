@@ -78,38 +78,37 @@ function setUpJourney(journey) {
   // Each beat fades in, travels up the screen with the scroll as the camera
   // moves, and fades out before the next arrives. The words float over the
   // scene with only a soft glow behind their letters for legibility.
-  // Each passage glides across the screen from left to right with the
-  // scroll: it arrives on the left, passes through the centre while it is
-  // read, and drifts off toward the sky on the right, fading as it goes.
+  // The tablets ride past like a slow carousel: each comes in from the left,
+  // turns to face the visitor as it crosses the centre, and turns away again
+  // as it leaves on the right, while the next is already coming in behind it.
+  // Nothing fades; they simply move in and out of view.
   function placeBeats() {
     const width = window.innerWidth;
     const narrow = width <= 760;
-    const gutter = Math.min(64, width * 0.06);
-    for (const beat of beats) {
+    // screen distance between neighbouring tablets
+    const spacing = narrow ? width * 0.95 : width * 0.62;
+    const centres = beats.map((beat) => (beat.start + beat.end) / 2);
+    const step = centres.length > 1 ? (centres[centres.length - 1] - centres[0]) / (centres.length - 1) : 1;
+    beats.forEach((beat, index) => {
       const span = beat.end - beat.start;
       const local = (progress - beat.start) / span;
-      const fadeIn = beat.start === 0 ? 1 : smooth(0, 0.15, local);
-      const fadeOut = 1 - smooth(0.62, 1, local);
-      const opacity = motionPreference.matches ? 1 : fadeIn * fadeOut;
-      // where it starts (left), passes the centre, and leaves (right)
+      const offset = (progress - centres[index]) / step; // -1 one place left, +1 one place right
+      const x = motionPreference.matches ? 0 : offset * spacing;
+      const turn = motionPreference.matches ? 0 : clamp(offset, -1.5, 1.5) * -32;
       const box = beat.element.offsetWidth;
-      const from = narrow ? -0.3 * width : -Math.max(0.15 * width, width / 2 - gutter - box / 2);
-      const to = narrow ? 0.6 * width : width / 2 - box / 2 + 0.12 * width;
-      const at = clamp(local);
-      const x = at < 0.45 ? from * (1 - at / 0.45) : (to * (at - 0.45)) / 0.55;
-      const glide = motionPreference.matches ? 0 : x;
-      beat.element.style.opacity = opacity.toFixed(3);
+      beat.element.style.opacity = "1";
+      beat.element.style.setProperty("--beat-turn", `${turn.toFixed(2)}deg`);
       beat.element.style.setProperty("--beat-progress", clamp(local).toFixed(4));
-      beat.element.style.setProperty("--beat-x", `${glide.toFixed(1)}px`);
+      beat.element.style.setProperty("--beat-x", `${x.toFixed(1)}px`);
       // Every beat stays readable to screen readers; only links that can't be
       // seen leave the tab order.
-      const shown = opacity > 0.05;
+      const shown = motionPreference.matches || Math.abs(x) < width / 2 + box / 2;
       beat.element.classList.toggle("is-shown", shown);
       for (const link of beat.links) {
         if (shown) link.removeAttribute("tabindex");
         else link.setAttribute("tabindex", "-1");
       }
-    }
+    });
   }
 
   // Phones get the portrait render, which widens its view as the live scene did.
