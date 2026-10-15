@@ -24,7 +24,7 @@
   overflow: hidden;
   isolation: isolate;
   background: #ecebe4;
-  /* depth for the tablets turning as they pass */
+  /* depth for the passages turning as they ride past */
   perspective: 1600px;
 }
 .journey-still,
@@ -59,199 +59,189 @@
   pointer-events: none;
 }
 
-@font-face {
-  font-family: "Cinzel";
-  src: url("./fonts/cinzel.woff") format("woff");
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ---- beats: every passage is a headline in the same large serif, set in
-   ivory with a dark shadow hugging the letters so it reads over sunlit marble
-   and sky alike. */
+/* ---- beats */
 .journey-beat {
   position: absolute;
   z-index: 3;
-  left: 50%;
-  top: 50%;
-  width: max-content;
-  max-width: 88vw;
-  opacity: 0;
-  text-align: center;
-  /* centred, then carried across by the scroll (--beat-x, set in journey.js) */
-  transform: translate(calc(-50% + var(--beat-x, 0px)), -50%) rotateY(var(--beat-turn, 0deg));
+  left: var(--gutter);
+  /* a little below centre, so the words sit under the scene, not on it */
+  top: 60%;
+  width: min(44vw, 620px);
+  /* each passage rides in from the left, past its place and out to the
+     right, turning as it goes (--beat-x and --beat-turn, set in journey.js) */
+  transform: translate(var(--beat-x, 0px), -50%) rotateY(var(--beat-turn, 0deg));
   will-change: transform;
 }
 .journey-beat:not(.is-shown) {
   pointer-events: none;
 }
-
-/* Every passage is set like the last: Cinzel capitals in dark ink with a
-   hairline of light under each stroke, standing free over the scene. As a
-   passage rides past, its lines part in opposite directions, the way the
-   hero's words do, and come together as it crosses the centre. */
-.journey .vision-heading {
-  margin: 0;
-  font-family: "Cinzel", var(--serif);
-  font-weight: 600;
-  font-size: clamp(44px, 5.1vw, 88px);
-  line-height: 1.12;
-  letter-spacing: 0.05em;
-  color: #1c1a16;
-  /* a soft ivory glow, close and quiet, so the dark letters lift off marble
-     and sky alike */
-  text-shadow:
-    0 0 1px rgba(246, 242, 232, 0.9),
-    0 0 8px rgba(246, 242, 232, 0.75),
-    0 0 22px rgba(246, 242, 232, 0.55),
-    0 0 48px rgba(246, 242, 232, 0.35);
-}
-.journey .vision-line,
-.journey .vision-line:nth-child(2),
-.journey .vision-line-last {
-  display: block;
-  padding-left: 0;
-  color: inherit;
-  --line-travel: -14vw;
-  transform: translateX(calc(var(--beat-offset, 0) * var(--line-travel)));
-  will-change: transform;
-}
-.journey .vision-line:nth-child(2) {
-  --line-travel: 18vw;
-}
-.journey .vision-line:nth-child(3) {
-  --line-travel: -9vw;
-}
-.journey .vision-line-last {
-  font-size: 0.82em;
-}
-.journey .vision-heading em {
-  display: inline;
-  font-style: normal;
-}
-
-/* The glow every journey line shares */
-.journey-sub,
-.journey-quality h3,
-.journey-numeral {
-  text-shadow:
-    0 0 1px rgba(246, 242, 232, 0.9),
-    0 0 8px rgba(246, 242, 232, 0.8),
-    0 0 22px rgba(246, 242, 232, 0.6),
-    0 0 44px rgba(246, 242, 232, 0.35);
-}
-/* A line of subtext under each headline, in the site's italic serif */
-.journey-sub {
-  max-width: 34em;
-  margin: 0.9em auto 0;
-  font-family: var(--serif);
+.journey-beat em {
   font-style: italic;
-  font-size: clamp(18px, 1.55vw, 26px);
-  font-weight: 600;
-  line-height: 1.35;
-  color: #2a2d24;
+}
+/* A soft paper-coloured glow hugs the letters so they read over marble and
+   sky alike, without any panel behind them. */
+.journey-beat {
   text-shadow:
-    0 0 1px rgba(246, 242, 232, 1),
-    0 0 4px rgba(246, 242, 232, 0.95),
-    0 0 12px rgba(246, 242, 232, 0.85),
-    0 0 28px rgba(246, 242, 232, 0.6);
+    0 0 2px rgba(242, 240, 233, 0.9),
+    0 0 14px rgba(242, 240, 233, 0.85),
+    0 0 34px rgba(242, 240, 233, 0.6);
+}
+/* Small type, and the opening statement, get a tighter, denser halo so they
+   read cleanly over fluting, veins and bright sky. */
+.beat-vision .vision-heading,
+.beat-vision .scene-caption,
+.journey-beat .eyebrow,
+.journey-beat .section-kicker,
+.journey-lead,
+.journey-body,
+.journey-aside,
+.journey-qualities .quality h3,
+.journey-qualities p {
+  text-shadow:
+    0 0 1px rgba(242, 240, 233, 1),
+    0 0 3px rgba(242, 240, 233, 0.95),
+    0 0 7px rgba(242, 240, 233, 0.9),
+    0 0 16px rgba(242, 240, 233, 0.8),
+    0 0 30px rgba(242, 240, 233, 0.55);
+}
+.journey-beat .scene-caption-line,
+.journey-beat .kicker-line,
+.journey-rule {
+  box-shadow: 0 0 10px rgba(242, 240, 233, 0.8);
 }
 
-/* The three qualities, together in a row */
-.journey-qualities {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4.5vw;
-  width: min(84vw, 1280px);
+.beat-vision {
+  width: min(80vw, 1200px);
 }
-.journey-numeral {
+.journey .vision-line {
+  transform: translateX(calc((var(--beat-progress, 0) - 0.3) * var(--line-travel)));
+}
+.journey .scene-caption {
+  margin-bottom: 42px;
+}
+
+.journey-rule {
   display: block;
-  font-family: "Cinzel", var(--serif);
-  font-weight: 600;
-  font-size: clamp(44px, 4.6vw, 80px);
+  width: 56px;
+  height: 1px;
+  background: #a29a7f;
+  margin-bottom: 34px;
+}
+.journey-statement {
+  font-family: var(--serif);
+  font-size: clamp(34px, 3.3vw, 58px);
   line-height: 1;
-  color: #6e5525;
+  letter-spacing: -0.035em;
+  color: #2a3326;
 }
-.journey-quality h3 {
-  margin: 0.35em 0 0;
-  font-family: "Cinzel", var(--serif);
-  font-weight: 600;
-  font-size: clamp(20px, 1.9vw, 32px);
-  line-height: 1.25;
-  letter-spacing: 0.04em;
-}
-.journey-quality h3 em {
-  display: block;
-  font-style: normal;
-}
-.journey-quality .journey-sub {
-  font-size: clamp(15px, 1.15vw, 19px);
-  margin-top: 0.7em;
-}
-
-/* The colours the journey first had: dark green-black ink, sage for the
-   opening's second line, warm bronze for the words that carry the meaning,
-   and an olive-grey for the subtext. */
-.journey .vision-heading,
-.journey-quality h3 {
-  color: #262d23;
-}
-.journey .vision-line:nth-child(2) {
-  color: #262d23;
-}
-.beat-vision .vision-line:nth-child(2) {
-  color: #6e775f;
-}
-.journey .vision-heading em,
-.journey-quality h3 em {
+.journey-statement em,
+.journey-title em {
   color: #7d6f4b;
 }
-.beat-vision .vision-heading em {
-  color: #8d7a51;
-}
-.journey-numeral {
-  color: #6d6244;
-}
-.journey-sub {
+.journey-aside {
+  margin-top: 30px;
+  max-width: 380px;
+  font-size: 14px;
+  line-height: 1.9;
   color: #3f4838;
+}
+.journey .section-kicker {
+  margin-bottom: 40px;
+  color: #59634f;
+}
+.journey-title {
+  font-family: var(--serif);
+  font-size: clamp(38px, 3.8vw, 66px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  color: #262d23;
+}
+.journey-lead {
+  margin-top: 34px;
+  max-width: 440px;
+  font-size: 19px;
+  line-height: 1.55;
+  letter-spacing: -0.3px;
+  color: #353d30;
+}
+.journey-body {
+  margin-top: 16px;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #48513f;
+}
+.beat-detail .eyebrow {
+  margin-bottom: 26px;
+  color: #59634f;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+}
+.beat-detail .text-link {
+  margin-top: 36px;
+}
+
+/* The three qualities float in a row near the far arch. */
+.beat-qualities {
+  top: auto;
+  bottom: clamp(32px, 8vh, 90px);
+  width: auto;
+  right: var(--gutter);
+  transform: translateX(var(--beat-x, 0px)) rotateY(var(--beat-turn, 0deg));
+}
+.journey-qualities {
+  margin: 0;
+  padding: 34px 40px 38px;
+  gap: 5vw;
+  border-top: 0;
+  background: none;
+}
+.journey-qualities .quality-number {
+  margin-bottom: 16px;
+  color: #6d6244;
 }
 
 @media (max-width: 760px) {
   .journey-beat {
-    top: 116px;
-    left: var(--gutter);
+    top: 150px;
     right: var(--gutter);
     width: auto;
-    max-width: none;
     transform: translateX(var(--beat-x, 0px)) rotateY(var(--beat-turn, 0deg));
   }
-  .journey .vision-heading {
-    font-size: 9vw;
+  .beat-vision {
+    width: auto;
   }
-  .journey-sub {
-    font-size: 4.3vw;
+  .journey .vision-line {
+    --line-travel: 0px;
+  }
+  .journey-statement {
+    font-size: 8.5vw;
+  }
+  .journey-title {
+    font-size: 9.5vw;
+  }
+  .journey-lead {
+    margin-top: 24px;
+    font-size: 16px;
+  }
+  .journey-body {
+    font-size: 13px;
+  }
+  .beat-qualities {
+    top: 104px;
+    bottom: auto;
   }
   .journey-qualities {
     grid-template-columns: 1fr;
-    gap: 5vw;
-    width: auto;
+    gap: 18px;
+    padding: 22px 22px 24px;
   }
-  .journey-numeral {
-    font-size: 8vw;
+  .journey-qualities .quality-number {
+    margin: 0;
+    font-size: 34px;
   }
-  .journey-quality h3 {
-    font-size: 5vw;
-  }
-  .journey-quality .journey-sub {
-    display: none;
-  }
-  .journey .vision-line,
-  .journey .vision-line-last {
-    --line-travel: -8vw;
-  }
-  .journey .vision-line:nth-child(2) {
-    --line-travel: 10vw;
+  .journey-qualities .quality h3 {
+    font-size: 23px;
   }
 }
 
@@ -280,7 +270,8 @@
     display: block;
     background: rgba(242, 240, 233, 0.8);
   }
-  .journey-beat {
+  .journey-beat,
+  .beat-qualities {
     position: relative;
     inset: auto;
     width: auto;
@@ -290,5 +281,8 @@
   }
   .journey-beat:not(.is-shown) {
     pointer-events: auto;
+  }
+  .journey-qualities {
+    padding: 0;
   }
 }

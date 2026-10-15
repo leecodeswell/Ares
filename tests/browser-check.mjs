@@ -298,18 +298,19 @@ const scrubBack = await journeyAt(0.47);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
 check('The story changes in step with the flight', journeyStates[0].shown.includes('beat-vision') && journeyStates[1].shown.includes('beat-craft') && journeyStates[2].shown.includes('beat-detail'), journeyStates);
 const readingStates = [];
-for (const fraction of [0.62, 0.665, 0.70]) {
+for (const fraction of [0.61, 0.665, 0.72]) {
   await journeyAt(fraction);
-  readingStates.push(await page.locator('.beat-qualities').evaluate(beat => {
+  readingStates.push(await page.locator('[data-reading-beat]').evaluate(beat => {
+    const style = getComputedStyle(beat);
     const rect = beat.getBoundingClientRect();
-    return { opacity: Number(getComputedStyle(beat).opacity), centre: (rect.left + rect.right) / 2, width: innerWidth, top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()), size: parseFloat(getComputedStyle(beat.querySelector('h3')).fontSize), visionSize: parseFloat(getComputedStyle(document.querySelector('#vision-title')).fontSize) };
+    return { opacity: Number(style.opacity), top: rect.top, bottom: rect.bottom, viewport: innerHeight, headings: [...beat.querySelectorAll('h3')].map(heading => heading.textContent.trim()) };
   }));
 }
-check('The three qualities ride past together, facing the visitor at the centre', readingStates[1].headings.length === 3 && readingStates[0].centre < readingStates[1].centre && readingStates[1].centre < readingStates[2].centre && readingStates.every(state => state.opacity === 1) && Math.abs(readingStates[1].centre - readingStates[1].width / 2) < readingStates[1].width * 0.05 && readingStates[1].top >= 0 && readingStates[1].bottom <= readingStates[1].viewport, readingStates);
+check('All three qualities stay fully readable while they ride past', readingStates.every(state => state.opacity === 1 && state.headings.length === 3 && state.top >= 0 && state.bottom <= state.viewport), readingStates);
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
-const lettering = await page.evaluate(() => ({ headings: [...document.querySelectorAll('[data-journey] .vision-heading, [data-journey] .journey-quality h3')].map(heading => ({ font: getComputedStyle(heading).fontFamily, colour: getComputedStyle(heading).color })), subtext: document.querySelectorAll('[data-journey] .journey-sub').length, images: document.querySelectorAll('[data-journey] .journey-beat img').length }));
-check('Every passage is Cinzel lettering in the original ink with a line of subtext', lettering.headings.length === 7 && lettering.headings.every(heading => /Cinzel/.test(heading.font) && heading.colour === 'rgb(38, 45, 35)') && lettering.subtext >= 7 && lettering.images === 0, lettering);
+const textBackdrop = await page.locator('[data-reading-beat] .journey-qualities').evaluate(element => ({ background: getComputedStyle(element).backgroundColor, filter: getComputedStyle(element).backdropFilter, scrim: getComputedStyle(document.querySelector('.journey-scrim')).display }));
+check('The journey words float over the scene with no panel behind them', textBackdrop.background === 'rgba(0, 0, 0, 0)' && (textBackdrop.filter === 'none' || !textBackdrop.filter) && textBackdrop.scrim === 'none', textBackdrop);
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
