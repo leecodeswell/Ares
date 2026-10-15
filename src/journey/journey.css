@@ -73,8 +73,10 @@
   z-index: 3;
   left: 50%;
   top: 50%;
-  width: min(80vw, 1200px);
+  width: max-content;
+  max-width: 88vw;
   opacity: 0;
+  text-align: center;
   /* centred, then carried across by the scroll (--beat-x, set in journey.js) */
   transform: translate(calc(-50% + var(--beat-x, 0px)), -50%);
   will-change: opacity, transform;
@@ -82,42 +84,85 @@
 .journey-beat:not(.is-shown) {
   pointer-events: none;
 }
-.journey-beat em {
-  font-style: italic;
-}
+
+/* Each passage is cut into a tabula ansata, the Roman inscription tablet with
+   a dovetail handle on either side: a slab of the colonnade's own marble,
+   framed by a fine bronze rule, the capitals incised into it. */
 .journey .vision-heading {
-  margin: 0;
+  position: relative;
+  display: inline-block;
+  margin: 0 1.1em;
+  padding: 0.5em 1.05em 0.55em;
   font-family: "Cinzel", var(--serif);
   font-weight: 500;
-  font-size: clamp(44px, 5.1vw, 88px);
-  line-height: 1.12;
-  letter-spacing: 0.03em;
-  color: #1c1a16;
-  /* a soft ivory glow, close and quiet, so the dark letters lift off marble
-     and sky alike */
-  text-shadow:
-    0 0 1px rgba(246, 242, 232, 0.9),
-    0 0 8px rgba(246, 242, 232, 0.75),
-    0 0 22px rgba(246, 242, 232, 0.55),
-    0 0 48px rgba(246, 242, 232, 0.35);
+  font-size: clamp(34px, 3.7vw, 64px);
+  line-height: 1.16;
+  letter-spacing: 0.04em;
+  color: #2a241a;
+  /* incised: a hairline of light below each stroke, as on cut stone */
+  text-shadow: 0 1px 0 rgba(255, 252, 244, 0.7);
+  background:
+    linear-gradient(180deg, rgba(247, 243, 234, 0.9), rgba(236, 229, 214, 0.9)),
+    url("./marble.webp") center / 520px;
+  border: 1px solid rgba(138, 116, 72, 0.75);
+  box-shadow:
+    inset 0 0 0 5px rgba(247, 243, 234, 0.55),
+    inset 0 0 0 6px rgba(138, 116, 72, 0.45),
+    0 18px 40px -12px rgba(40, 30, 16, 0.45);
 }
-/* Inscribed capitals: no italics or second colours, only a quiet champagne
-   for the words that carry the meaning. */
+/* the dovetail handles (ansae) */
+.journey .vision-heading::before,
+.journey .vision-heading::after {
+  content: "";
+  position: absolute;
+  top: 18%;
+  bottom: 18%;
+  width: 0.95em;
+  background: center / 100% 100% no-repeat;
+}
+.journey .vision-heading::before {
+  right: 100%;
+  margin-right: -1px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 100' preserveAspectRatio='none'%3E%3Cpath d='M40 28 L2 4 Q12 50 2 96 L40 72 Z' fill='%23efe8d9' stroke='%238a7448' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+.journey .vision-heading::after {
+  left: 100%;
+  margin-left: -1px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 100' preserveAspectRatio='none'%3E%3Cpath d='M0 28 L38 4 Q28 50 38 96 L0 72 Z' fill='%23efe8d9' stroke='%238a7448' stroke-width='1.2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+/* The lines sit centred and still inside the tablet. */
 .journey .vision-line,
-.journey .vision-line:nth-child(2) {
+.journey .vision-line:nth-child(2),
+.journey .vision-line-last {
+  display: block;
+  padding-left: 0;
   color: inherit;
+  transform: none;
 }
 .journey .vision-line-last {
   font-size: 0.78em;
-  margin-top: 0.25em;
+  margin-top: 0.2em;
 }
 .journey .vision-heading em,
 .journey .vision-line-last em {
+  display: inline;
+  margin: 0;
   font-style: normal;
-  color: #4d3d20;
+  color: #6b5326;
 }
-.journey .vision-line {
-  transform: translateX(calc((var(--beat-progress, 0) - 0.3) * var(--line-travel)));
+
+/* Out through the arch the sky belongs to the reveal: the last line stands
+   free, without a tablet, small and quiet over the clouds. */
+.journey .beat-detail .vision-heading {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  font-size: clamp(28px, 2.8vw, 46px);
+  text-shadow: 0 1px 0 rgba(255, 252, 244, 0.6);
+}
+.journey .beat-detail .vision-heading::before,
+.journey .beat-detail .vision-heading::after {
+  content: none;
 }
 
 @media (max-width: 760px) {
@@ -126,13 +171,17 @@
     left: var(--gutter);
     right: var(--gutter);
     width: auto;
+    max-width: none;
     transform: translateX(var(--beat-x, 0px));
   }
-  .journey .vision-line {
-    --line-travel: 0px;
-  }
   .journey .vision-heading {
-    font-size: 9vw;
+    font-size: 6.6vw;
+    margin: 0 0.9em;
+    padding: 0.5em 0.8em;
+  }
+  .journey .vision-line-last em {
+    display: inline;
+    text-align: inherit;
   }
 }
 
@@ -171,13 +220,5 @@
   }
   .journey-beat:not(.is-shown) {
     pointer-events: auto;
-  }
-  /* over the pale still the headlines go back to dark ink */
-  .journey .vision-heading {
-    color: #262d23;
-    text-shadow: none;
-  }
-  .journey .vision-heading em {
-    color: #8d7a51;
   }
 }
