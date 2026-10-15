@@ -8,7 +8,7 @@ await build({
   entryPoints: [`${here}harness.js`],
   bundle: true,
   outfile: `${here}out/harness.js`,
-  loader: { ".webp": "file", ".css": "empty" },
+  loader: { ".webp": "file", ".png": "file", ".css": "empty" },
   assetNames: "[name]",
   publicPath: "./",
 });

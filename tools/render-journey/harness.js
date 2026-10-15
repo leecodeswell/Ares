@@ -4,8 +4,10 @@
 // live. Built by build.mjs and driven by render.py.
 import { VERTEX, FRAGMENT } from "../../src/journey/scene.js";
 import { cameraAt } from "../../src/journey/camera.js";
+import { colonnade } from "../../src/journey/statues.js";
 import skyUrl from "../../src/journey/sky.webp";
 import marbleUrl from "../../src/journey/marble.webp";
+import auleUrl from "../../src/journey/aule-sdf.png";
 
 const PAPER = [232 / 255, 231 / 255, 221 / 255]; // the showcase colour the flight fades into
 const canvas = document.querySelector("canvas");
@@ -20,7 +22,7 @@ function shader(type, source) {
 }
 const program = gl.createProgram();
 gl.attachShader(program, shader(gl.VERTEX_SHADER, VERTEX));
-gl.attachShader(program, shader(gl.FRAGMENT_SHADER, FRAGMENT));
+gl.attachShader(program, shader(gl.FRAGMENT_SHADER, colonnade(FRAGMENT)));
 gl.linkProgram(program);
 gl.useProgram(program);
 gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -48,9 +50,10 @@ const texture = (unit, url, repeat) =>
     image.src = url;
   });
 
-window.ready = Promise.all([texture(0, skyUrl, false), texture(1, marbleUrl, true)]).then(() => {
+window.ready = Promise.all([texture(0, skyUrl, false), texture(1, marbleUrl, true), texture(2, auleUrl, false)]).then(() => {
   gl.uniform1i(uniform("uSky"), 0);
   gl.uniform1i(uniform("uMarble"), 1);
+  gl.uniform1i(uniform("uAule"), 2); // the statue's distance atlas
   gl.uniform3f(uniform("uPaper"), ...PAPER);
   gl.uniform1f(uniform("uQuality"), 1);
 });
