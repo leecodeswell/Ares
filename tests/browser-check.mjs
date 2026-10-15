@@ -290,40 +290,39 @@ const journeyAt = async fraction => {
 };
 await page.waitForFunction(() => document.querySelector('[data-journey]')?.classList.contains('is-flying'), null, { timeout: 8000 }).catch(() => {});
 const journeyStates = [];
-// before the first statue, so no hover pulls the flight in
-for (const fraction of [0.03, 0.1, 0.17]) journeyStates.push(await journeyAt(fraction));
+// before the first statue's hover
+for (const fraction of [0.03, 0.08, 0.13]) journeyStates.push(await journeyAt(fraction));
 check('The colonnade flight renders and follows the scroll', journeyStates.every(state => state.flying) && journeyStates[0].progress < journeyStates[1].progress && journeyStates[1].progress < journeyStates[2].progress, journeyStates);
 check('The pre-rendered flight is scrubbed to the frame matching the scroll', journeyStates.every(state => Math.abs(state.time - (Math.round(state.progress * 239) + 0.5) / 24) < 0.05), journeyStates);
-const scrubBack = await journeyAt(0.1);
+const scrubBack = await journeyAt(0.08);
 check('The flight scrubs backward as well as forward', Math.abs(scrubBack.time - journeyStates[1].time) < 0.05, { scrubBack, forward: journeyStates[1] });
 const flightFrames = await page.evaluate(() => [...document.querySelectorAll('[data-journey] video')].map(video => ({ source: new URL(video.currentSrc).pathname, width: video.videoWidth, height: video.videoHeight, ready: video.readyState >= 2, paused: video.paused, visible: getComputedStyle(video).opacity === '1', stage: video.getBoundingClientRect().width === innerWidth, liveCanvas: !!document.querySelector('[data-journey] canvas') })));
 check('The landscape flight video fills the stage with no live 3D canvas', flightFrames.length === 1 && /flight-landscape\.(mp4|webm)$/.test(flightFrames[0].source) && flightFrames[0].width === 1920 && flightFrames[0].ready && flightFrames[0].paused && flightFrames[0].visible && flightFrames[0].stage && !flightFrames[0].liveCanvas, flightFrames);
-// Scrolling on past the first statue's approach glides into its hover and holds there.
-const statueState = () => page.evaluate(() => ({ held: document.documentElement.classList.contains('is-journey-held'), progress: Number(document.querySelector('[data-journey]').dataset.progress), cue: document.querySelector('.scroll-cue:not([hidden])')?.textContent || null, open: !document.querySelector('.papyrus').hidden, heading: document.querySelector('.papyrus-passage h2')?.textContent.replace(/\s+/g, ' ').trim() || null, label: document.querySelector('.papyrus-label').textContent, beatsHidden: [...document.querySelectorAll('[data-beat]')].every(beat => getComputedStyle(beat).display === 'none') }));
-await page.evaluate(([box]) => scrollTo({ top: box.top + (box.height - innerHeight) * 0.215, behavior: 'instant' }), [journeyBox]);
-await page.waitForTimeout(1600);
-const arrived = await statueState();
-await page.keyboard.press('ArrowDown');
-await page.waitForTimeout(1700);
-const opened = await statueState();
-await page.screenshot({ path: `${screenshotDir}/desktop-journey-scroll-open.png` });
-report.screenshots.push(`${screenshotDir}/desktop-journey-scroll-open.png`);
-await page.keyboard.press('ArrowDown');
-await page.waitForTimeout(2200);
-const flownOn = await statueState();
-check('The flight holds at statue I; one scroll opens its passage and the next rolls it up and flies on', arrived.held && arrived.cue === 'I' && !arrived.open && opened.open && /Your themes/.test(opened.heading) && opened.beatsHidden && !flownOn.open && !flownOn.held && flownOn.progress > arrived.progress, { arrived, opened, flownOn });
+// At each hover the frame holds while the scroll goes on, and the papyrus
+// unrolls, stays open and rolls up again just by scrolling: nothing locks.
+const papyrusState = () => page.evaluate(() => {
+  const papyrus = document.querySelector('.papyrus');
+  return { progress: Number(document.querySelector('[data-journey]').dataset.progress), shown: !papyrus.hidden, opacity: Number(getComputedStyle(papyrus.querySelector('.papyrus-text')).opacity), heading: papyrus.querySelector('.papyrus-passage h2')?.textContent.replace(/\s+/g, ' ').trim() || null, label: papyrus.querySelector('.papyrus-label').textContent, beatsHidden: [...document.querySelectorAll('[data-beat]')].every(beat => getComputedStyle(beat).display === 'none'), locked: getComputedStyle(document.documentElement).overflow === 'hidden' };
+});
 await page.locator('.scroll-index-toggle').click();
 const listed = await page.locator('#scroll-index-list button').count();
+await page.locator('#scroll-index-list button').first().click();
+await page.waitForTimeout(2500);
+const reading = await papyrusState();
+await page.screenshot({ path: `${screenshotDir}/desktop-journey-scroll-open.png` });
+report.screenshots.push(`${screenshotDir}/desktop-journey-scroll-open.png`);
+await page.mouse.wheel(0, 120);
+await page.waitForTimeout(500);
+const stillHeld = await papyrusState();
+await page.evaluate(() => scrollBy({ top: innerHeight * 0.4, behavior: 'instant' }));
+await page.waitForTimeout(700);
+const flownOn = await papyrusState();
+check('Scrolling through statue I holds its frame while the papyrus opens, then rolls it up and flies on, without locking the page', reading.shown && reading.opacity === 1 && /Your themes/.test(reading.heading) && reading.beatsHidden && !reading.locked && stillHeld.progress === reading.progress && !flownOn.shown && flownOn.progress > reading.progress, { reading, stillHeld, flownOn });
+await page.locator('.scroll-index-toggle').click();
 await page.locator('#scroll-index-list button').nth(3).click();
-await page.waitForTimeout(2600);
-const fromList = await statueState();
-await page.keyboard.press('Escape');
-await page.waitForTimeout(1300);
-const afterEscape = await statueState();
-check('Every scroll is reachable from the list, and Escape rolls it up', listed === 4 && fromList.open && /Scroll IV/.test(fromList.label) && !afterEscape.open, { listed, fromList, afterEscape });
-// back out of the hover, up the corridor, so the rest of the page scrolls freely
-await page.keyboard.press('ArrowUp');
-await page.waitForTimeout(1500);
+await page.waitForTimeout(2500);
+const fromList = await papyrusState();
+check('Every scroll is reachable from the list', listed === 4 && fromList.shown && fromList.opacity === 1 && /Scroll IV/.test(fromList.label), { listed, fromList });
 const scrolledProgress = await page.locator('#scroll-progress').evaluate(element => getComputedStyle(element).transform);
 check('Reading progress responds to scrolling', initialProgress !== scrolledProgress, { initialProgress, scrolledProgress });
 
