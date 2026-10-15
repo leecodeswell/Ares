@@ -4,8 +4,8 @@ import { setUpScrolls } from "./scrolls.js";
 
 // The journey: a camera flies up the steps and down a static marble
 // colonnade, through the arch in its far wall and out into open sky, past
-// statues that hold out scrolls; each scroll opens one of the story's
-// passages (scrolls.js). The flight is rendered offline at full
+// statues that hold out scrolls; the camera hovers at each, and its scroll
+// opens one of the story's passages (scrolls.js). The flight is rendered offline at full
 // quality along a fixed path (tools/render-journey) and played here as a
 // video scrubbed by the scroll, so the visitor's GPU does no 3D work.
 
@@ -57,7 +57,7 @@ function setUpJourney(journey) {
   });
   // With motion, the passages live on the statues' scrolls; with reduced
   // motion there is no flight, and they read as one section over the still.
-  const scrolls = setUpScrolls(journey, stage, beats);
+  const scrolls = setUpScrolls(journey, stage, beats, { cameraAt, reduced: () => motionPreference.matches });
   const readingBeat = beats.find((beat) => beat.reading);
   const journeyStyle = getComputedStyle(journey);
   const flightScroll = Number.parseFloat(journeyStyle.getPropertyValue("--flight-scroll"));
@@ -168,7 +168,7 @@ function setUpJourney(journey) {
     journey.dataset.progress = progress.toFixed(3);
     // markers follow the frame on screen, so they never drift from the picture
     const camera = cameraAt(ready ? Math.round(progress * (frames - 1)) / (frames - 1) : progress);
-    scrolls.place(camera, orientation || (stage.clientHeight > stage.clientWidth * 1.05 ? "portrait" : "landscape"));
+    scrolls.place();
 
     if (!ready) {
       if (still) {
@@ -224,7 +224,10 @@ function setUpJourney(journey) {
     });
   }
 
-  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("scroll", () => {
+    if (!motionPreference.matches && !phone.matches) scrolls.onScroll();
+    schedule();
+  }, { passive: true });
   window.addEventListener("resize", () => {
     if (orientation) pickSource();
     schedule();

@@ -1,7 +1,7 @@
 /* The journey: a pinned stage where the camera flies through the colonnade and
    the story's words arrive in step. */
 .journey {
-  --flight-scroll: 660;
+  --flight-scroll: 400; /* about four screens of scrolling */
   --reading-scroll: 0;
   position: relative;
   /* Extra runway belongs to the qualities' reading interval; the rest of the
@@ -287,103 +287,283 @@
   }
 }
 
-/* ---- scrolls: the passages open from the statues' scrolls (scrolls.js) */
+/* ---- scrolls: the camera hovers at each statue and its scroll unrolls (scrolls.js) */
 @media (prefers-reduced-motion: no-preference) {
   .journey.has-scrolls .journey-beat {
     display: none;
   }
 }
-.scroll-markers {
+/* while a statue holds the journey, the page itself stays put */
+html.is-journey-held {
+  overflow: hidden;
+}
+.scroll-layer {
   position: absolute;
   inset: 0;
   z-index: 3;
   pointer-events: none;
 }
-.scroll-marker {
+.scroll-layer > * {
+  pointer-events: auto;
+}
+.scroll-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 31, 26, 0.55);
+  opacity: 0;
+  transition: opacity 0.45s;
+  pointer-events: none;
+}
+.scroll-dim.is-on {
+  opacity: 1;
+}
+.scroll-cue {
   position: absolute;
   top: 0;
   left: 0;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   padding: 0;
-  border: 1px solid rgba(242, 240, 233, 0.85);
+  border: 1px solid rgba(242, 240, 233, 0.9);
   border-radius: 50%;
-  background: rgba(41, 46, 39, 0.32);
+  background: rgba(41, 46, 39, 0.3);
   color: var(--paper);
   font: 600 16px/1 var(--serif);
-  pointer-events: auto;
-  backdrop-filter: blur(3px);
-  transition: background 0.2s, color 0.2s;
+  backdrop-filter: blur(2px);
+  transition: background 0.2s;
 }
-.scroll-marker::before {
+.scroll-cue::before {
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -7px;
   border: 1px solid var(--paper);
   border-radius: 50%;
-  opacity: 0;
-  animation: scroll-ring 2.4s ease-out infinite;
+  animation: scroll-ring 2.2s ease-out infinite;
   pointer-events: none;
 }
-.scroll-marker::after {
-  content: attr(data-label);
-  position: absolute;
-  top: calc(100% + 8px);
-  padding: 6px 9px;
-  border-radius: 4px;
-  background: rgba(41, 46, 39, 0.66);
-  color: var(--paper);
-  font: 500 10px/1 "DM Sans", sans-serif;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-.scroll-marker:hover,
-.scroll-marker:focus-visible {
+.scroll-cue:hover,
+.scroll-cue:focus-visible {
   background: var(--gold);
+  outline: none;
 }
-.scroll-marker:hover::after,
-.scroll-marker:focus-visible::after,
-.scroll-marker.is-pinned::after {
-  opacity: 1;
-}
-/* statues stand on the left, so a marker pinned to the edge labels inward */
-.scroll-marker.is-pinned::after {
-  left: 0;
-}
-.scroll-marker:focus-visible {
-  outline: 2px solid var(--paper);
-  outline-offset: 3px;
-}
-.scroll-marker[hidden] {
+.scroll-cue[hidden] {
   display: none;
 }
-.scroll-marker.is-read {
-  border-style: dashed;
-}
-.scroll-marker.is-read::before {
-  animation: none;
-}
 @keyframes scroll-ring {
-  0% {
+  from {
     transform: scale(0.8);
-    opacity: 0.7;
+    opacity: 0.8;
   }
-  100% {
+  to {
     transform: scale(1.5);
     opacity: 0;
   }
 }
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 10px 16px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(41, 46, 39, 0.6);
+  color: var(--paper);
+  font: 500 11px/1 "DM Sans", sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.scroll-hint.is-shown {
+  opacity: 1;
+}
+
+/* the papyrus: a sheet between two rollers, large and centred */
+.papyrus {
+  --papyrus-w: min(660px, calc(100vw - 48px));
+  --papyrus-h: min(580px, calc(100svh - 150px));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--papyrus-w);
+  height: var(--papyrus-h);
+  margin: calc(var(--papyrus-h) / -2) 0 0 calc(var(--papyrus-w) / -2);
+  color: #2c2416;
+}
+.papyrus[hidden] {
+  display: none;
+}
+.papyrus-sheet {
+  position: absolute;
+  inset: 14px 18px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(120, 90, 40, 0.28), transparent 7%, transparent 93%, rgba(120, 90, 40, 0.28)),
+    linear-gradient(180deg, rgba(110, 80, 30, 0.2), transparent 9%, transparent 91%, rgba(110, 80, 30, 0.2)),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.012 .9' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .22  0 0 0 .28 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9 .015' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .38  0 0 0 0 .2  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+    #e9dcbc;
+  box-shadow: inset 0 0 40px rgba(120, 90, 40, 0.25), 0 26px 70px rgba(0, 0, 0, 0.45);
+  clip-path: inset(50% 0 50% 0);
+}
+.papyrus-roll {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 30px;
+  border-radius: 15px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(80, 60, 30, 0.08) 18px 20px),
+    linear-gradient(#a99a82, #efe8da 38%, #d9cfbd 60%, #8a7d68);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+.papyrus-roll::before,
+.papyrus-roll::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  width: 22px;
+  height: 40px;
+  border-radius: 11px;
+  background: linear-gradient(#8f8370, #e6dfd0 40%, #7d715d);
+}
+.papyrus-roll::before {
+  left: -14px;
+}
+.papyrus-roll::after {
+  right: -14px;
+}
+.papyrus-roll-top {
+  top: 0;
+}
+.papyrus-roll-bottom {
+  bottom: 0;
+}
+.papyrus-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px clamp(28px, 7%, 64px) 40px;
+  overflow: auto;
+  opacity: 0;
+}
+.papyrus-label {
+  margin: 0;
+  color: #6b5a3a;
+  font: 500 11px/1.3 "DM Sans", sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.papyrus-close {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #4a3d26;
+  font: 400 30px/1 var(--serif);
+  opacity: 0;
+}
+.papyrus-close:focus-visible {
+  outline: 2px solid #4a3d26;
+}
+/* the passage's copy, without the overlay's moving, wide layouts */
+.papyrus-passage {
+  display: grid;
+  gap: 14px;
+}
+.papyrus .papyrus-passage :is(h2, h3) {
+  margin: 0;
+  color: #2c2416;
+  font-family: var(--serif);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+.papyrus .papyrus-passage h2,
+.papyrus .papyrus-passage .vision-heading {
+  font-size: clamp(32px, 5.4vw, 48px);
+}
+.papyrus .papyrus-passage .vision-line {
+  display: block;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  text-align: left;
+  transform: none;
+}
+.papyrus .papyrus-passage em {
+  color: #8a5f1e;
+}
+.papyrus .papyrus-passage :is(p, .journey-statement) {
+  max-width: 60ch;
+  margin: 0;
+  color: #3a3020;
+  font: 400 19px/1.5 var(--serif);
+}
+.papyrus .papyrus-passage .journey-statement {
+  color: #2c2416;
+  font-size: clamp(28px, 4.6vw, 40px);
+  line-height: 1.12;
+}
+.papyrus .papyrus-passage :is(.journey-rule, .scene-caption-line, .kicker-line) {
+  display: none;
+}
+.papyrus .papyrus-passage :is(.eyebrow, .section-kicker, .scene-caption) {
+  color: #6b5a3a;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.papyrus .papyrus-passage .qualities {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.papyrus .papyrus-passage .quality {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.papyrus .papyrus-passage .quality-number {
+  display: inline;
+  margin: 0;
+  color: #8a6a34;
+  font-size: 28px;
+}
+.papyrus .papyrus-passage .quality h3 {
+  font-size: 26px;
+}
+.papyrus .papyrus-passage .quality br {
+  display: none;
+}
+
+/* the list of every scroll */
 .scroll-index {
   position: absolute;
-  left: var(--gutter);
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  z-index: 4;
+  left: var(--gutter);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -414,13 +594,13 @@
   letter-spacing: 0.08em;
   text-align: left;
 }
+.scroll-index .scroll-index-toggle {
+  display: block;
+  width: auto;
+}
 .scroll-index button:focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 2px;
-}
-.scroll-index-toggle.scroll-index-toggle {
-  display: block;
-  width: auto;
 }
 .scroll-index-number {
   min-width: 2.2em;
@@ -434,178 +614,10 @@
 .is-read .scroll-index-read {
   opacity: 0.65;
 }
-.scroll-reader {
-  width: min(620px, calc(100% - 32px));
-  max-height: calc(100svh - 48px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  overflow: visible;
-}
-.scroll-reader::backdrop {
-  background: rgba(41, 46, 39, 0.5);
-  backdrop-filter: blur(3px);
-}
-.scroll-reader-roller {
-  position: relative;
-  z-index: 1;
-  height: 20px;
-  margin: 0 -14px;
-  border-radius: 10px;
-  background: linear-gradient(#cfccc4, #f4f2ec 45%, #a9a69d);
-}
-.scroll-reader-sheet {
-  position: relative;
-  max-height: calc(100svh - 96px);
-  overflow: auto;
-  padding: 48px clamp(24px, 6vw, 56px) 36px;
-  background: linear-gradient(90deg, #e3e0d6, var(--paper) 8%, #f8f7f2 50%, var(--paper) 92%, #e3e0d6);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
-  animation: scroll-unroll 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-@keyframes scroll-unroll {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-.scroll-reader-label {
-  margin: 0 0 18px;
-  color: var(--muted);
-  font: 500 11px/1.3 "DM Sans", sans-serif;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.scroll-reader-passage {
-  display: grid;
-  gap: 14px;
-}
-.scroll-reader-passage :is(h2, h3) {
-  margin: 0;
-  font-family: var(--serif);
-  font-weight: 500;
-  line-height: 1.05;
-  text-wrap: balance;
-}
-.scroll-reader-passage h2 {
-  font-size: clamp(32px, 6vw, 46px);
-}
-.scroll-reader-passage h3 {
-  font-size: 26px;
-}
-.scroll-reader-passage :is(p, .journey-statement) {
-  margin: 0;
-  max-width: 60ch;
-  font: 400 19px/1.5 var(--serif);
-}
-.scroll-reader-passage .journey-statement {
-  font-size: clamp(26px, 5vw, 36px);
-  line-height: 1.15;
-}
-.scroll-reader-passage em {
-  color: var(--gold);
-}
-.scroll-reader-passage .vision-line {
-  display: block;
-}
-.scroll-reader-passage :is(.journey-rule, .scene-caption-line, .kicker-line) {
-  display: none;
-}
-.scroll-reader-passage .qualities {
-  display: grid;
-  gap: 14px;
-}
-.scroll-reader-passage .quality {
-  display: flex;
-  gap: 14px;
-  align-items: baseline;
-}
-.scroll-reader-passage .quality br {
-  display: none;
-}
-.scroll-reader-passage :is(.eyebrow, .section-kicker) {
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.scroll-reader-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: 400 30px/1 var(--serif);
-}
-.scroll-reader-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 28px;
-}
-.scroll-reader-nav button {
-  padding: 11px 16px;
-  border: 1px solid rgba(41, 46, 39, 0.35);
-  border-radius: 99px;
-  background: transparent;
-  color: var(--ink);
-  font: 500 13px/1 "DM Sans", sans-serif;
-}
-.scroll-reader-nav button[hidden] {
-  display: none;
-}
-:is(.scroll-reader-close, .scroll-reader-nav button):is(:hover, :focus-visible) {
-  background: var(--ink);
-  color: var(--paper);
-  outline: none;
-}
 @media (prefers-reduced-motion: reduce) {
-  .scroll-markers,
-  .scroll-index {
+  .scroll-layer {
     display: none;
   }
-  .scroll-reader-sheet,
-  .scroll-marker::before {
-    animation: none;
-  }
-}
-/* the reader's copy of a passage drops the overlay's moving, wide layouts */
-.scroll-reader .scroll-reader-passage .vision-heading {
-  font-size: clamp(32px, 6vw, 46px);
-  line-height: 1.05;
-  letter-spacing: 0;
-}
-.scroll-reader .scroll-reader-passage .vision-line {
-  display: block;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-  transform: none;
-}
-.scroll-reader .scroll-reader-passage .qualities {
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-.scroll-reader .scroll-reader-passage .quality-number {
-  display: inline;
-  margin: 0;
-  font-size: 28px;
-}
-.scroll-reader .scroll-reader-passage .quality h3 {
-  font-size: 26px;
-}
-.scroll-reader .scroll-reader-passage .vision-line-last {
-  font-size: inherit;
 }
 
 /* Desktop only for now: phones go from the hero straight on to the showcase. */
