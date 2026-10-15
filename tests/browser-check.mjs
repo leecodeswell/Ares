@@ -426,8 +426,11 @@ for (const width of [390, 320, 768]) {
     check('Mobile navigation closes after selecting a link', await menu.getAttribute('aria-expanded') === 'false');
     await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight * 0.75) { scrollTo({ top: y, behavior: 'instant' }); await new Promise(resolve => setTimeout(resolve, 140)); } });
     await page.waitForTimeout(1000);
-    const mobileImages = await page.locator('img').evaluateAll(elements => elements.map(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0 })));
-    check('All mobile photographs load after scrolling', mobileImages.length >= 3 && mobileImages.every(image => image.loaded), mobileImages);
+    // the journey is desktop-only, so its still never loads on phones
+    const mobileImages = await page.locator('img:not([data-journey-still])').evaluateAll(elements => elements.map(image => ({ source: image.currentSrc || image.src, loaded: image.complete && image.naturalWidth > 0 })));
+    check('All mobile photographs load after scrolling', mobileImages.length >= 2 && mobileImages.every(image => image.loaded), mobileImages);
+    const mobileJourney = await page.evaluate(() => ({ hidden: getComputedStyle(document.querySelector('[data-journey]')).display === 'none', visionLinks: [...document.querySelectorAll('[data-vision-link]')].map(link => link.getAttribute('href')), flightRequested: performance.getEntriesByType('resource').some(entry => /flight-/.test(entry.name)) }));
+    check('Phones skip the journey: hidden, never loaded, and its links lead on to the showcase', mobileJourney.hidden && !mobileJourney.flightRequested && mobileJourney.visionLinks.length > 0 && mobileJourney.visionLinks.every(href => href === '#showcase'), mobileJourney);
     await page.screenshot({ path: `${screenshotDir}/mobile-full.png`, fullPage: true });
     report.screenshots.push(`${screenshotDir}/mobile-full.png`);
   }

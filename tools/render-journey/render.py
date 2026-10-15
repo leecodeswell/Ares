@@ -2,8 +2,7 @@
 
     python3 tools/render-journey/render.py [frames-dir] [--frames 240]
 
-Writes <frames-dir>/landscape/f_000.png ... (1920x1080) and
-<frames-dir>/portrait/f_000.png ... (864x1536), one per frame at progress
+Writes <frames-dir>/landscape/f_000.png ... (1920x1080), one per frame at progress
 i / (frames - 1). Existing frames are skipped, so an interrupted render
 resumes where it stopped. Each frame is rendered larger (--supersample, 1.5x
 by default) and scaled down, which smooths edges and fine carving. Uses headless Chromium; on a machine without a GPU
@@ -14,7 +13,7 @@ from PIL import Image
 from playwright.async_api import async_playwright
 
 HERE = pathlib.Path(__file__).resolve().parent
-SIZES = {"landscape": (1920, 1080), "portrait": (864, 1536)}
+SIZES = {"landscape": (1920, 1080)}  # the journey is desktop-only
 
 
 async def main(out, frames, only, supersample):

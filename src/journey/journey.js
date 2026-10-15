@@ -17,6 +17,17 @@ const smooth = (edge0, edge1, value) => {
 };
 
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+// The journey is desktop-only for now: on phones the section is hidden
+// (journey.css) and links to it lead on to the showcase instead.
+const phone = window.matchMedia("(max-width: 760px)");
+function routeVisionLinks() {
+  for (const link of document.querySelectorAll('a[href="#vision"], a[data-vision-link]')) {
+    link.dataset.visionLink = "";
+    link.setAttribute("href", phone.matches ? "#showcase" : "#vision");
+  }
+}
+routeVisionLinks();
+phone.addEventListener("change", routeVisionLinks);
 const root = document.querySelector("[data-journey]");
 if (root) setUpJourney(root);
 
@@ -123,10 +134,10 @@ function setUpJourney(journey) {
     });
   }
 
-  // Phones get the portrait render, which widens its view as the live scene did.
-  function pickSource() {
+    function pickSource() {
     if (!video) return;
-    const wanted = stage.clientHeight > stage.clientWidth * 1.05 ? "portrait" : "landscape";
+    // only the landscape flight is rendered; a portrait one is used if present
+    const wanted = sources.portrait && stage.clientHeight > stage.clientWidth * 1.05 ? "portrait" : "landscape";
     if (wanted === orientation || !sources[wanted]) return;
     orientation = wanted;
     ready = false;

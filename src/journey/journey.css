@@ -607,3 +607,10 @@
 .scroll-reader .scroll-reader-passage .vision-line-last {
   font-size: inherit;
 }
+
+/* Desktop only for now: phones go from the hero straight on to the showcase. */
+@media (max-width: 760px) {
+  .journey {
+    display: none;
+  }
+}
